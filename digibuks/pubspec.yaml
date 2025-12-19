@@ -81,9 +81,10 @@ flutter:
     - assets/fonts/
 
   # Custom Fonts (Mizo language support)
-  fonts:
-    - family: Mizo
-      fonts:
-        - asset: assets/fonts/Mizo-Regular.ttf
-        - asset: assets/fonts/Mizo-Bold.ttf
-          weight: 700
+  # Commented out until font files are added
+  # fonts:
+  #   - family: Mizo
+  #     fonts:
+  #       - asset: assets/fonts/Mizo-Regular.ttf
+  #       - asset: assets/fonts/Mizo-Bold.ttf
+  #         weight: 700
