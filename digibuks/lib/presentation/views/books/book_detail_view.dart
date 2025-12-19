@@ -5,7 +5,7 @@ import '../../controllers/auth_controller.dart';
 import '../../controllers/payment_controller.dart';
 import '../../../data/models/book_model.dart';
 import '../../../core/constants/app_constants.dart';
-import '../../../core/theme/app_theme.dart';
+// removed unused import: app_theme
 import '../payment/payment_view.dart';
 
 class BookDetailView extends StatelessWidget {
@@ -24,7 +24,6 @@ class BookDetailView extends StatelessWidget {
     // Use find or putIfAbsent - controllers should be initialized via bindings
     final bookController = Get.find<BookController>();
     final authController = Get.find<AuthController>();
-    final paymentController = Get.put(PaymentController());
 
     return Scaffold(
       body: CustomScrollView(
@@ -35,23 +34,15 @@ class BookDetailView extends StatelessWidget {
             pinned: true,
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      AppTheme.primaryColor,
-                      AppTheme.primaryColor.withOpacity(0.7),
-                    ],
-                  ),
-                ),
+                // Use a solid surface color behind the cover image
+                color: Theme.of(context).colorScheme.primary.withAlpha(179),
                 child: book.coverImage != null
                     ? Image.network(
                         book.coverImage!,
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => _buildPlaceholder(),
+                        errorBuilder: (context, error, stackTrace) => _buildPlaceholder(bgColor: Theme.of(context).colorScheme.primary.withAlpha(26), iconColor: Theme.of(context).colorScheme.primary.withAlpha(128)),
                       )
-                    : _buildPlaceholder(),
+                    : _buildPlaceholder(bgColor: Theme.of(context).colorScheme.primary.withAlpha(26), iconColor: Theme.of(context).colorScheme.primary.withAlpha(128)),
               ),
             ),
           ),
@@ -73,8 +64,8 @@ class BookDetailView extends StatelessWidget {
                   Text(
                     'By ${book.authorName ?? "Unknown Author"}',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: AppTheme.textSecondary,
-                        ),
+                            color: Theme.of(context).colorScheme.onSurface.withAlpha(0xB3),
+                          ),
                   ),
                   const SizedBox(height: 16),
                   // Rating and Reviews
@@ -100,7 +91,7 @@ class BookDetailView extends StatelessWidget {
                           Text(
                             '(${book.reviewCount} reviews)',
                             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: AppTheme.textSecondary,
+                                  color: Theme.of(context).colorScheme.onSurface.withAlpha(0xB3),
                                 ),
                           ),
                         ],
@@ -138,14 +129,14 @@ class BookDetailView extends StatelessWidget {
     );
   }
 
-  Widget _buildPlaceholder() {
+  Widget _buildPlaceholder({Color? bgColor, Color? iconColor}) {
     return Container(
-      color: AppTheme.primaryColor.withOpacity(0.1),
+      color: bgColor ?? const Color(0xFFF2F2F2),
       child: Center(
         child: Icon(
           Icons.menu_book,
           size: 80,
-          color: AppTheme.primaryColor.withOpacity(0.5),
+          color: iconColor ?? const Color(0xFF9CA3AF),
         ),
       ),
     );
@@ -156,12 +147,12 @@ class BookDetailView extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: AppTheme.textSecondary),
+          Icon(icon, size: 20, color: Theme.of(context).colorScheme.onSurface.withAlpha(0xB3)),
           const SizedBox(width: 12),
           Text(
             '$label: ',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppTheme.textSecondary,
+                  color: Theme.of(context).colorScheme.onSurface.withAlpha(0xB3),
                 ),
           ),
           Text(
@@ -197,13 +188,13 @@ class BookDetailView extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppTheme.successColor.withOpacity(0.1),
+                  color: Theme.of(context).colorScheme.tertiary.withAlpha(26),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppTheme.successColor),
+                  border: Border.all(color: Theme.of(context).colorScheme.tertiary),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.check_circle, color: AppTheme.successColor),
+                    Icon(Icons.check_circle, color: Theme.of(context).colorScheme.tertiary),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -213,7 +204,7 @@ class BookDetailView extends StatelessWidget {
                                 ? 'Rented until ${_formatDate(rentalExpiry)}'
                                 : 'You have access',
                         style: TextStyle(
-                          color: AppTheme.successColor,
+                          color: Theme.of(context).colorScheme.tertiary,
                           fontWeight: FontWeight.bold,
                         ),
                       ),

@@ -1,8 +1,7 @@
 import 'package:get/get.dart';
 import '../../core/utils/snackbar_helper.dart';
 import '../../data/models/book_model.dart';
-import '../../data/models/sample_content.dart';
-import '../../core/constants/app_constants.dart';
+// Removed unused imports: sample_content and app_constants were not used here
 import '../../core/utils/logger.dart';
 import '../../core/utils/storage_helper.dart';
 
@@ -205,9 +204,9 @@ class ReaderController extends GetxController {
 
   Future<void> _saveBookmarks() async {
     try {
-      final bookmarksKey = 'bookmarks_${book!.id}';
       // Save bookmarks as JSON (simplified for demo)
-      // In real app, serialize the list properly
+      // In real app, serialize the list properly to a key like
+      // 'bookmarks_${book!.id}' and persist via StorageHelper.
     } catch (e) {
       AppLogger.e('Error saving bookmarks', e);
     }

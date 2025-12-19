@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/utils/snackbar_helper.dart';
 import '../../controllers/author_controller.dart';
-import '../../controllers/auth_controller.dart';
+// removed unused import: auth_controller
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/app_constants.dart';
-import 'analytics_view.dart';
-import 'upload_book_view.dart';
+// removed unused view imports
 
 class AuthorDashboardView extends StatelessWidget {
   const AuthorDashboardView({super.key});
@@ -14,7 +13,6 @@ class AuthorDashboardView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final authorController = Get.put(AuthorController());
-    final authController = Get.find<AuthController>();
 
     return Scaffold(
       appBar: AppBar(
@@ -183,7 +181,7 @@ class AuthorDashboardView extends StatelessWidget {
           width: 50,
           height: 70,
           decoration: BoxDecoration(
-            color: AppTheme.primaryColor.withOpacity(0.1),
+            color: AppTheme.primaryColor.withAlpha(26),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(

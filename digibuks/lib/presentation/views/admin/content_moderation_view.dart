@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/admin_controller.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/constants/app_constants.dart';
+// removed unused import: app_constants
 
 class ContentModerationView extends StatelessWidget {
   const ContentModerationView({super.key});
@@ -71,7 +71,7 @@ class ContentModerationView extends StatelessWidget {
               width: 50,
               height: 70,
               decoration: BoxDecoration(
-                color: AppTheme.primaryColor.withOpacity(0.1),
+                color: AppTheme.primaryColor.withAlpha(26),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(

@@ -18,9 +18,10 @@ class BookCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 2,
+      elevation: 4,
+      color: Theme.of(context).colorScheme.surface,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: InkWell(
         onTap: onTap,
@@ -34,7 +35,7 @@ class BookCard extends StatelessWidget {
             child: Container(
               height: 180,
               width: double.infinity,
-              color: AppTheme.primaryColor.withOpacity(0.1),
+              color: Theme.of(context).colorScheme.primary.withAlpha(26),
               child: book.coverImage != null
                   ? Image.network(
                       book.coverImage!,
@@ -83,7 +84,7 @@ class BookCard extends StatelessWidget {
                         Icon(
                           Icons.star,
                           size: 12,
-                          color: Colors.amber,
+                          color: Theme.of(context).colorScheme.secondary,
                         ),
                         const SizedBox(width: 2),
                         Text(
@@ -111,12 +112,16 @@ class BookCard extends StatelessWidget {
 
   Widget _buildPlaceholder() {
     return Container(
-      color: AppTheme.primaryColor.withOpacity(0.1),
+      decoration: BoxDecoration(
+        // Use a single neutral surface color following Material 3 (no gradients)
+        color: AppTheme.primaryColor.withAlpha(51),
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Center(
         child: Icon(
           Icons.menu_book,
           size: 64,
-          color: AppTheme.primaryColor.withOpacity(0.5),
+          color: AppTheme.primaryColor.withAlpha(179),
         ),
       ),
     );
@@ -127,7 +132,7 @@ class BookCard extends StatelessWidget {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
         decoration: BoxDecoration(
-          color: AppTheme.successColor.withOpacity(0.1),
+          color: AppTheme.successColor.withAlpha(26),
           borderRadius: BorderRadius.circular(4),
         ),
         child: Text(
@@ -143,7 +148,7 @@ class BookCard extends StatelessWidget {
       return Text(
         '₹${book.rentalPrice!.toStringAsFixed(0)}/rent',
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppTheme.secondaryColor,
+              color: Theme.of(context).colorScheme.onSurface,
               fontWeight: FontWeight.bold,
               fontSize: 12,
             ),
@@ -154,7 +159,7 @@ class BookCard extends StatelessWidget {
       return Text(
         '₹${book.price!.toStringAsFixed(0)}',
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppTheme.primaryColor,
+              color: Theme.of(context).colorScheme.primary,
               fontWeight: FontWeight.bold,
               fontSize: 12,
             ),

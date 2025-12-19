@@ -19,12 +19,7 @@ class PaymentView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (book == null) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Payment')),
-        body: const Center(child: Text('Book not found')),
-      );
-    }
+    // `book` is required and non-nullable; no null check needed.
 
     final paymentController = Get.put(PaymentController());
 
@@ -48,13 +43,13 @@ class PaymentView extends StatelessWidget {
                         width: 80,
                         height: 120,
                         decoration: BoxDecoration(
-                          color: AppTheme.primaryColor.withOpacity(0.1),
+                          color: Theme.of(context).colorScheme.primary.withAlpha(26),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Icon(
                           Icons.menu_book,
                           size: 40,
-                          color: AppTheme.primaryColor,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -63,7 +58,7 @@ class PaymentView extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              book!.title,
+                                book.title,
                               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -72,9 +67,9 @@ class PaymentView extends StatelessWidget {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'By ${book!.authorName ?? "Unknown"}',
+                              'By ${book.authorName ?? "Unknown"}',
                               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: AppTheme.textSecondary,
+                                    color: Theme.of(context).colorScheme.onSurface.withAlpha(0xB3),
                                   ),
                             ),
                           ],
@@ -115,14 +110,14 @@ class PaymentView extends StatelessWidget {
                       _buildPaymentRow(
                         context,
                         'Amount',
-                        '₹${paymentType == 'purchase' ? (book!.price ?? 0).toStringAsFixed(0) : (book!.rentalPrice ?? 0).toStringAsFixed(0)}',
+                        '₹${paymentType == 'purchase' ? (book.price ?? 0).toStringAsFixed(0) : (book.rentalPrice ?? 0).toStringAsFixed(0)}',
                         isAmount: true,
                       ),
                       const Divider(),
                       _buildPaymentRow(
                         context,
                         'Total',
-                        '₹${paymentType == 'purchase' ? (book!.price ?? 0).toStringAsFixed(0) : (book!.rentalPrice ?? 0).toStringAsFixed(0)}',
+                        '₹${paymentType == 'purchase' ? (book.price ?? 0).toStringAsFixed(0) : (book.rentalPrice ?? 0).toStringAsFixed(0)}',
                         isAmount: true,
                         isTotal: true,
                       ),
@@ -146,12 +141,12 @@ class PaymentView extends StatelessWidget {
                       ),
                     ),
                     child: paymentController.isProcessing
-                        ? const SizedBox(
+                        ? SizedBox(
                             height: 20,
                             width: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.onPrimary),
                             ),
                           )
                         : Text(
@@ -186,14 +181,14 @@ class PaymentView extends StatelessWidget {
           Text(
             label,
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: isTotal ? null : AppTheme.textSecondary,
+                  color: isTotal ? null : Theme.of(context).colorScheme.onSurface.withAlpha(0xB3),
                   fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
                 ),
           ),
           Text(
             value,
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: isAmount || isTotal ? AppTheme.primaryColor : null,
+                  color: isAmount || isTotal ? Theme.of(context).colorScheme.primary : null,
                   fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
                   fontSize: isTotal ? 18 : null,
                 ),
@@ -207,7 +202,7 @@ class PaymentView extends StatelessWidget {
     BuildContext context,
     PaymentController controller,
   ) async {
-    if (book == null) return;
+    // `book` is non-nullable
     // Capture navigator state before async gaps to avoid using BuildContext
     // synchronously after awaits (use_build_context_synchronously).
     final navigator = Navigator.of(context);
@@ -215,9 +210,9 @@ class PaymentView extends StatelessWidget {
     bool success = false;
     
     if (paymentType == 'purchase') {
-      success = await controller.purchaseBook(book!);
+      success = await controller.purchaseBook(book);
     } else if (paymentType == 'rental' && rentalDays != null) {
-      success = await controller.rentBook(book!, rentalDays!);
+      success = await controller.rentBook(book, rentalDays!);
     }
 
     if (success) {

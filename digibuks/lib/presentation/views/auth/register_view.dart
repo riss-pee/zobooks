@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/auth_controller.dart';
 import '../../../core/utils/validators.dart';
-import '../../../core/theme/app_theme.dart';
+// removed unused import: app_theme
 import '../../../core/constants/app_constants.dart';
 
 class RegisterView extends StatefulWidget {

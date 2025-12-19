@@ -50,7 +50,7 @@ class UserManagementView extends StatelessWidget {
                                     vertical: 4,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: _getRoleColor(user.role).withOpacity(0.1),
+                                    color: _getRoleColor(user.role).withAlpha(26),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: Text(

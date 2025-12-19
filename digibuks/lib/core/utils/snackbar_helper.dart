@@ -12,40 +12,33 @@ void showSnackSafe(
   Color? colorText,
   Duration? duration,
 }) {
-  void _show() {
-    try {
-      final ctx = Get.overlayContext;
-      // If there's no overlay context or no overlay ancestor, postpone showing
-      // the snackbar until after the next frame when an overlay may be available.
-      if (ctx == null) {
-        WidgetsBinding.instance.addPostFrameCallback((_) => _show());
-        return;
-      }
-
-      try {
-        // Try to access Overlay; if this throws or returns null, schedule for later
-        if (Overlay.of(ctx) == null) {
-          WidgetsBinding.instance.addPostFrameCallback((_) => _show());
-          return;
-        }
-      } catch (e) {
-        WidgetsBinding.instance.addPostFrameCallback((_) => _show());
-        return;
-      }
-
-      Get.snackbar(
-        title,
-        message,
-        snackPosition: snackPosition ?? SnackPosition.BOTTOM,
-        backgroundColor: backgroundColor,
-        colorText: colorText,
-        duration: duration,
-      );
-    } catch (e) {
-      // Swallow errors to avoid app crash when overlay isn't available.
-      debugPrint('showSnackSafe failed: $e');
+  void showAttempt() {
+    final ctx = Get.overlayContext;
+    // If overlay context not available, retry later.
+    // Some GetX versions report overlayContext as non-nullable; keep the
+    // defensive null-check for safety across versions.
+    // ignore: unnecessary_null_comparison
+    if (ctx == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => showAttempt());
+      return;
     }
+
+    // If overlay isn't ready yet, retry later.
+    if (Overlay.of(ctx) == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => showAttempt());
+      return;
+    }
+
+    // Safe to show snackbar now
+    Get.snackbar(
+      title,
+      message,
+      snackPosition: snackPosition ?? SnackPosition.BOTTOM,
+      backgroundColor: backgroundColor,
+      colorText: colorText,
+      duration: duration,
+    );
   }
 
-  _show();
+  showAttempt();
 }

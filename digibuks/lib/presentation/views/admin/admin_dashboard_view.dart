@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/utils/snackbar_helper.dart';
 import '../../controllers/admin_controller.dart';
-import '../../controllers/auth_controller.dart';
+// removed unused import: auth_controller
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/app_constants.dart';
 
@@ -12,7 +12,6 @@ class AdminDashboardView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final adminController = Get.put(AdminController());
-    final authController = Get.find<AuthController>();
 
     return DefaultTabController(
       length: 3,
@@ -230,7 +229,7 @@ class AdminDashboardView extends StatelessWidget {
               width: 50,
               height: 70,
               decoration: BoxDecoration(
-                color: AppTheme.primaryColor.withOpacity(0.1),
+                color: AppTheme.primaryColor.withAlpha(26),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(

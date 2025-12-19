@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
 import '../controllers/book_controller.dart';
+import '../controllers/payment_controller.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../data/datasources/remote/auth_remote_datasource.dart';
 import '../../core/network/api_client.dart';
@@ -32,6 +33,11 @@ class HomeBinding extends Bindings {
     // Initialize BookController if not already initialized
     if (!Get.isRegistered<BookController>()) {
       Get.put(BookController());
+    }
+
+    // Initialize PaymentController if not already initialized
+    if (!Get.isRegistered<PaymentController>()) {
+      Get.put(PaymentController());
     }
   }
 }

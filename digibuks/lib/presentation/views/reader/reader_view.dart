@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/reader_controller.dart';
-import '../../../data/models/book_model.dart';
+// removed unused import: book_model
 import '../../../data/models/sample_content.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
@@ -25,9 +25,8 @@ class ReaderView extends StatelessWidget {
 
     return Obx(
       () => Scaffold(
-        backgroundColor: controller.isDarkMode 
-            ? Colors.grey[900] 
-            : Colors.white,
+        // Use surface instead of deprecated background
+        backgroundColor: Theme.of(context).colorScheme.surface,
         body: SafeArea(
           child: Column(
             children: [
@@ -36,7 +35,7 @@ class ReaderView extends StatelessWidget {
                 _buildAppBar(context, controller),
               // Reader Content
               Expanded(
-                child: _buildReaderContent(controller),
+                child: _buildReaderContent(context, controller),
               ),
               // Bottom Controls
               if (!controller.isFullScreen)
@@ -52,12 +51,10 @@ class ReaderView extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: controller.isDarkMode 
-            ? Colors.grey[850] 
-            : Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Theme.of(context).colorScheme.onSurface.withAlpha(0x1A),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -75,22 +72,19 @@ class ReaderView extends StatelessWidget {
               children: [
                 Text(
                   controller.book!.title,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: controller.isDarkMode 
-                            ? Colors.white 
-                            : Colors.black,
-                      ),
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            // prefer onSurface over deprecated onBackground
+                            color: Theme.of(context).colorScheme.onSurface,
+                              ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 if (controller.totalPages > 0)
                   Text(
                     'Page ${controller.currentPage + 1} of ${controller.totalPages}',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: controller.isDarkMode 
-                              ? Colors.grey[400] 
-                              : Colors.grey[600],
-                        ),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurface.withAlpha(0xB3),
+                      ),
                   ),
               ],
             ),
@@ -151,7 +145,7 @@ class ReaderView extends StatelessWidget {
     );
   }
 
-  Widget _buildReaderContent(ReaderController controller) {
+  Widget _buildReaderContent(BuildContext context, ReaderController controller) {
     if (controller.isLoading) {
       return Center(
         child: CircularProgressIndicator(
@@ -161,9 +155,9 @@ class ReaderView extends StatelessWidget {
     }
 
     if (controller.book!.fileType == AppConstants.fileTypePDF) {
-      return _buildPDFReader(controller);
+      return _buildPDFReader(context, controller);
     } else if (controller.book!.fileType == AppConstants.fileTypeEPUB) {
-      return _buildEPUBReader(controller);
+      return _buildEPUBReader(context, controller);
     } else {
       return Center(
         child: Column(
@@ -187,13 +181,13 @@ class ReaderView extends StatelessWidget {
     }
   }
 
-  Widget _buildPDFReader(ReaderController controller) {
+  Widget _buildPDFReader(BuildContext context, ReaderController controller) {
     // For demo, show sample content
     // In production, use actual PDF file URL with Syncfusion PDF Viewer
     final content = SampleContent.getSampleContent(controller.book?.id ?? '');
     
     return Container(
-      color: controller.isDarkMode ? Colors.grey[900] : Colors.white,
+      color: Theme.of(context).colorScheme.surface,
       child: SingleChildScrollView(
         padding: EdgeInsets.all(controller.fontSize),
         child: Column(
@@ -205,16 +199,16 @@ class ReaderView extends StatelessWidget {
               style: TextStyle(
                 fontSize: controller.fontSize + 6,
                 fontWeight: FontWeight.bold,
-                color: controller.isDarkMode ? Colors.white : Colors.black,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 16),
             // Author
             Text(
               'By ${controller.book?.authorName ?? "Unknown Author"}',
-              style: TextStyle(
+                style: TextStyle(
                 fontSize: controller.fontSize - 2,
-                color: controller.isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                color: Theme.of(context).colorScheme.onSurface.withAlpha(0xB3),
                 fontStyle: FontStyle.italic,
               ),
             ),
@@ -222,10 +216,10 @@ class ReaderView extends StatelessWidget {
             // Content
             Text(
               content,
-              style: TextStyle(
+                style: TextStyle(
                 fontSize: controller.fontSize,
                 height: controller.lineHeight,
-                color: controller.isDarkMode ? Colors.white : Colors.black,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
               textAlign: TextAlign.justify,
             ),
@@ -236,15 +230,16 @@ class ReaderView extends StatelessWidget {
               child: Column(
                 children: [
                   LinearProgressIndicator(
-                    value: controller.readingProgress,
-                    backgroundColor: Colors.grey[300],
-                    valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
-                  ),
+                          value: controller.readingProgress,
+                          // surfaceVariant deprecated -> surfaceContainerHighest
+                          backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                          valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
+                        ),
                   const SizedBox(height: 8),
                   Text(
                     'Progress: ${controller.getProgressText()}',
                     style: TextStyle(
-                      color: controller.isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                      color: Theme.of(context).colorScheme.onSurface.withAlpha(0xB3),
                     ),
                   ),
                 ],
@@ -278,12 +273,12 @@ class ReaderView extends StatelessWidget {
     );
   }
 
-  Widget _buildEPUBReader(ReaderController controller) {
+  Widget _buildEPUBReader(BuildContext context, ReaderController controller) {
     // EPUB reader with sample content
     final content = SampleContent.getEPUBSampleContent(controller.book?.id ?? '');
     
     return Container(
-      color: controller.isDarkMode ? Colors.grey[900] : Colors.white,
+      color: Theme.of(context).colorScheme.surface,
       padding: EdgeInsets.all(controller.fontSize),
       child: SingleChildScrollView(
         child: Column(
@@ -295,16 +290,16 @@ class ReaderView extends StatelessWidget {
               style: TextStyle(
                 fontSize: controller.fontSize + 6,
                 fontWeight: FontWeight.bold,
-                color: controller.isDarkMode ? Colors.white : Colors.black,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 8),
             // Author
             Text(
               'By ${controller.book?.authorName ?? "Unknown Author"}',
-              style: TextStyle(
+                style: TextStyle(
                 fontSize: controller.fontSize - 2,
-                color: controller.isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                color: Theme.of(context).colorScheme.onSurface.withAlpha(0xB3),
                 fontStyle: FontStyle.italic,
               ),
             ),
@@ -315,7 +310,7 @@ class ReaderView extends StatelessWidget {
               style: TextStyle(
                 fontSize: controller.fontSize,
                 height: controller.lineHeight,
-                color: controller.isDarkMode ? Colors.white : Colors.black,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
               textAlign: TextAlign.justify,
             ),
@@ -327,14 +322,14 @@ class ReaderView extends StatelessWidget {
                 children: [
                   LinearProgressIndicator(
                     value: controller.readingProgress,
-                    backgroundColor: Colors.grey[300],
-                    valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
+                    backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                    valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Progress: ${controller.getProgressText()}',
                     style: TextStyle(
-                      color: controller.isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                      color: Theme.of(context).colorScheme.onSurface.withAlpha(0xB3),
                     ),
                   ),
                 ],
@@ -372,12 +367,10 @@ class ReaderView extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: controller.isDarkMode 
-            ? Colors.grey[850] 
-            : Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Theme.of(context).colorScheme.onSurface.withAlpha(0x1A),
             blurRadius: 4,
             offset: const Offset(0, -2),
           ),

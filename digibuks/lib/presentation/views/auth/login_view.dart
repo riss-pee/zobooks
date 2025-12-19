@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import '../../../core/utils/snackbar_helper.dart';
 import '../../controllers/auth_controller.dart';
 import '../../../core/utils/validators.dart';
-import '../../../core/theme/app_theme.dart';
+// removed unused import: app_theme
 import '../../../core/constants/app_constants.dart';
 
 class LoginView extends StatefulWidget {
@@ -59,7 +59,7 @@ class _LoginViewState extends State<LoginView> {
                 Text(
                   'DigiBuks',
                   style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                        color: AppTheme.primaryColor,
+                        color: Theme.of(context).colorScheme.primary,
                         fontWeight: FontWeight.bold,
                       ),
                   textAlign: TextAlign.center,
@@ -75,10 +75,10 @@ class _LoginViewState extends State<LoginView> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryColor.withOpacity(0.1),
+                    color: Theme.of(context).colorScheme.primary.withAlpha(26),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: AppTheme.primaryColor.withOpacity(0.3),
+                      color: Theme.of(context).colorScheme.primary.withAlpha(77),
                     ),
                   ),
                   child: Column(
@@ -88,14 +88,14 @@ class _LoginViewState extends State<LoginView> {
                         children: [
                           Icon(
                             Icons.info_outline,
-                            color: AppTheme.primaryColor,
+                            color: Theme.of(context).colorScheme.primary,
                             size: 20,
                           ),
                           const SizedBox(width: 8),
                           Text(
                             'Demo Mode',
                             style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                  color: AppTheme.primaryColor,
+                                  color: Theme.of(context).colorScheme.primary,
                                   fontWeight: FontWeight.bold,
                                 ),
                           ),
@@ -106,7 +106,7 @@ class _LoginViewState extends State<LoginView> {
                         'Use any email and password to login.\n'
                         'Add "admin" or "author" to email for role-based access.',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: AppTheme.textSecondary,
+                              color: Theme.of(context).colorScheme.onSurface.withAlpha(0xB3),
                             ),
                       ),
                     ],
@@ -184,12 +184,12 @@ class _LoginViewState extends State<LoginView> {
                       ),
                     ),
                     child: _authController.isLoading
-                        ? const SizedBox(
+                        ? SizedBox(
                             height: 20,
                             width: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.onPrimary),
                             ),
                           )
                         : const Text(

@@ -35,36 +35,30 @@ class ProfileView extends StatelessWidget {
           return SingleChildScrollView(
             child: Column(
               children: [
-                // Profile Header
+                // Profile Header — use primary container surface for MD3
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        AppTheme.primaryColor,
-                        AppTheme.secondaryColor,
-                      ],
-                    ),
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                   child: Column(
                     children: [
                       // Profile Picture
                       CircleAvatar(
                         radius: 50,
-                        backgroundColor: Colors.white,
+                        backgroundColor: Theme.of(context).colorScheme.onPrimary,
                         backgroundImage: user.profileImage != null
                             ? NetworkImage(user.profileImage!)
                             : null,
                         child: user.profileImage == null
                             ? Text(
                                 user.name?.substring(0, 1).toUpperCase() ?? 'U',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 32,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.white,
+                                  // initials on top of onPrimary background should use primary color
+                                  color: Theme.of(context).colorScheme.primary,
                                 ),
                               )
                             : null,
@@ -72,37 +66,32 @@ class ProfileView extends StatelessWidget {
                       const SizedBox(height: 16),
                       Text(
                         user.name ?? 'User',
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              color: Theme.of(context).colorScheme.onPrimary,
+                              fontWeight: FontWeight.bold,
+                            ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         user.email,
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.white.withOpacity(0.9),
-                        ),
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Theme.of(context).colorScheme.onPrimary.withAlpha(0xE6),
+                            ),
                       ),
                       const SizedBox(height: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Theme.of(context).colorScheme.onPrimary.withAlpha(0x33),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
                           user.role.toUpperCase(),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          ),
+                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                color: Theme.of(context).colorScheme.onPrimary,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
                         ),
                       ),
                     ],
