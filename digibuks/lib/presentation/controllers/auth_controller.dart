@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import '../../core/utils/snackbar_helper.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../data/models/user_model.dart';
 import '../../core/utils/logger.dart';
@@ -55,7 +56,7 @@ class AuthController extends GetxController {
     } on ApiException catch (e) {
       _errorMessage.value = e.message;
       AppLogger.e('Login failed: ${e.message}');
-      Get.snackbar(
+      showSnackSafe(
         'Login Failed',
         e.message,
         snackPosition: SnackPosition.BOTTOM,
@@ -63,7 +64,7 @@ class AuthController extends GetxController {
     } catch (e) {
       _errorMessage.value = 'An unexpected error occurred';
       AppLogger.e('Login error', e);
-      Get.snackbar(
+      showSnackSafe(
         'Error',
         'An unexpected error occurred. Please try again.',
         snackPosition: SnackPosition.BOTTOM,
@@ -101,7 +102,7 @@ class AuthController extends GetxController {
     } on ApiException catch (e) {
       _errorMessage.value = e.message;
       AppLogger.e('Registration failed: ${e.message}');
-      Get.snackbar(
+      showSnackSafe(
         'Registration Failed',
         e.message,
         snackPosition: SnackPosition.BOTTOM,
@@ -109,7 +110,7 @@ class AuthController extends GetxController {
     } catch (e) {
       _errorMessage.value = 'An unexpected error occurred';
       AppLogger.e('Registration error', e);
-      Get.snackbar(
+      showSnackSafe(
         'Error',
         'An unexpected error occurred. Please try again.',
         snackPosition: SnackPosition.BOTTOM,

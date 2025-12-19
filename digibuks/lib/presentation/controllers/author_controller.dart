@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import '../../core/utils/snackbar_helper.dart';
 import '../../data/models/book_model.dart';
 import '../../core/utils/logger.dart';
 
@@ -68,12 +69,13 @@ class AuthorController extends GetxController {
   }
 
   Future<void> uploadBook() async {
-    Get.snackbar('Upload', 'Book upload feature coming soon');
+    // Navigate to upload book screen
+    Get.toNamed('/upload-book');
   }
 
   Future<void> deleteBook(String bookId) async {
     _myBooks.removeWhere((book) => book.id == bookId);
-    Get.snackbar('Deleted', 'Book deleted successfully');
+    showSnackSafe('Deleted', 'Book deleted successfully');
   }
 }
 

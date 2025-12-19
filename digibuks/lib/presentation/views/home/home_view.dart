@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../core/utils/snackbar_helper.dart';
 import '../../controllers/book_controller.dart';
 import '../../controllers/auth_controller.dart';
 import '../../widgets/book_card.dart';
@@ -24,7 +25,7 @@ class HomeView extends StatelessWidget {
             icon: const Icon(Icons.search),
             onPressed: () {
               // TODO: Implement search
-              Get.snackbar('Coming Soon', 'Search feature will be available soon');
+              showSnackSafe('Coming Soon', 'Search feature will be available soon');
             },
           ),
           IconButton(
@@ -155,10 +156,10 @@ class HomeView extends StatelessWidget {
               // Already on home
               break;
             case 1:
-              Get.snackbar('Coming Soon', 'My Library feature coming soon');
+              showSnackSafe('Coming Soon', 'My Library feature coming soon');
               break;
             case 2:
-              Get.snackbar('Coming Soon', 'Wishlist feature coming soon');
+              showSnackSafe('Coming Soon', 'Wishlist feature coming soon');
               break;
             case 3:
               Get.toNamed(AppConstants.profileRoute);

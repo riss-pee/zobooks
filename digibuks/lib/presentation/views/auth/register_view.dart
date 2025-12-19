@@ -258,7 +258,7 @@ class _RegisterViewState extends State<RegisterView> {
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     TextButton(
-                      onPressed: () => Get.back(),
+                      onPressed: () => Navigator.of(context).pop(),
                       child: const Text('Login'),
                     ),
                   ],

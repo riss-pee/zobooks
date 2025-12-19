@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../core/utils/snackbar_helper.dart';
 import '../../controllers/auth_controller.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/theme/app_theme.dart';
@@ -162,7 +163,7 @@ class _LoginViewState extends State<LoginView> {
                   child: TextButton(
                     onPressed: () {
                       // TODO: Implement forgot password
-                      Get.snackbar(
+                      showSnackSafe(
                         'Coming Soon',
                         'Forgot password feature will be available soon',
                         snackPosition: SnackPosition.BOTTOM,

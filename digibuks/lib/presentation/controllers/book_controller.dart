@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import '../../core/utils/snackbar_helper.dart';
 import '../../data/models/book_model.dart';
 import '../../data/models/sample_books.dart';
 import '../../core/utils/logger.dart';
@@ -40,7 +41,7 @@ class BookController extends GetxController {
       AppLogger.i('Books loaded: ${_books.length}');
     } catch (e) {
       AppLogger.e('Error loading books', e);
-      Get.snackbar('Error', 'Failed to load books');
+      showSnackSafe('Error', 'Failed to load books');
     } finally {
       _isLoading.value = false;
     }
@@ -73,7 +74,7 @@ class BookController extends GetxController {
   void toggleWishlist(String bookId) {
     if (_wishlist.contains(bookId)) {
       _wishlist.remove(bookId);
-      Get.snackbar(
+      showSnackSafe(
         'Removed',
         'Book removed from wishlist',
         snackPosition: SnackPosition.BOTTOM,
@@ -81,7 +82,7 @@ class BookController extends GetxController {
       );
     } else {
       _wishlist.add(bookId);
-      Get.snackbar(
+      showSnackSafe(
         'Added',
         'Book added to wishlist',
         snackPosition: SnackPosition.BOTTOM,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../core/utils/snackbar_helper.dart';
 import '../../controllers/auth_controller.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
@@ -19,7 +20,7 @@ class ProfileView extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () {
-              Get.snackbar('Settings', 'Settings feature coming soon');
+              showSnackSafe('Settings', 'Settings feature coming soon');
             },
           ),
         ],
@@ -116,13 +117,13 @@ class ProfileView extends StatelessWidget {
                       context,
                       Icons.person_outline,
                       'Edit Profile',
-                      () => Get.snackbar('Coming Soon', 'Edit profile feature coming soon'),
+                      () => showSnackSafe('Coming Soon', 'Edit profile feature coming soon'),
                     ),
                     _buildMenuItem(
                       context,
                       Icons.phone_outlined,
                       'Phone: ${user.phone ?? "Not set"}',
-                      () => Get.snackbar('Coming Soon', 'Edit phone feature coming soon'),
+                      () => showSnackSafe('Coming Soon', 'Edit phone feature coming soon'),
                     ),
                   ],
                 ),
@@ -134,25 +135,25 @@ class ProfileView extends StatelessWidget {
                       context,
                       Icons.library_books,
                       'My Books',
-                      () => Get.snackbar('Coming Soon', 'My books feature coming soon'),
+                      () => showSnackSafe('Coming Soon', 'My books feature coming soon'),
                     ),
                     _buildMenuItem(
                       context,
                       Icons.favorite_outline,
                       'Wishlist',
-                      () => Get.snackbar('Coming Soon', 'Wishlist feature coming soon'),
+                      () => showSnackSafe('Coming Soon', 'Wishlist feature coming soon'),
                     ),
                     _buildMenuItem(
                       context,
                       Icons.history,
                       'Reading History',
-                      () => Get.snackbar('Coming Soon', 'Reading history feature coming soon'),
+                      () => showSnackSafe('Coming Soon', 'Reading history feature coming soon'),
                     ),
                     _buildMenuItem(
                       context,
                       Icons.bookmark_outline,
                       'Bookmarks',
-                      () => Get.snackbar('Coming Soon', 'Bookmarks feature coming soon'),
+                      () => showSnackSafe('Coming Soon', 'Bookmarks feature coming soon'),
                     ),
                   ],
                 ),
@@ -171,7 +172,7 @@ class ProfileView extends StatelessWidget {
                         context,
                         Icons.add_circle_outline,
                         'Upload Book',
-                        () => Get.snackbar('Coming Soon', 'Upload book feature coming soon'),
+                        () => showSnackSafe('Coming Soon', 'Upload book feature coming soon'),
                       ),
                     ],
                   ),
@@ -196,19 +197,19 @@ class ProfileView extends StatelessWidget {
                       context,
                       Icons.notifications_outlined,
                       'Notifications',
-                      () => Get.snackbar('Coming Soon', 'Notifications settings coming soon'),
+                      () => showSnackSafe('Coming Soon', 'Notifications settings coming soon'),
                     ),
                     _buildMenuItem(
                       context,
                       Icons.language,
                       'Language',
-                      () => Get.snackbar('Coming Soon', 'Language settings coming soon'),
+                      () => showSnackSafe('Coming Soon', 'Language settings coming soon'),
                     ),
                     _buildMenuItem(
                       context,
                       Icons.dark_mode_outlined,
                       'Theme',
-                      () => Get.snackbar('Coming Soon', 'Theme settings coming soon'),
+                      () => showSnackSafe('Coming Soon', 'Theme settings coming soon'),
                     ),
                   ],
                 ),

@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import '../../core/utils/snackbar_helper.dart';
 import '../../data/models/user_model.dart';
 import '../../data/models/book_model.dart';
 import '../../core/utils/logger.dart';
@@ -90,17 +91,17 @@ class AdminController extends GetxController {
 
   Future<void> approveBook(String bookId) async {
     _pendingBooks.removeWhere((book) => book.id == bookId);
-    Get.snackbar('Approved', 'Book approved successfully');
+    showSnackSafe('Approved', 'Book approved successfully');
   }
 
   Future<void> rejectBook(String bookId) async {
     _pendingBooks.removeWhere((book) => book.id == bookId);
-    Get.snackbar('Rejected', 'Book rejected');
+    showSnackSafe('Rejected', 'Book rejected');
   }
 
   Future<void> deleteUser(String userId) async {
     _users.removeWhere((user) => user.id == userId);
-    Get.snackbar('Deleted', 'User deleted successfully');
+    showSnackSafe('Deleted', 'User deleted successfully');
   }
 }
 

@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../core/utils/snackbar_helper.dart';
 import '../../controllers/author_controller.dart';
 import '../../controllers/auth_controller.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/app_constants.dart';
+import 'analytics_view.dart';
+import 'upload_book_view.dart';
 
 class AuthorDashboardView extends StatelessWidget {
   const AuthorDashboardView({super.key});
@@ -17,6 +20,10 @@ class AuthorDashboardView extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Author Dashboard'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.analytics),
+            onPressed: () => Get.toNamed('/author-analytics'),
+          ),
           IconButton(
             icon: const Icon(Icons.add_circle_outline),
             onPressed: () => authorController.uploadBook(),
@@ -213,7 +220,7 @@ class AuthorDashboardView extends StatelessWidget {
             if (value == 'delete') {
               controller.deleteBook(book.id);
             } else {
-              Get.snackbar('Edit', 'Edit feature coming soon');
+              showSnackSafe('Edit', 'Edit feature coming soon');
             }
           },
         ),

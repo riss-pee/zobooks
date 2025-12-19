@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import '../../core/utils/snackbar_helper.dart';
 import '../../data/models/book_model.dart';
 import '../../data/models/sample_content.dart';
 import '../../core/constants/app_constants.dart';
@@ -170,10 +171,10 @@ class ReaderController extends GetxController {
   void toggleBookmark() {
     if (_bookmarks.contains(_currentPage.value)) {
       _bookmarks.remove(_currentPage.value);
-      Get.snackbar('Bookmark Removed', 'Bookmark removed from page ${_currentPage.value + 1}');
+      showSnackSafe('Bookmark Removed', 'Bookmark removed from page ${_currentPage.value + 1}');
     } else {
       _bookmarks.add(_currentPage.value);
-      Get.snackbar('Bookmarked', 'Page ${_currentPage.value + 1} bookmarked');
+      showSnackSafe('Bookmarked', 'Page ${_currentPage.value + 1} bookmarked');
     }
     _saveBookmarks();
   }
@@ -184,7 +185,7 @@ class ReaderController extends GetxController {
 
   void addNote(String note) {
     _notes[_currentPage.value.toString()] = note;
-    Get.snackbar('Note Added', 'Note added to page ${_currentPage.value + 1}');
+    showSnackSafe('Note Added', 'Note added to page ${_currentPage.value + 1}');
   }
 
   String? getNote(int page) {

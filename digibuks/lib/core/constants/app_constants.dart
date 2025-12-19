@@ -9,6 +9,11 @@ class AppConstants {
   static const String profileRoute = '/profile';
   static const String authorDashboardRoute = '/author-dashboard';
   static const String adminDashboardRoute = '/admin-dashboard';
+  static const String uploadBookRoute = '/upload-book';
+  static const String authorAnalyticsRoute = '/author-analytics';
+  static const String userManagementRoute = '/user-management';
+  static const String contentModerationRoute = '/content-moderation';
+  static const String paymentRoute = '/payment';
   
   // User Roles
   static const String roleReader = 'reader';

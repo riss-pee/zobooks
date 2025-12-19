@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../core/utils/snackbar_helper.dart';
 import '../../controllers/admin_controller.dart';
 import '../../controllers/auth_controller.dart';
 import '../../../core/theme/app_theme.dart';
@@ -118,10 +119,24 @@ class AdminDashboardView extends StatelessWidget {
             mainAxisSpacing: 12,
             childAspectRatio: 2,
             children: [
-              _buildActionCard(context, Icons.people, 'Manage Users', () {}),
-              _buildActionCard(context, Icons.menu_book, 'Manage Books', () {}),
-              _buildActionCard(context, Icons.analytics, 'Analytics', () {}),
-              _buildActionCard(context, Icons.settings, 'Settings', () {}),
+              _buildActionCard(
+                context,
+                Icons.people,
+                'Manage Users',
+                () => Get.toNamed('/user-management'),
+              ),
+              _buildActionCard(
+                context,
+                Icons.pending_actions,
+                'Content Moderation',
+                () => Get.toNamed('/content-moderation'),
+              ),
+              _buildActionCard(context, Icons.analytics, 'Analytics', () {
+                showSnackSafe('Analytics', 'Analytics feature coming soon');
+              }),
+              _buildActionCard(context, Icons.settings, 'Settings', () {
+                showSnackSafe('Settings', 'Settings feature coming soon');
+              }),
             ],
           ),
         ],
@@ -172,7 +187,7 @@ class AdminDashboardView extends StatelessWidget {
                 if (value == 'delete') {
                   controller.deleteUser(user.id);
                 } else {
-                  Get.snackbar('Edit', 'Edit feature coming soon');
+                  showSnackSafe('Edit', 'Edit feature coming soon');
                 }
               },
             ),
@@ -294,7 +309,7 @@ class AdminDashboardView extends StatelessWidget {
       child: InkWell(
         onTap: () {
           onTap();
-          Get.snackbar('Coming Soon', '$label feature coming soon');
+          showSnackSafe('Coming Soon', '$label feature coming soon');
         },
         borderRadius: BorderRadius.circular(12),
         child: Center(
