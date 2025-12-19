@@ -63,5 +63,13 @@ class StorageHelper {
   static int? getInt(String key) {
     return _prefs?.getInt(key);
   }
+
+  static Future<void> saveDouble(String key, double value) async {
+    await _prefs?.setDouble(key, value);
+  }
+
+  static double? getDouble(String key) {
+    return _prefs?.getDouble(key);
+  }
 }
 
