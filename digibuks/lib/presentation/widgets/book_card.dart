@@ -26,86 +26,92 @@ class BookCard extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
-        child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Book Cover
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-            child: Container(
-              height: 180,
-              width: double.infinity,
-              color: Theme.of(context).colorScheme.primary.withAlpha(26),
-              child: book.coverImage != null
-                  ? Image.network(
-                      book.coverImage!,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => _buildPlaceholder(),
-                    )
-                  : _buildPlaceholder(),
-            ),
-          ),
-          // Book Info
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Title - Flexible height
-                  Flexible(
-                    child: Text(
+        child: ClipRect(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Book Cover
+              ClipRRect(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                child: Container(
+                  height: 150,
+                  width: double.infinity,
+                  color: Theme.of(context).colorScheme.primary.withAlpha(26),
+                  child: book.coverImage != null
+                      ? Image.network(
+                          book.coverImage!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => _buildPlaceholder(),
+                        )
+                      : _buildPlaceholder(),
+                ),
+              ),
+              // Book Info
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Title - Single line to save space
+                    Text(
                       book.title,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.bold,
-                            fontSize: 13,
+                            fontSize: 12,
                           ),
-                      maxLines: 2,
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                  const SizedBox(height: 3),
-                  // Author
-                  Text(
-                    book.authorName ?? 'Unknown Author',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppTheme.textSecondary,
-                          fontSize: 11,
-                        ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  // Rating - Compact
-                  if (book.rating != null)
+                    const SizedBox(height: 2),
+                    // Author
+                    Text(
+                      book.authorName ?? 'Unknown Author',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppTheme.textSecondary,
+                            fontSize: 10,
+                          ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    // Rating and Price in same row to save space
+                    const SizedBox(height: 2),
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Icon(
-                          Icons.star,
-                          size: 12,
-                          color: Theme.of(context).colorScheme.secondary,
-                        ),
-                        const SizedBox(width: 2),
-                        Text(
-                          '${book.rating!.toStringAsFixed(1)}',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                fontSize: 10,
+                        // Rating - Compact
+                        if (book.rating != null)
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.star,
+                                size: 11,
+                                color: Theme.of(context).colorScheme.secondary,
                               ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                              const SizedBox(width: 2),
+                              Text(
+                                '${book.rating!.toStringAsFixed(1)}',
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      fontSize: 9,
+                                    ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        // Price - at end
+                        Flexible(child: _buildPrice(context)),
                       ],
                     ),
-                  // Price - at bottom
-                  const Spacer(),
-                  _buildPrice(context),
-                ],
+                  ],
+                ),
               ),
-            ),
+            ],
           ),
-        ],
-      ),
+        ),
       ),
     );
   }
@@ -130,7 +136,7 @@ class BookCard extends StatelessWidget {
   Widget _buildPrice(BuildContext context) {
     if (book.type == AppConstants.bookTypeFree) {
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
         decoration: BoxDecoration(
           color: AppTheme.successColor.withAlpha(26),
           borderRadius: BorderRadius.circular(4),
@@ -140,7 +146,7 @@ class BookCard extends StatelessWidget {
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: AppTheme.successColor,
                 fontWeight: FontWeight.bold,
-                fontSize: 11,
+                fontSize: 10,
               ),
         ),
       );
@@ -150,7 +156,7 @@ class BookCard extends StatelessWidget {
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: Theme.of(context).colorScheme.onSurface,
               fontWeight: FontWeight.bold,
-              fontSize: 12,
+              fontSize: 10,
             ),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
@@ -161,7 +167,7 @@ class BookCard extends StatelessWidget {
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: Theme.of(context).colorScheme.primary,
               fontWeight: FontWeight.bold,
-              fontSize: 12,
+              fontSize: 10,
             ),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,

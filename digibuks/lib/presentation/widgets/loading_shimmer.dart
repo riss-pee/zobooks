@@ -40,28 +40,32 @@ class BookCardShimmer extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          LoadingShimmer(
-            width: double.infinity,
-            height: 200,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                LoadingShimmer(width: double.infinity, height: 20),
-                const SizedBox(height: 8),
-                LoadingShimmer(width: 120, height: 16),
-                const SizedBox(height: 8),
-                LoadingShimmer(width: 80, height: 16),
-              ],
+      child: ClipRect(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            LoadingShimmer(
+              width: double.infinity,
+              height: 180,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
             ),
-          ),
-        ],
+            Padding(
+              padding: const EdgeInsets.all(10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  LoadingShimmer(width: double.infinity, height: 20),
+                  const SizedBox(height: 6),
+                  LoadingShimmer(width: 120, height: 16),
+                  const SizedBox(height: 6),
+                  LoadingShimmer(width: 80, height: 16),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
