@@ -139,13 +139,13 @@ class AuthController extends GetxController {
       _currentUser.value = null;
       _isAuthenticated.value = false;
       
-      Get.offAllNamed(AppConstants.loginRoute);
+      Get.offAllNamed(AppConstants.homeRoute);
     } catch (e) {
       AppLogger.e('Logout error', e);
       // Clear local state even if API call fails
       _currentUser.value = null;
       _isAuthenticated.value = false;
-      Get.offAllNamed(AppConstants.loginRoute);
+      Get.offAllNamed(AppConstants.homeRoute);
     } finally {
       _isLoading.value = false;
     }

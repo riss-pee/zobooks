@@ -2,177 +2,125 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  // MD3-friendly neutral + Indigo / Blue accent
-  // Chosen: Indigo 600 as primary, Indigo 400 as accent for highlights
+  // Liquid Glass Palette: Warm Neutrals + Indigo
   static const Color primaryColor = Color(0xFF3949AB); // Indigo 600
-  static const Color secondaryColor = Color(0xFFFFFFFF); // white
-  static const Color accentColor = Color(0xFF5C6BC0); // Indigo 400 (accent)
-  static const Color backgroundColor = Color(0xFFFFFFFF); // white background for light theme
-  static const Color surfaceColor = Color(0xFFFFFFFF);
-  static const Color errorColor = Color(0xFFB00020);
-  static const Color successColor = Color(0xFF1F2937); // dark grey for subtle success
-  static const Color textPrimary = Color(0xFF000000); // black text
-  static const Color textSecondary = Color(0xFF6B7280); // medium grey
+  static const Color accentColor = Color(0xFFC5A059);  // Muted Gold
+  static const Color bgCream = Color(0xFFFFFBF0);     // Warm Cream
+  static const Color surfaceGlass = Color(0xFFFFFFFF); 
+  static const Color textDark = Color(0xFF1A1C1E);
+  static const Color textMuted = Color(0xFF6B7280);
+  static const Color errorColor = Color(0xFFBA1A1A);
 
-  // Gradient for primary backgrounds (used in Scaffold, cards, etc.)
-  // No gradients: follow Material 3 principle — use solid surfaces and elevation
+  // Legacy Aliases for backward compatibility
+  static const Color secondaryColor = Colors.white;
+  static const Color successColor = Color(0xFF2E7D32); // Green 800
+  static const Color textPrimary = textDark;
+  static const Color textSecondary = textMuted;
+  static const Color backgroundColor = bgCream;
+  static const Color surfaceColor = surfaceGlass;
 
-  // Light Theme – modern, glass‑morphism ready
   static ThemeData lightTheme = ThemeData(
     useMaterial3: true,
     brightness: Brightness.light,
     primaryColor: primaryColor,
-    scaffoldBackgroundColor: backgroundColor,
+    scaffoldBackgroundColor: bgCream,
     colorScheme: const ColorScheme.light(
       primary: primaryColor,
-      onPrimary: secondaryColor,
+      onPrimary: Colors.white,
       secondary: accentColor,
-      onSecondary: secondaryColor,
+      onSecondary: Colors.white,
+      surface: surfaceGlass,
+      onSurface: textDark,
       error: errorColor,
-      surface: surfaceColor,
-      // 'background' and 'onBackground' deprecated in M3 - prefer surface/onSurface
-      // Keep the background color by setting the scaffoldBackgroundColor above
-      onSurface: Color(0xFF0F1724),
     ),
-    textTheme: GoogleFonts.poppinsTextTheme().copyWith(
-      displayLarge: GoogleFonts.poppins(
-        color: textPrimary,
-        fontSize: 34,
+    textTheme: GoogleFonts.outfitTextTheme().copyWith(
+      displayLarge: GoogleFonts.outfit(
+        color: textDark,
+        fontSize: 36,
         fontWeight: FontWeight.bold,
-        letterSpacing: 1.2,
+        letterSpacing: -0.5,
       ),
-      displayMedium: GoogleFonts.poppins(
-        color: textPrimary,
-        fontSize: 28,
+      displayMedium: GoogleFonts.outfit(
+        color: textDark,
+        fontSize: 30,
         fontWeight: FontWeight.w600,
-        letterSpacing: 0.8,
       ),
-      headlineMedium: GoogleFonts.poppins(
-        color: textPrimary,
+      headlineMedium: GoogleFonts.outfit(
+        color: textDark,
         fontSize: 24,
         fontWeight: FontWeight.w500,
       ),
-      titleLarge: GoogleFonts.poppins(
-        color: textPrimary,
+      titleLarge: GoogleFonts.outfit(
+        color: textDark,
         fontSize: 20,
         fontWeight: FontWeight.w600,
       ),
-      bodyLarge: GoogleFonts.poppins(
-        color: textPrimary,
+      bodyLarge: GoogleFonts.outfit(
+        color: textDark,
         fontSize: 16,
+        height: 1.5,
       ),
-      bodyMedium: GoogleFonts.poppins(
-        color: textSecondary,
+      bodyMedium: GoogleFonts.outfit(
+        color: textMuted,
         fontSize: 14,
       ),
     ),
-    appBarTheme: AppBarTheme(
-      backgroundColor: surfaceColor,
+    appBarTheme: const AppBarTheme(
+      backgroundColor: Colors.transparent,
       elevation: 0,
-      iconTheme: const IconThemeData(color: textPrimary),
-      titleTextStyle: GoogleFonts.poppins(
-        color: textPrimary,
-        fontSize: 20,
-        fontWeight: FontWeight.w600,
-      ),
-      surfaceTintColor: surfaceColor,
+      centerTitle: true,
+      iconTheme: IconThemeData(color: textDark),
+      surfaceTintColor: Colors.transparent,
     ),
     cardTheme: CardThemeData(
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      // Cards remain white on light theme with subtle elevation
-      color: const Color(0xFFFFFFFF),
-    ),
-    elevatedButtonTheme: ElevatedButtonThemeData(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: accentColor,
-        foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        elevation: 2,
-      ),
-    ),
-  );
-
-  // Dark Theme – deep, luxurious
-  static ThemeData darkTheme = ThemeData(
-    useMaterial3: true,
-    brightness: Brightness.dark,
-    primaryColor: primaryColor,
-    scaffoldBackgroundColor: const Color(0xFF0B0F12), // near-black for dark theme
-    colorScheme: const ColorScheme.dark(
-      primary: primaryColor,
-      onPrimary: secondaryColor,
-      secondary: primaryColor,
-      onSecondary: secondaryColor,
-      error: errorColor,
-      surface: Color(0xFF121212),
-      // 'background' and 'onBackground' deprecated in M3 - prefer surface/onSurface
-      onSurface: secondaryColor,
-    ),
-    textTheme: GoogleFonts.poppinsTextTheme(ThemeData.dark().textTheme).copyWith(
-      displayLarge: GoogleFonts.poppins(
-        color: Colors.white,
-        fontSize: 34,
-        fontWeight: FontWeight.bold,
-      ),
-      displayMedium: GoogleFonts.poppins(
-        color: Colors.white70,
-        fontSize: 28,
-        fontWeight: FontWeight.w600,
-      ),
-      headlineMedium: GoogleFonts.poppins(
-        color: Colors.white70,
-        fontSize: 24,
-        fontWeight: FontWeight.w500,
-      ),
-      titleLarge: GoogleFonts.poppins(
-        color: Colors.white70,
-        fontSize: 20,
-        fontWeight: FontWeight.w600,
-      ),
-      bodyLarge: GoogleFonts.poppins(
-        color: Colors.white70,
-        fontSize: 16,
-      ),
-      bodyMedium: GoogleFonts.poppins(
-        color: Colors.grey,
-        fontSize: 14,
-      ),
-    ),
-    appBarTheme: AppBarTheme(
-      backgroundColor: const Color(0xFF1E1E1E),
       elevation: 0,
-      iconTheme: const IconThemeData(color: Colors.white70),
-      titleTextStyle: GoogleFonts.poppins(
-        color: Colors.white70,
-        fontSize: 20,
-        fontWeight: FontWeight.w600,
-      ),
-    ),
-    cardTheme: CardThemeData(
-      elevation: 4,
-      // Cards use a dark surface in dark theme
-      color: const Color(0xFF1E1E1E),
+      color: Colors.white.withAlpha(204), // 80% opacity
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(24),
+        side: BorderSide(color: Colors.white.withAlpha(77), width: 1.5),
       ),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         backgroundColor: primaryColor,
-        foregroundColor: secondaryColor,
-        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
         ),
-        elevation: 2,
+        elevation: 0,
+      ),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: Colors.white.withAlpha(127),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: Colors.white.withAlpha(77), width: 1.5),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: primaryColor.withAlpha(102), width: 2),
       ),
     ),
   );
+
+  static ThemeData darkTheme = lightTheme.copyWith(
+    brightness: Brightness.dark,
+    scaffoldBackgroundColor: const Color(0xFF0F1113),
+    colorScheme: const ColorScheme.dark(
+      primary: primaryColor,
+      onPrimary: Colors.white,
+      secondary: accentColor,
+      surface: Color(0xFF1A1C1E),
+      onSurface: Colors.white,
+    ),
+    // ... dark theme remains a variation of the liquid system
+  );
 }
+
 

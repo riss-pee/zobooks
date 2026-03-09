@@ -9,6 +9,8 @@ import '../../../core/theme/app_theme.dart';
 // import 'package:syncfusion_flutter_pdfviewer/syncfusion_flutter_pdfviewer.dart';
 // import 'package:epubx/epubx.dart' as epub;
 
+import '../../widgets/glass_container.dart';
+
 class ReaderView extends StatelessWidget {
   const ReaderView({super.key});
 
@@ -25,22 +27,61 @@ class ReaderView extends StatelessWidget {
 
     return Obx(
       () => Scaffold(
-        // Use surface instead of deprecated background
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        body: SafeArea(
-          child: Column(
-            children: [
-              // App Bar
-              if (!controller.isFullScreen)
-                _buildAppBar(context, controller),
-              // Reader Content
-              Expanded(
-                child: _buildReaderContent(context, controller),
-              ),
-              // Bottom Controls
-              if (!controller.isFullScreen)
-                _buildBottomControls(context, controller),
-            ],
+        extendBody: true,
+        backgroundColor: Colors.transparent,
+        body: AnimatedContainer(
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+          width: double.infinity,
+          height: double.infinity,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: controller.isDarkMode
+                  ? [
+                      const Color(0xFF1A1C1E),
+                      const Color(0xFF111417),
+                      const Color(0xFF0D0F11),
+                    ]
+                  : [
+                      const Color(0xFFFFFBF0),
+                      const Color(0xFFF7F0E0),
+                      const Color(0xFFECE4D0),
+                    ],
+            ),
+          ),
+          child: SafeArea(
+            child: Stack(
+              children: [
+                // Reader Content
+                Column(
+                  children: [
+                    if (!controller.isFullScreen) const SizedBox(height: 80),
+                    Expanded(
+                      child: _buildReaderContent(context, controller),
+                    ),
+                    if (!controller.isFullScreen) const SizedBox(height: 90),
+                  ],
+                ),
+                // Top App Bar
+                if (!controller.isFullScreen)
+                  Positioned(
+                    top: 10,
+                    left: 16,
+                    right: 16,
+                    child: _buildAppBar(context, controller),
+                  ),
+                // Bottom Controls
+                if (!controller.isFullScreen)
+                  Positioned(
+                    bottom: 20,
+                    left: 16,
+                    right: 16,
+                    child: _buildBottomControls(context, controller),
+                  ),
+              ],
+            ),
           ),
         ),
       ),
@@ -48,43 +89,38 @@ class ReaderView extends StatelessWidget {
   }
 
   Widget _buildAppBar(BuildContext context, ReaderController controller) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).colorScheme.onSurface.withAlpha(0x1A),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+    return GlassContainer(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      blur: 20,
+      opacity: controller.isDarkMode ? 0.25 : 0.15,
+      borderRadius: 20,
+      color: controller.isDarkMode ? Colors.black : Colors.white,
       child: Row(
         children: [
-            IconButton(
-              icon: const Icon(Icons.arrow_back),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
+          IconButton(
+            icon: const Icon(Icons.arrow_back_rounded),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   controller.book!.title,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            // prefer onSurface over deprecated onBackground
-                            color: Theme.of(context).colorScheme.onSurface,
-                              ),
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: controller.isDarkMode ? Colors.white : AppTheme.textDark,
+                      ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 if (controller.totalPages > 0)
                   Text(
                     'Page ${controller.currentPage + 1} of ${controller.totalPages}',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface.withAlpha(0xB3),
-                      ),
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: controller.isDarkMode ? Colors.white70 : AppTheme.textMuted,
+                        ),
                   ),
               ],
             ),
@@ -92,41 +128,66 @@ class ReaderView extends StatelessWidget {
           IconButton(
             icon: Icon(
               controller.isBookmarked(controller.currentPage)
-                  ? Icons.bookmark
-                  : Icons.bookmark_border,
+                  ? Icons.bookmark_rounded
+                  : Icons.bookmark_border_rounded,
             ),
             onPressed: () => controller.toggleBookmark(),
           ),
           IconButton(
             icon: Icon(
-              controller.isDarkMode ? Icons.light_mode : Icons.dark_mode,
+              controller.isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
             ),
             onPressed: () => controller.toggleDarkMode(),
           ),
           PopupMenuButton(
-            icon: const Icon(Icons.more_vert),
+            icon: const Icon(Icons.more_vert_rounded),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             itemBuilder: (context) => [
               const PopupMenuItem(
-                value: 'settings',
-                child: Text('Settings'),
+                value: 'fullscreen',
+                child: Row(
+                  children: [
+                    Icon(Icons.fullscreen_rounded, size: 20),
+                    SizedBox(width: 12),
+                    Text('Full Screen'),
+                  ],
+                ),
               ),
               const PopupMenuItem(
                 value: 'bookmarks',
-                child: Text('Bookmarks'),
+                child: Row(
+                  children: [
+                    Icon(Icons.bookmarks_rounded, size: 20),
+                    SizedBox(width: 12),
+                    Text('Bookmarks'),
+                  ],
+                ),
               ),
               const PopupMenuItem(
                 value: 'notes',
-                child: Text('Notes'),
+                child: Row(
+                  children: [
+                    Icon(Icons.notes_rounded, size: 20),
+                    SizedBox(width: 12),
+                    Text('Notes'),
+                  ],
+                ),
               ),
               const PopupMenuItem(
-                value: 'fullscreen',
-                child: Text('Full Screen'),
+                value: 'settings',
+                child: Row(
+                  children: [
+                    Icon(Icons.settings_rounded, size: 20),
+                    SizedBox(width: 12),
+                    Text('Settings'),
+                  ],
+                ),
               ),
             ],
             onSelected: (value) {
               switch (value) {
-                case 'settings':
-                  _showSettingsDialog(context, controller);
+                case 'fullscreen':
+                  controller.toggleFullScreen();
                   break;
                 case 'bookmarks':
                   _showBookmarksDialog(context, controller);
@@ -134,8 +195,8 @@ class ReaderView extends StatelessWidget {
                 case 'notes':
                   _showNotesDialog(context, controller);
                   break;
-                case 'fullscreen':
-                  controller.toggleFullScreen();
+                case 'settings':
+                  _showSettingsDialog(context, controller);
                   break;
               }
             },
@@ -147,126 +208,102 @@ class ReaderView extends StatelessWidget {
 
   Widget _buildReaderContent(BuildContext context, ReaderController controller) {
     if (controller.isLoading) {
-      return Center(
-        child: CircularProgressIndicator(
-          color: AppTheme.primaryColor,
-        ),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
-    if (controller.book!.fileType == AppConstants.fileTypePDF) {
-      return _buildPDFReader(context, controller);
-    } else if (controller.book!.fileType == AppConstants.fileTypeEPUB) {
-      return _buildEPUBReader(context, controller);
-    } else {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: AppTheme.errorColor,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Unsupported file type',
-              style: TextStyle(
-                color: controller.isDarkMode ? Colors.white : Colors.black,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      child: controller.book!.fileType == AppConstants.fileTypePDF
+          ? _buildPDFReader(context, controller)
+          : _buildEPUBReader(context, controller),
+    );
   }
 
   Widget _buildPDFReader(BuildContext context, ReaderController controller) {
-    // For demo, show sample content
-    // In production, use actual PDF file URL with Syncfusion PDF Viewer
     final content = SampleContent.getSampleContent(controller.book?.id ?? '');
+    final textColor = controller.isDarkMode ? Colors.white : AppTheme.textDark;
+    final mutedTextColor = controller.isDarkMode ? Colors.white70 : AppTheme.textMuted;
     
-    return Container(
-      color: Theme.of(context).colorScheme.surface,
+    return GlassContainer(
+      blur: 5,
+      opacity: controller.isDarkMode ? 0.08 : 0.05,
+      borderRadius: 24,
+      color: controller.isDarkMode ? Colors.black12 : Colors.white,
       child: SingleChildScrollView(
-        padding: EdgeInsets.all(controller.fontSize),
+        padding: EdgeInsets.all(controller.fontSize + 4),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Book Title
             Text(
               controller.book?.title ?? 'Book',
-              style: TextStyle(
-                fontSize: controller.fontSize + 6,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: textColor,
+                    fontFamily: 'Outfit',
+                  ),
             ),
-            const SizedBox(height: 16),
-            // Author
+            const SizedBox(height: 8),
             Text(
               'By ${controller.book?.authorName ?? "Unknown Author"}',
-                style: TextStyle(
-                fontSize: controller.fontSize - 2,
-                color: Theme.of(context).colorScheme.onSurface.withAlpha(0xB3),
-                fontStyle: FontStyle.italic,
-              ),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: mutedTextColor,
+                    fontStyle: FontStyle.italic,
+                    fontFamily: 'Outfit',
+                  ),
             ),
-            const SizedBox(height: 24),
-            // Content
+            Divider(height: 48, color: textColor.withOpacity(0.1)),
             Text(
               content,
-                style: TextStyle(
+              style: TextStyle(
                 fontSize: controller.fontSize,
                 height: controller.lineHeight,
-                color: Theme.of(context).colorScheme.onSurface,
+                color: textColor.withOpacity(0.9),
+                fontFamily: 'Outfit',
               ),
               textAlign: TextAlign.justify,
             ),
-            const SizedBox(height: 32),
-            // Progress indicator
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                children: [
-                  LinearProgressIndicator(
-                          value: controller.readingProgress,
-                          // surfaceVariant deprecated -> surfaceContainerHighest
-                          backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-                          valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
-                        ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Progress: ${controller.getProgressText()}',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurface.withAlpha(0xB3),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-            // Navigation buttons
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            const SizedBox(height: 40),
+            // Progress
+            Column(
               children: [
-                ElevatedButton.icon(
-                  onPressed: controller.currentPage > 0
-                      ? () => controller.previousPage()
-                      : null,
-                  icon: const Icon(Icons.arrow_back),
-                  label: const Text('Previous'),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: LinearProgressIndicator(
+                    value: controller.readingProgress,
+                    minHeight: 6,
+                    backgroundColor: controller.isDarkMode ? Colors.white12 : Colors.black12,
+                    valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
+                  ),
                 ),
-                const SizedBox(width: 16),
-                ElevatedButton.icon(
-                  onPressed: controller.currentPage < controller.totalPages - 1
-                      ? () => controller.nextPage()
-                      : null,
-                  icon: const Icon(Icons.arrow_forward),
-                  label: const Text('Next'),
+                const SizedBox(height: 12),
+                Text(
+                  'Progress: ${controller.getProgressText()}',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: mutedTextColor,
+                    fontFamily: 'Outfit',
+                  ),
                 ),
               ],
             ),
+            const SizedBox(height: 40),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                TextButton.icon(
+                  onPressed: controller.currentPage > 0 ? () => controller.previousPage() : null,
+                  icon: const Icon(Icons.chevron_left_rounded),
+                  label: const Text('Previous'),
+                  style: TextButton.styleFrom(foregroundColor: textColor),
+                ),
+                TextButton.icon(
+                  onPressed: controller.currentPage < controller.totalPages - 1 ? () => controller.nextPage() : null,
+                  icon: const Text('Next'),
+                  label: const Icon(Icons.chevron_right_rounded),
+                  style: TextButton.styleFrom(foregroundColor: textColor),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
           ],
         ),
       ),
@@ -274,89 +311,89 @@ class ReaderView extends StatelessWidget {
   }
 
   Widget _buildEPUBReader(BuildContext context, ReaderController controller) {
-    // EPUB reader with sample content
     final content = SampleContent.getEPUBSampleContent(controller.book?.id ?? '');
+    final textColor = controller.isDarkMode ? Colors.white : AppTheme.textDark;
+    final mutedTextColor = controller.isDarkMode ? Colors.white70 : AppTheme.textMuted;
     
-    return Container(
-      color: Theme.of(context).colorScheme.surface,
-      padding: EdgeInsets.all(controller.fontSize),
+    return GlassContainer(
+      blur: 5,
+      opacity: controller.isDarkMode ? 0.08 : 0.05,
+      borderRadius: 24,
+      color: controller.isDarkMode ? Colors.black12 : Colors.white,
       child: SingleChildScrollView(
+        padding: EdgeInsets.all(controller.fontSize + 4),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Book Title
             Text(
               controller.book?.title ?? 'Book',
-              style: TextStyle(
-                fontSize: controller.fontSize + 6,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: textColor,
+                    fontFamily: 'Outfit',
+                  ),
             ),
             const SizedBox(height: 8),
-            // Author
             Text(
               'By ${controller.book?.authorName ?? "Unknown Author"}',
-                style: TextStyle(
-                fontSize: controller.fontSize - 2,
-                color: Theme.of(context).colorScheme.onSurface.withAlpha(0xB3),
-                fontStyle: FontStyle.italic,
-              ),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: mutedTextColor,
+                    fontStyle: FontStyle.italic,
+                    fontFamily: 'Outfit',
+                  ),
             ),
-            const SizedBox(height: 24),
-            // Content with proper formatting
+            Divider(height: 48, color: textColor.withOpacity(0.1)),
             Text(
               content,
               style: TextStyle(
                 fontSize: controller.fontSize,
                 height: controller.lineHeight,
-                color: Theme.of(context).colorScheme.onSurface,
+                color: textColor.withOpacity(0.9),
+                fontFamily: 'Outfit',
               ),
               textAlign: TextAlign.justify,
             ),
-            const SizedBox(height: 32),
-            // Progress
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                children: [
-                  LinearProgressIndicator(
+            const SizedBox(height: 40),
+            Column(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: LinearProgressIndicator(
                     value: controller.readingProgress,
-                    backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                    minHeight: 6,
+                    backgroundColor: controller.isDarkMode ? Colors.white12 : Colors.black12,
                     valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Progress: ${controller.getProgressText()}',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurface.withAlpha(0xB3),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-            // Navigation
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton.icon(
-                  onPressed: controller.currentPage > 0
-                      ? () => controller.previousPage()
-                      : null,
-                  icon: const Icon(Icons.arrow_back),
-                  label: const Text('Previous'),
                 ),
-                const SizedBox(width: 16),
-                ElevatedButton.icon(
-                  onPressed: controller.currentPage < controller.totalPages - 1
-                      ? () => controller.nextPage()
-                      : null,
-                  icon: const Icon(Icons.arrow_forward),
-                  label: const Text('Next'),
+                const SizedBox(height: 12),
+                Text(
+                  'Progress: ${controller.getProgressText()}',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: mutedTextColor,
+                    fontFamily: 'Outfit',
+                  ),
                 ),
               ],
             ),
+            const SizedBox(height: 40),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                TextButton.icon(
+                  onPressed: controller.currentPage > 0 ? () => controller.previousPage() : null,
+                  icon: const Icon(Icons.chevron_left_rounded),
+                  label: const Text('Previous'),
+                  style: TextButton.styleFrom(foregroundColor: textColor),
+                ),
+                TextButton.icon(
+                  onPressed: controller.currentPage < controller.totalPages - 1 ? () => controller.nextPage() : null,
+                  icon: const Text('Next'),
+                  label: const Icon(Icons.chevron_right_rounded),
+                  style: TextButton.styleFrom(foregroundColor: textColor),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
           ],
         ),
       ),
@@ -364,48 +401,34 @@ class ReaderView extends StatelessWidget {
   }
 
   Widget _buildBottomControls(BuildContext context, ReaderController controller) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).colorScheme.onSurface.withAlpha(0x1A),
-            blurRadius: 4,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
+    return GlassContainer(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      blur: 30,
+      opacity: 0.1,
+      borderRadius: 24,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          IconButton(
-            icon: const Icon(Icons.bookmark_border),
-            onPressed: () => controller.toggleBookmark(),
-            tooltip: 'Bookmark',
-          ),
-          IconButton(
-            icon: const Icon(Icons.note_add),
-            onPressed: () => _showAddNoteDialog(context, controller),
-            tooltip: 'Add Note',
-          ),
-          IconButton(
-            icon: const Icon(Icons.format_size),
-            onPressed: () => _showFontSizeDialog(context, controller),
-            tooltip: 'Font Size',
-          ),
-          IconButton(
-            icon: const Icon(Icons.brightness_6),
-            onPressed: () => _showBrightnessDialog(context, controller),
-            tooltip: 'Brightness',
-          ),
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () => _showSettingsDialog(context, controller),
-            tooltip: 'Settings',
-          ),
+          _buildControlIcon(Icons.bookmark_add_rounded, 'Bookmark', () => controller.toggleBookmark()),
+          _buildControlIcon(Icons.note_add_rounded, 'Note', () => _showAddNoteDialog(context, controller)),
+          _buildControlIcon(Icons.text_fields_rounded, 'Text', () => _showFontSizeDialog(context, controller)),
+          _buildControlIcon(Icons.brightness_medium_rounded, 'Brightness', () => _showBrightnessDialog(context, controller)),
+          _buildControlIcon(Icons.settings_rounded, 'Settings', () => _showSettingsDialog(context, controller)),
         ],
       ),
+    );
+  }
+
+  Widget _buildControlIcon(IconData icon, String tooltip, VoidCallback onTap) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          icon: Icon(icon, size: 22),
+          onPressed: onTap,
+          tooltip: tooltip,
+        ),
+      ],
     );
   }
 

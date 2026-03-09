@@ -3,6 +3,8 @@ import '../../data/models/book_model.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_theme.dart';
 
+import '../widgets/glass_container.dart';
+
 class BookCard extends StatelessWidget {
   final BookModel book;
   final VoidCallback? onTap;
@@ -17,27 +19,26 @@ class BookCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 4,
-      color: Theme.of(context).colorScheme.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+    return GlassContainer(
+      padding: EdgeInsets.zero,
+      blur: 10,
+      opacity: 0.1,
+      borderRadius: 20,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: ClipRect(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Book Cover
-              ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+        borderRadius: BorderRadius.circular(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Book Cover
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              child: AspectRatio(
+                aspectRatio: 2 / 3,
                 child: Container(
-                  height: 150,
                   width: double.infinity,
-                  color: Theme.of(context).colorScheme.primary.withAlpha(26),
+                  color: Theme.of(context).colorScheme.primary.withAlpha(20),
                   child: book.coverImage != null
                       ? Image.network(
                           book.coverImage!,
@@ -47,70 +48,68 @@ class BookCard extends StatelessWidget {
                       : _buildPlaceholder(),
                 ),
               ),
-              // Book Info
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Title - Single line to save space
-                    Text(
-                      book.title,
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    // Author
-                    Text(
-                      book.authorName ?? 'Unknown Author',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppTheme.textSecondary,
-                            fontSize: 10,
-                          ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    // Rating and Price in same row to save space
-                    const SizedBox(height: 2),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        // Rating - Compact
-                        if (book.rating != null)
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.star,
-                                size: 11,
-                                color: Theme.of(context).colorScheme.secondary,
-                              ),
-                              const SizedBox(width: 2),
-                              Text(
-                                '${book.rating!.toStringAsFixed(1)}',
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      fontSize: 9,
-                                    ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
-                        // Price - at end
-                        Flexible(child: _buildPrice(context)),
-                      ],
-                    ),
-                  ],
-                ),
+            ),
+            // Book Info
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Title
+                  Text(
+                    book.title,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  // Author
+                  Text(
+                    book.authorName ?? 'Unknown Author',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppTheme.textMuted,
+                          fontSize: 11,
+                        ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Rating
+                      if (book.rating != null)
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.star_rounded,
+                              size: 14,
+                              color: Theme.of(context).colorScheme.secondary,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              book.rating!.toStringAsFixed(1),
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 11,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      // Price
+                      _buildPrice(context),
+                    ],
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

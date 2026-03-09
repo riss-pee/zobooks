@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/glass_container.dart';
 
 typedef BottomNavTap = void Function(int index);
 
@@ -10,21 +11,32 @@ class CustomBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return NavigationBar(
-      selectedIndex: currentIndex,
-      onDestinationSelected: onTap,
-      elevation: 8,
-      backgroundColor: colorScheme.surface,
-      labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
-      // Indicator color will use primary by default; enforce a softer indicator
-      // via NavigationBarTheme if needed in the global theme
-      destinations: const [
-        NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Home'),
-        NavigationDestination(icon: Icon(Icons.book_outlined), selectedIcon: Icon(Icons.book), label: 'Library'),
-        NavigationDestination(icon: Icon(Icons.favorite_border), selectedIcon: Icon(Icons.favorite), label: 'Wishlist'),
-        NavigationDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person), label: 'Profile'),
-      ],
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        child: GlassContainer(
+          blur: 20,
+          opacity: 0.15,
+          borderRadius: 28,
+          border: Border.all(
+            color: Colors.white.withAlpha(77),
+            width: 1.5,
+          ),
+          child: NavigationBar(
+            selectedIndex: currentIndex,
+            onDestinationSelected: onTap,
+            elevation: 0,
+            backgroundColor: Colors.transparent,
+            labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
+            destinations: const [
+              NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home_rounded), label: 'Home'),
+              NavigationDestination(icon: Icon(Icons.auto_stories_outlined), selectedIcon: Icon(Icons.auto_stories), label: 'Library'),
+              NavigationDestination(icon: Icon(Icons.favorite_rounded), selectedIcon: Icon(Icons.favorite), label: 'Wishlist'),
+              NavigationDestination(icon: Icon(Icons.person_rounded), selectedIcon: Icon(Icons.person), label: 'Profile'),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

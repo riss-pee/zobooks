@@ -51,7 +51,7 @@ class _HomeTabState extends State<HomeTab> {
     final userName = authController.currentUser?.name ?? 'Reader';
 
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: Colors.transparent, // Let parent or decoration handle it
       body: SafeArea(
         bottom: false,
         child: RefreshIndicator(
@@ -64,11 +64,11 @@ class _HomeTabState extends State<HomeTab> {
                       // 1. Header & Search
                       SliverToBoxAdapter(
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+                          padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Greeting Row
+                              // Glassy Greeting Header
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
@@ -77,34 +77,49 @@ class _HomeTabState extends State<HomeTab> {
                                     children: [
                                       Text(
                                         _getGreeting(),
-                                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                               color: Theme.of(context).colorScheme.onSurface.withAlpha(150),
+                                              fontWeight: FontWeight.w500,
                                             ),
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
                                         userName,
-                                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                        style: Theme.of(context).textTheme.displayMedium?.copyWith(
                                               fontWeight: FontWeight.bold,
-                                              color: Theme.of(context).colorScheme.onSurface,
+                                              color: Theme.of(context).colorScheme.primary,
+                                              fontSize: 28,
                                             ),
                                       ),
                                     ],
                                   ),
-                                  CircleAvatar(
-                                    radius: 24,
-                                    backgroundColor: Theme.of(context).colorScheme.primary.withAlpha(30),
-                                    child: Text(
-                                      (userName.isNotEmpty ? userName[0] : 'U').toUpperCase(),
-                                      style: TextStyle(
-                                          color: Theme.of(context).colorScheme.primary,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 18),
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(color: Colors.white, width: 2),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withAlpha(20),
+                                          blurRadius: 10,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
+                                    child: CircleAvatar(
+                                      radius: 28,
+                                      backgroundColor: Theme.of(context).colorScheme.primary.withAlpha(30),
+                                      child: Text(
+                                        (userName.isNotEmpty ? userName[0] : 'U').toUpperCase(),
+                                        style: TextStyle(
+                                            color: Theme.of(context).colorScheme.primary,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 20),
+                                      ),
                                     ),
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 24),
+                              const SizedBox(height: 32),
                               
                               // Search Bar
                               AppSearchBar(
@@ -191,7 +206,7 @@ class _HomeTabState extends State<HomeTab> {
                       ),
                       SliverToBoxAdapter(
                         child: SizedBox(
-                          height: 240,
+                          height: 340,
                           child: ListView.separated(
                             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                             scrollDirection: Axis.horizontal,
@@ -224,7 +239,7 @@ class _HomeTabState extends State<HomeTab> {
                         sliver: SliverGrid(
                           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 2,
-                            childAspectRatio: 0.60,
+                            childAspectRatio: 0.48,
                             crossAxisSpacing: 16,
                             mainAxisSpacing: 16,
                           ),

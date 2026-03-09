@@ -24,22 +24,36 @@ class _HomeViewState extends State<HomeView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      // We don't set an AppBar here because each child page manages its own AppBar.
-      // We don't set backgroundColor here, children manage it.
-      
-      // Use IndexedStack to preserve state of each tab
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _pages,
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(0xFFFFFBF0),
+            Color(0xFFF7F0E0),
+          ],
+        ),
       ),
-      bottomNavigationBar: CustomBottomNav(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
+      child: Scaffold(
+        extendBody: true,
+        backgroundColor: Colors.transparent,
+        // We don't set an AppBar here because each child page manages its own AppBar.
+        // We don't set backgroundColor here, children manage it.
+        
+        // Use IndexedStack to preserve state of each tab
+        body: IndexedStack(
+          index: _currentIndex,
+          children: _pages,
+        ),
+        bottomNavigationBar: CustomBottomNav(
+          currentIndex: _currentIndex,
+          onTap: (index) {
+            setState(() {
+              _currentIndex = index;
+            });
+          },
+        ),
       ),
     );
   }

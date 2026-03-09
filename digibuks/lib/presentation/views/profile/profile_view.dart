@@ -4,6 +4,9 @@ import '../../../core/utils/snackbar_helper.dart';
 import '../../controllers/auth_controller.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../controllers/theme_controller.dart';
+
+import '../../widgets/glass_container.dart';
 
 class ProfileView extends StatelessWidget {
   const ProfileView({super.key});
@@ -13,275 +16,290 @@ class ProfileView extends StatelessWidget {
     // Use find or putIfAbsent to handle case where controller might not be initialized
     final authController = Get.find<AuthController>();
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profile'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () {
-              showSnackSafe('Settings', 'Settings feature coming soon');
-            },
-          ),
-        ],
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(0xFFFFFBF0),
+            Color(0xFFF7F0E0),
+          ],
+        ),
       ),
-      body: Obx(
-        () {
-          final user = authController.currentUser;
-          if (user == null) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.account_circle_outlined,
-                      size: 100,
-                      color: Theme.of(context).colorScheme.primary.withAlpha(127),
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      'Welcome to DigiBuks',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Login or create an account to view your profile, manage your books, and more.',
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 32),
-                    ElevatedButton(
-                      onPressed: () => Get.toNamed(AppConstants.loginRoute),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          title: const Text('Profile'),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.settings_rounded),
+              onPressed: () => _showSettingsWindow(context),
+            ),
+          ],
+        ),
+        body: Obx(
+          () {
+            final user = authController.currentUser;
+            if (user == null) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: GlassContainer(
+                    padding: const EdgeInsets.all(32),
+                    blur: 20,
+                    opacity: 0.1,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.account_circle_rounded,
+                          size: 100,
+                          color: Theme.of(context).colorScheme.primary.withAlpha(50),
                         ),
-                      ),
-                      child: const Text('Login / Sign Up'),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }
-
-          return SingleChildScrollView(
-            child: Column(
-              children: [
-                // Profile Header — use primary container surface for MD3
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  child: Column(
-                    children: [
-                      // Profile Picture
-                      CircleAvatar(
-                        radius: 50,
-                        backgroundColor: Theme.of(context).colorScheme.onPrimary,
-                        backgroundImage: user.profileImage != null
-                            ? NetworkImage(user.profileImage!)
-                            : null,
-                        child: user.profileImage == null
-                            ? Text(
-                                user.name?.substring(0, 1).toUpperCase() ?? 'U',
-                                style: TextStyle(
-                                  fontSize: 32,
-                                  fontWeight: FontWeight.bold,
-                                  // initials on top of onPrimary background should use primary color
-                                  color: Theme.of(context).colorScheme.primary,
-                                ),
-                              )
-                            : null,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        user.name ?? 'User',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              color: Theme.of(context).colorScheme.onPrimary,
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        user.email,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Theme.of(context).colorScheme.onPrimary.withAlpha(0xE6),
-                            ),
-                      ),
-                      const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.onPrimary.withAlpha(0x33),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          user.role.toUpperCase(),
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                color: Theme.of(context).colorScheme.onPrimary,
+                        const SizedBox(height: 24),
+                        Text(
+                          'Welcome to DigiBuks',
+                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
-                                fontSize: 12,
                               ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 12),
+                        Text(
+                          'Login or create an account to view your profile, manage your books, and more.',
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                        const SizedBox(height: 32),
+                        ElevatedButton(
+                          onPressed: () => Get.toNamed(AppConstants.loginRoute),
+                          child: const Text('Login / Sign Up'),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                // Menu Items
-                _buildMenuSection(
-                  context,
-                  'Account',
-                  [
-                    _buildMenuItem(
-                      context,
-                      Icons.person_outline,
-                      'Edit Profile',
-                      () => showSnackSafe('Coming Soon', 'Edit profile feature coming soon'),
+              );
+            }
+
+            return SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+              child: Column(
+                children: [
+                  // Profile Header Glass
+                  GlassContainer(
+                    padding: const EdgeInsets.all(24),
+                    blur: 15,
+                    opacity: 0.1,
+                    child: Column(
+                      children: [
+                        // Profile Picture
+                        Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 2),
+                          ),
+                          child: CircleAvatar(
+                            radius: 50,
+                            backgroundColor: Colors.white.withAlpha(50),
+                            backgroundImage: user.profileImage != null
+                                ? NetworkImage(user.profileImage!)
+                                : null,
+                            child: user.profileImage == null
+                                ? Text(
+                                    user.name?.substring(0, 1).toUpperCase() ?? 'U',
+                                    style: TextStyle(
+                                      fontSize: 32,
+                                      fontWeight: FontWeight.bold,
+                                      color: Theme.of(context).colorScheme.primary,
+                                    ),
+                                  )
+                                : null,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        Text(
+                          user.name ?? 'User',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          user.email,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                        const SizedBox(height: 16),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.primary.withAlpha(20),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            user.role.toUpperCase(),
+                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1,
+                                ),
+                          ),
+                        ),
+                      ],
                     ),
-                    _buildMenuItem(
-                      context,
-                      Icons.phone_outlined,
-                      'Phone: ${user.phone ?? "Not set"}',
-                      () => showSnackSafe('Coming Soon', 'Edit phone feature coming soon'),
-                    ),
-                  ],
-                ),
-                _buildMenuSection(
-                  context,
-                  'Library',
-                  [
-                    _buildMenuItem(
-                      context,
-                      Icons.library_books,
-                      'My Books',
-                      () => showSnackSafe('Coming Soon', 'My books feature coming soon'),
-                    ),
-                    _buildMenuItem(
-                      context,
-                      Icons.favorite_outline,
-                      'Wishlist',
-                      () => showSnackSafe('Coming Soon', 'Wishlist feature coming soon'),
-                    ),
-                    _buildMenuItem(
-                      context,
-                      Icons.history,
-                      'Reading History',
-                      () => showSnackSafe('Coming Soon', 'Reading history feature coming soon'),
-                    ),
-                    _buildMenuItem(
-                      context,
-                      Icons.bookmark_outline,
-                      'Bookmarks',
-                      () => showSnackSafe('Coming Soon', 'Bookmarks feature coming soon'),
-                    ),
-                  ],
-                ),
-                if (user.role == AppConstants.roleAuthor)
-                  _buildMenuSection(
+                  ),
+                  const SizedBox(height: 24),
+                  
+                  // Menu Items in Glass Containers
+                  _buildGlassMenuSection(
                     context,
-                    'Author',
+                    'Account',
                     [
                       _buildMenuItem(
                         context,
-                        Icons.dashboard,
-                        'Author Dashboard',
-                        () => Get.toNamed(AppConstants.authorDashboardRoute),
+                        Icons.person_rounded,
+                        'Edit Profile',
+                        () => showSnackSafe('Coming Soon', 'Edit profile feature coming soon'),
                       ),
                       _buildMenuItem(
                         context,
-                        Icons.add_circle_outline,
-                        'Upload Book',
-                        () => showSnackSafe('Coming Soon', 'Upload book feature coming soon'),
+                        Icons.phone_rounded,
+                        'Phone: ${user.phone ?? "Not set"}',
+                        () => showSnackSafe('Coming Soon', 'Edit phone feature coming soon'),
                       ),
                     ],
                   ),
-                if (user.role == AppConstants.roleAdmin)
-                  _buildMenuSection(
+                  const SizedBox(height: 16),
+                  
+                  _buildGlassMenuSection(
                     context,
-                    'Admin',
+                    'Library',
                     [
                       _buildMenuItem(
                         context,
-                        Icons.admin_panel_settings,
-                        'Admin Dashboard',
-                        () => Get.toNamed(AppConstants.adminDashboardRoute),
+                        Icons.auto_stories_rounded,
+                        'My Books',
+                        () => showSnackSafe('Coming Soon', 'My books feature coming soon'),
+                      ),
+                      _buildMenuItem(
+                        context,
+                        Icons.favorite_rounded,
+                        'Wishlist',
+                        () => showSnackSafe('Coming Soon', 'Wishlist feature coming soon'),
+                      ),
+                      _buildMenuItem(
+                        context,
+                        Icons.history_rounded,
+                        'Reading History',
+                        () => showSnackSafe('Coming Soon', 'Reading history feature coming soon'),
+                      ),
+                      _buildMenuItem(
+                        context,
+                        Icons.bookmark_rounded,
+                        'Bookmarks',
+                        () => showSnackSafe('Coming Soon', 'Bookmarks feature coming soon'),
                       ),
                     ],
                   ),
-                _buildMenuSection(
-                  context,
-                  'Settings',
-                  [
-                    _buildMenuItem(
+                  const SizedBox(height: 16),
+                  
+                  if (user.role == AppConstants.roleAuthor) ...[
+                    _buildGlassMenuSection(
                       context,
-                      Icons.notifications_outlined,
-                      'Notifications',
-                      () => showSnackSafe('Coming Soon', 'Notifications settings coming soon'),
+                      'Author',
+                      [
+                        _buildMenuItem(
+                          context,
+                          Icons.dashboard_rounded,
+                          'Author Dashboard',
+                          () => Get.toNamed(AppConstants.authorDashboardRoute),
+                        ),
+                        _buildMenuItem(
+                          context,
+                          Icons.add_circle_rounded,
+                          'Upload Book',
+                          () => showSnackSafe('Coming Soon', 'Upload book feature coming soon'),
+                        ),
+                      ],
                     ),
-                    _buildMenuItem(
-                      context,
-                      Icons.language,
-                      'Language',
-                      () => showSnackSafe('Coming Soon', 'Language settings coming soon'),
-                    ),
-                    _buildMenuItem(
-                      context,
-                      Icons.dark_mode_outlined,
-                      'Theme',
-                      () => showSnackSafe('Coming Soon', 'Theme settings coming soon'),
-                    ),
+                    const SizedBox(height: 16),
                   ],
-                ),
-                // Logout Button
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: SizedBox(
+                  
+                  if (user.role == AppConstants.roleAdmin) ...[
+                    _buildGlassMenuSection(
+                      context,
+                      'Admin',
+                      [
+                        _buildMenuItem(
+                          context,
+                          Icons.admin_panel_settings_rounded,
+                          'Admin Dashboard',
+                          () => Get.toNamed(AppConstants.adminDashboardRoute),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  
+                  const SizedBox(height: 32),
+                  
+                  // Logout Button
+                  SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
                       onPressed: () => _showLogoutDialog(context, authController),
-                      icon: const Icon(Icons.logout),
+                      icon: const Icon(Icons.logout_rounded),
                       label: const Text('Logout'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppTheme.errorColor,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        side: BorderSide(color: AppTheme.errorColor),
+                        padding: const EdgeInsets.symmetric(vertical: 18),
+                        side: BorderSide(color: AppTheme.errorColor.withAlpha(100)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
-            ),
-          );
-        },
+                  const SizedBox(height: 100), // Larger bottom padding for floating navbar
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }
 
-  Widget _buildMenuSection(BuildContext context, String title, List<Widget> items) {
+  Widget _buildGlassMenuSection(BuildContext context, String title, List<Widget> items) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
+          padding: const EdgeInsets.only(left: 12, bottom: 8),
           child: Text(
             title,
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: AppTheme.textSecondary,
+                  color: AppTheme.textMuted,
                   fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
                 ),
           ),
         ),
-        ...items,
+        GlassContainer(
+          blur: 10,
+          opacity: 0.1,
+          child: Column(
+            children: items,
+          ),
+        ),
       ],
     );
   }
+
 
   Widget _buildMenuItem(
     BuildContext context,
@@ -293,6 +311,191 @@ class ProfileView extends StatelessWidget {
       leading: Icon(icon),
       title: Text(title),
       trailing: const Icon(Icons.chevron_right),
+      onTap: onTap,
+    );
+  }
+
+  void _showSettingsWindow(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withAlpha(20),
+      builder: (context) => Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 40),
+          child: Material(
+            color: Colors.transparent,
+            child: GlassContainer(
+              padding: const EdgeInsets.all(24),
+              blur: 25,
+              opacity: 0.1,
+              borderRadius: 32,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Settings',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          color: AppTheme.textMuted,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1,
+                        ),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildPopupItem(
+                    context,
+                    Icons.notifications_rounded,
+                    'Notifications',
+                    () {
+                      Navigator.pop(context);
+                      showSnackSafe('Notifications', 'Settings opened');
+                    },
+                  ),
+                  _buildPopupItem(
+                    context,
+                    Icons.language_rounded,
+                    'Language',
+                    () {
+                      Navigator.pop(context);
+                      showSnackSafe('Language', 'Language selector opened');
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  // Theme Toggle Section
+                  _buildThemeToggleSection(context),
+                  const SizedBox(height: 16),
+                  Center(
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text(
+                        'Close',
+                        style: TextStyle(color: Theme.of(context).colorScheme.primary),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildThemeToggleSection(BuildContext context) {
+    final themeController = Get.find<ThemeController>();
+    return Obx(
+      () => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(left: 4, bottom: 8),
+            child: Text(
+              'Theme',
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    color: AppTheme.textMuted,
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+          ),
+          Row(
+            children: [
+              _buildThemeToggleOption(
+                context,
+                ThemeMode.light,
+                'Light',
+                Icons.light_mode_rounded,
+                themeController,
+              ),
+              const SizedBox(width: 8),
+              _buildThemeToggleOption(
+                context,
+                ThemeMode.dark,
+                'Dark',
+                Icons.dark_mode_rounded,
+                themeController,
+              ),
+              const SizedBox(width: 8),
+              _buildThemeToggleOption(
+                context,
+                ThemeMode.system,
+                'System',
+                Icons.brightness_auto_rounded,
+                themeController,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildThemeToggleOption(
+    BuildContext context,
+    ThemeMode mode,
+    String label,
+    IconData icon,
+    ThemeController controller,
+  ) {
+    bool isSelected = controller.themeMode == mode;
+    return Expanded(
+      child: InkWell(
+        onTap: () => controller.setThemeMode(mode),
+        borderRadius: BorderRadius.circular(16),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: isSelected ? Theme.of(context).colorScheme.primary : Colors.white12,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isSelected ? Colors.transparent : Colors.white10,
+            ),
+          ),
+          child: Column(
+            children: [
+              Icon(
+                icon,
+                size: 20,
+                color: isSelected ? Colors.white : Colors.grey[400],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  color: isSelected ? Colors.white : Colors.grey[400],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPopupItem(
+    BuildContext context,
+    IconData icon,
+    String title,
+    VoidCallback onTap,
+  ) {
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Colors.white.withAlpha(50),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(icon, size: 20),
+      ),
+      title: Text(
+        title,
+        style: const TextStyle(fontWeight: FontWeight.w500),
+      ),
+      trailing: const Icon(Icons.chevron_right_rounded, size: 20),
       onTap: onTap,
     );
   }
