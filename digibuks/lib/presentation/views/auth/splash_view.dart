@@ -24,17 +24,9 @@ class _SplashViewState extends State<SplashView> {
     // Wait a bit for splash screen
     await Future.delayed(const Duration(seconds: 2));
     
-    // Check if user is logged in
-    final isLoggedIn = await StorageHelper.getAccessToken();
-    
     if (mounted) {
-      if (isLoggedIn != null && isLoggedIn.isNotEmpty) {
-        // User is logged in, navigate to home
-        Get.offAllNamed(AppConstants.homeRoute);
-      } else {
-        // User is not logged in, navigate to login
-        Get.offAllNamed(AppConstants.loginRoute);
-      }
+      // Always navigate to home, allowing guest browsing
+      Get.offAllNamed(AppConstants.homeRoute);
     }
   }
 

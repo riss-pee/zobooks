@@ -29,7 +29,44 @@ class ProfileView extends StatelessWidget {
         () {
           final user = authController.currentUser;
           if (user == null) {
-            return const Center(child: Text('Not logged in'));
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.account_circle_outlined,
+                      size: 100,
+                      color: Theme.of(context).colorScheme.primary.withAlpha(127),
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      'Welcome to DigiBuks',
+                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Login or create an account to view your profile, manage your books, and more.',
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 32),
+                    ElevatedButton(
+                      onPressed: () => Get.toNamed(AppConstants.loginRoute),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text('Login / Sign Up'),
+                    ),
+                  ],
+                ),
+              ),
+            );
           }
 
           return SingleChildScrollView(

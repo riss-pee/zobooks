@@ -5,7 +5,7 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.10.1
+  sdk: ^3.6.1
 
 dependencies:
   flutter:
@@ -31,7 +31,7 @@ dependencies:
   google_fonts: ^6.1.0
 
   # PDF & eBook Reader
-  syncfusion_flutter_pdfviewer: ^32.1.21
+  syncfusion_flutter_pdfviewer: ^29.1.38
   epubx: ^4.0.0
 
   # Image Picker & File Handling
@@ -64,7 +64,7 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^6.0.0
+  flutter_lints: ^3.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
