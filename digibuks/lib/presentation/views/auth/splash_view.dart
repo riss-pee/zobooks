@@ -56,8 +56,8 @@ class _SplashViewState extends State<SplashView> {
                 // ZoReads Logo
                 Image.asset(
                   'assets/images/ZoReads_logo.png',
-                  width: 220,
-                  height: 220,
+                  width: 264,
+                  height: 264,
                   fit: BoxFit.contain,
                 ),
                 const SizedBox(height: 80),
