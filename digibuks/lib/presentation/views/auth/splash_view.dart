@@ -3,8 +3,6 @@ import 'package:get/get.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/utils/storage_helper.dart';
 
-import '../../widgets/glass_container.dart';
-
 class SplashView extends StatefulWidget {
   const SplashView({super.key});
 
@@ -22,10 +20,10 @@ class _SplashViewState extends State<SplashView> {
   Future<void> _initializeApp() async {
     // Initialize storage
     await StorageHelper.init();
-    
+
     // Wait a bit for splash screen
     await Future.delayed(const Duration(seconds: 3));
-    
+
     if (mounted) {
       // Always navigate to home, allowing guest browsing
       Get.offAllNamed(AppConstants.homeRoute);
@@ -55,36 +53,12 @@ class _SplashViewState extends State<SplashView> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Liquid Glass Logo Container
-                GlassContainer(
-                  width: 160,
-                  height: 160,
-                  blur: 20,
-                  opacity: 0.1,
-                  borderRadius: 40,
-                  child: Center(
-                    child: Icon(
-                      Icons.menu_book_rounded,
-                      size: 80,
-                      color: Theme.of(context).primaryColor,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 40),
-                Text(
-                  'DigiBuks',
-                  style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: -1,
-                      ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Mizoram\'s Digital eBook Ecosystem',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    letterSpacing: 0.5,
-                    fontWeight: FontWeight.w500,
-                  ),
+                // ZoReads Logo
+                Image.asset(
+                  'assets/images/ZoReads_logo.png',
+                  width: 220,
+                  height: 220,
+                  fit: BoxFit.contain,
                 ),
                 const SizedBox(height: 80),
                 const CircularProgressIndicator(strokeWidth: 2),
@@ -96,4 +70,3 @@ class _SplashViewState extends State<SplashView> {
     );
   }
 }
-
