@@ -20,16 +20,6 @@ class _HomeTabState extends State<HomeTab> {
   late final PageController _featuredController;
   final _searchController = TextEditingController();
   int _featuredIndex = 0;
-  String _selectedCategory = 'All';
-
-  final List<Map<String, dynamic>> _categories = [
-    {'label': 'All', 'icon': Icons.apps},
-    {'label': 'Fiction', 'icon': Icons.auto_stories},
-    {'label': 'Non‑Fiction', 'icon': Icons.menu_book},
-    {'label': 'Poetry', 'icon': Icons.library_books},
-    {'label': 'History', 'icon': Icons.history_edu},
-    {'label': 'Education', 'icon': Icons.school},
-  ];
 
   @override
   void initState() {
@@ -58,8 +48,8 @@ class _HomeTabState extends State<HomeTab> {
         bottom: false,
         child: RefreshIndicator(
           onRefresh: () async {
-             bookController.loadBooks();
-             homeController.fetchBooks();
+            bookController.loadBooks();
+            homeController.fetchBooks();
           },
           child: Obx(
             () => homeController.isLoading.value
@@ -75,24 +65,37 @@ class _HomeTabState extends State<HomeTab> {
                             children: [
                               // Glassy Greeting Header
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         _getGreeting(),
-                                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                              color: Theme.of(context).colorScheme.onSurface.withAlpha(150),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.copyWith(
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurface
+                                                  .withAlpha(150),
                                               fontWeight: FontWeight.w500,
                                             ),
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
                                         userName,
-                                        style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .displayMedium
+                                            ?.copyWith(
                                               fontWeight: FontWeight.bold,
-                                              color: Theme.of(context).colorScheme.primary,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .primary,
                                               fontSize: 28,
                                             ),
                                       ),
@@ -101,7 +104,8 @@ class _HomeTabState extends State<HomeTab> {
                                   Container(
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
-                                      border: Border.all(color: Colors.white, width: 2),
+                                      border: Border.all(
+                                          color: Colors.white, width: 2),
                                       boxShadow: [
                                         BoxShadow(
                                           color: Colors.black.withAlpha(20),
@@ -112,11 +116,19 @@ class _HomeTabState extends State<HomeTab> {
                                     ),
                                     child: CircleAvatar(
                                       radius: 28,
-                                      backgroundColor: Theme.of(context).colorScheme.primary.withAlpha(30),
+                                      backgroundColor: Theme.of(context)
+                                          .colorScheme
+                                          .primary
+                                          .withAlpha(30),
                                       child: Text(
-                                        (userName.isNotEmpty ? userName[0] : 'U').toUpperCase(),
+                                        (userName.isNotEmpty
+                                                ? userName[0]
+                                                : 'U')
+                                            .toUpperCase(),
                                         style: TextStyle(
-                                            color: Theme.of(context).colorScheme.primary,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .primary,
                                             fontWeight: FontWeight.bold,
                                             fontSize: 20),
                                       ),
@@ -125,45 +137,32 @@ class _HomeTabState extends State<HomeTab> {
                                 ],
                               ),
                               const SizedBox(height: 32),
-                              
+
                               // Search Bar
                               AppSearchBar(
                                 controller: _searchController,
-                                onFilter: () => _showFilterDialog(context, bookController),
+                                onFilter: () =>
+                                    _showFilterDialog(context, bookController),
                               ),
                             ],
                           ),
                         ),
                       ),
 
-                      // 2. Categories
-                      SliverToBoxAdapter(
-                        child: SizedBox(
-                          height: 50,
-                          child: ListView.separated(
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            scrollDirection: Axis.horizontal,
-                            itemCount: _categories.length,
-                            separatorBuilder: (_, __) => const SizedBox(width: 10),
-                            itemBuilder: (context, index) {
-                              final cat = _categories[index];
-                              final isSelected = _selectedCategory == cat['label'];
-                              return _buildCategoryChip(context, cat, isSelected, bookController);
-                            },
-                          ),
-                        ),
-                      ),
-                      
                       const SliverToBoxAdapter(child: SizedBox(height: 24)),
 
                       // 3. Featured Section
                       if (bookController.featuredBooks.isNotEmpty) ...[
                         SliverToBoxAdapter(
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 8),
                             child: Text(
                               'Trending Now',
-                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleLarge
+                                  ?.copyWith(
                                     fontWeight: FontWeight.bold,
                                   ),
                             ),
@@ -175,21 +174,27 @@ class _HomeTabState extends State<HomeTab> {
                             child: PageView.builder(
                               controller: _featuredController,
                               itemCount: bookController.featuredBooks.length,
-                              onPageChanged: (p) => setState(() => _featuredIndex = p),
+                              onPageChanged: (p) =>
+                                  setState(() => _featuredIndex = p),
                               itemBuilder: (context, index) {
-                                final book = bookController.featuredBooks[index];
+                                final book =
+                                    bookController.featuredBooks[index];
                                 final active = index == _featuredIndex;
                                 return AnimatedContainer(
                                   duration: const Duration(milliseconds: 300),
                                   curve: Curves.easeOut,
                                   margin: EdgeInsets.symmetric(
-                                    horizontal: 8, 
-                                    vertical: active ? 0 : 16
-                                  ),
+                                      horizontal: 8, vertical: active ? 0 : 16),
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(20),
-                                    boxShadow: active 
-                                        ? [BoxShadow(color: Colors.black.withAlpha(50), blurRadius: 15, offset: const Offset(0, 10))]
+                                    boxShadow: active
+                                        ? [
+                                            BoxShadow(
+                                                color:
+                                                    Colors.black.withAlpha(50),
+                                                blurRadius: 15,
+                                                offset: const Offset(0, 10))
+                                          ]
                                         : [],
                                   ),
                                   child: _buildFeaturedCard(context, book),
@@ -203,39 +208,46 @@ class _HomeTabState extends State<HomeTab> {
 
                       // 4. Dynamic Categories from API
                       ...homeController.groupedBooks.map((group) {
-                        if (group.books.isEmpty) return const SliverToBoxAdapter(child: SizedBox.shrink());
-                        
+                        if (group.books.isEmpty)
+                          return const SliverToBoxAdapter(
+                              child: SizedBox.shrink());
+
                         return SliverMainAxisGroup(
                           slivers: [
                             SliverToBoxAdapter(
-                              child: _buildSectionHeader(context, group.category, () {}),
+                              child: _buildSectionHeader(
+                                  context, group.category, () {}),
                             ),
                             SliverToBoxAdapter(
                               child: SizedBox(
                                 height: 340,
                                 child: ListView.separated(
-                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 20, vertical: 8),
                                   scrollDirection: Axis.horizontal,
                                   itemCount: group.books.length,
-                                  separatorBuilder: (_, __) => const SizedBox(width: 16),
+                                  separatorBuilder: (_, __) =>
+                                      const SizedBox(width: 16),
                                   itemBuilder: (context, index) {
-                                     final book = group.books[index];
-                                     // Create an interim BookModel to reuse BookCard formatting, 
-                                     // or properly update BookCard.
-                                     // For simplicity, converting BookSummaryModel to dynamic to pass to Get arguments or UI correctly
-                                     return SizedBox(
-                                       width: 150,
-                                       child: _buildBookSummaryCard(context, book),
-                                     );
+                                    final book = group.books[index];
+                                    // Create an interim BookModel to reuse BookCard formatting,
+                                    // or properly update BookCard.
+                                    // For simplicity, converting BookSummaryModel to dynamic to pass to Get arguments or UI correctly
+                                    return SizedBox(
+                                      width: 150,
+                                      child:
+                                          _buildBookSummaryCard(context, book),
+                                    );
                                   },
                                 ),
                               ),
                             ),
-                            const SliverToBoxAdapter(child: SizedBox(height: 24)),
+                            const SliverToBoxAdapter(
+                                child: SizedBox(height: 24)),
                           ],
                         );
                       }).toList(),
-                      
+
                       // Bottom padding for safer scrolling above navbar
                       const SliverToBoxAdapter(child: SizedBox(height: 20)),
                     ],
@@ -251,49 +263,6 @@ class _HomeTabState extends State<HomeTab> {
     if (hour < 12) return 'Good Morning,';
     if (hour < 17) return 'Good Afternoon,';
     return 'Good Evening,';
-  }
-
-  Widget _buildCategoryChip(BuildContext context, Map<String, dynamic> cat, bool isSelected, BookController controller) {
-    final selectedColor = Theme.of(context).colorScheme.primary;
-    final unselectedColor = Theme.of(context).colorScheme.surfaceContainerHighest;
-    
-    return GestureDetector(
-      onTap: () {
-        setState(() => _selectedCategory = cat['label']);
-        if (cat['label'] == 'All') {
-          controller.filterByGenre('');
-        } else {
-          controller.filterByGenre(cat['label']);
-        }
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? selectedColor : unselectedColor.withAlpha(80),
-          borderRadius: BorderRadius.circular(25),
-          border: isSelected ? null : Border.all(color: Theme.of(context).dividerColor.withAlpha(50)),
-        ),
-        child: Row(
-          children: [
-            // Only show icon if selected or for 'All' to save space? Or always. 
-            // Let's hide icon for cleaner pill look unless it's strictly needed.
-            if (isSelected) ...[
-               Icon(cat['icon'], size: 16, color: Colors.white),
-               const SizedBox(width: 6),
-            ],
-            Text(
-              cat['label'],
-              style: TextStyle(
-                color: isSelected ? Colors.white : Theme.of(context).colorScheme.onSurface,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                fontSize: 13,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   Widget _buildFeaturedCard(BuildContext context, dynamic book) {
@@ -313,11 +282,14 @@ class _HomeTabState extends State<HomeTab> {
                 : Container(
                     color: Theme.of(context).colorScheme.primaryContainer,
                     child: Center(
-                      child: Icon(Icons.menu_book, size: 50, color: Theme.of(context).colorScheme.onPrimaryContainer),
+                      child: Icon(Icons.menu_book,
+                          size: 50,
+                          color:
+                              Theme.of(context).colorScheme.onPrimaryContainer),
                     ),
                   ),
           ),
-          
+
           // Gradient Overlay
           Container(
             decoration: BoxDecoration(
@@ -334,7 +306,7 @@ class _HomeTabState extends State<HomeTab> {
               ),
             ),
           ),
-          
+
           // Text Content
           Positioned(
             left: 20,
@@ -346,7 +318,8 @@ class _HomeTabState extends State<HomeTab> {
               children: [
                 // Tag
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: Theme.of(context).colorScheme.primary,
                     borderRadius: BorderRadius.circular(8),
@@ -364,16 +337,16 @@ class _HomeTabState extends State<HomeTab> {
                 Text(
                   book.title,
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        shadows: [
-                          const Shadow(
-                            offset: Offset(0, 1),
-                            blurRadius: 3,
-                            color: Colors.black45,
-                          ),
-                        ],
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    shadows: [
+                      const Shadow(
+                        offset: Offset(0, 1),
+                        blurRadius: 3,
+                        color: Colors.black45,
                       ),
+                    ],
+                  ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -398,16 +371,17 @@ class _HomeTabState extends State<HomeTab> {
   Widget _buildBookSummaryCard(BuildContext context, dynamic book) {
     return GestureDetector(
       onTap: () {
-         // Create mock full book argument from API until BookDetail handles ID or SummaryModel
-         final mockBookArg = {
-           'id': book.id,
-           'title': book.title,
-           'coverImage': book.coverUrl,
-           'authorName': book.authors.isNotEmpty ? book.authors.first : 'Unknown',
-           'price': book.price,
-           'isFree': book.isFree,
-         };
-         Get.toNamed(AppConstants.bookDetailRoute, arguments: mockBookArg);
+        // Create mock full book argument from API until BookDetail handles ID or SummaryModel
+        final mockBookArg = {
+          'id': book.id,
+          'title': book.title,
+          'coverImage': book.coverUrl,
+          'authorName':
+              book.authors.isNotEmpty ? book.authors.first : 'Unknown',
+          'price': book.price,
+          'isFree': book.isFree,
+        };
+        Get.toNamed(AppConstants.bookDetailRoute, arguments: mockBookArg);
       },
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -433,20 +407,24 @@ class _HomeTabState extends State<HomeTab> {
                     ? Image.network(
                         book.coverUrl,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const Center(child: Icon(Icons.broken_image)),
+                        errorBuilder: (_, __, ___) =>
+                            const Center(child: Icon(Icons.broken_image)),
                       )
                     : Center(
                         child: Icon(
                           Icons.menu_book,
                           size: 40,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant.withAlpha(100),
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurfaceVariant
+                              .withAlpha(100),
                         ),
                       ),
               ),
             ),
           ),
           const SizedBox(height: 12),
-          
+
           // Original layout with Title & Author
           Text(
             book.title,
@@ -466,24 +444,26 @@ class _HomeTabState extends State<HomeTab> {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
-          
+
           const SizedBox(height: 8),
-          
+
           // Price Info
           Row(
             children: [
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: book.isFree 
-                      ? Colors.green.withAlpha(20) 
+                  color: book.isFree
+                      ? Colors.green.withAlpha(20)
                       : Theme.of(context).colorScheme.primary.withAlpha(20),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
                   book.isFree ? 'Free' : '₹${book.price}',
                   style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: book.isFree ? Colors.green : Theme.of(context).colorScheme.primary,
+                        color: book.isFree
+                            ? Colors.green
+                            : Theme.of(context).colorScheme.primary,
                         fontWeight: FontWeight.bold,
                       ),
                 ),
@@ -495,7 +475,8 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
-  Widget _buildSectionHeader(BuildContext context, String title, VoidCallback onSeeAll) {
+  Widget _buildSectionHeader(
+      BuildContext context, String title, VoidCallback onSeeAll) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
@@ -508,7 +489,8 @@ class _HomeTabState extends State<HomeTab> {
                 ),
           ),
           TextButton(
-            onPressed: () => showSnackSafe('Coming Soon', 'See all coming soon'),
+            onPressed: () =>
+                showSnackSafe('Coming Soon', 'See all coming soon'),
             style: TextButton.styleFrom(
               visualDensity: VisualDensity.compact,
             ),
@@ -569,24 +551,33 @@ class _HomeTabState extends State<HomeTab> {
             Text(
               'Filter Books',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
             const SizedBox(height: 24),
-            Text('Language', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+            Text('Language',
+                style: Theme.of(context)
+                    .textTheme
+                    .titleMedium
+                    ?.copyWith(fontWeight: FontWeight.w600)),
             const SizedBox(height: 12),
             Wrap(
               spacing: 12,
               children: [
-                _buildFilterChip(context, 'All', controller.selectedLanguage.isEmpty, () {
+                _buildFilterChip(
+                    context, 'All', controller.selectedLanguage.isEmpty, () {
                   controller.filterByLanguage('');
                   Navigator.pop(context);
                 }),
-                _buildFilterChip(context, 'English', controller.selectedLanguage == AppConstants.languageEnglish, () {
+                _buildFilterChip(context, 'English',
+                    controller.selectedLanguage == AppConstants.languageEnglish,
+                    () {
                   controller.filterByLanguage(AppConstants.languageEnglish);
                   Navigator.pop(context);
                 }),
-                _buildFilterChip(context, 'Mizo', controller.selectedLanguage == AppConstants.languageMizo, () {
+                _buildFilterChip(context, 'Mizo',
+                    controller.selectedLanguage == AppConstants.languageMizo,
+                    () {
                   controller.filterByLanguage(AppConstants.languageMizo);
                   Navigator.pop(context);
                 }),
@@ -599,13 +590,11 @@ class _HomeTabState extends State<HomeTab> {
                 onPressed: () {
                   controller.filterByGenre('');
                   controller.filterByLanguage('');
-                  setState(() {
-                    _selectedCategory = 'All';
-                  });
                   Navigator.pop(context);
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  backgroundColor:
+                      Theme.of(context).colorScheme.surfaceContainerHighest,
                   foregroundColor: Theme.of(context).colorScheme.onSurface,
                   elevation: 0,
                 ),
@@ -618,7 +607,8 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
-  Widget _buildFilterChip(BuildContext context, String label, bool isSelected, VoidCallback onTap) {
+  Widget _buildFilterChip(
+      BuildContext context, String label, bool isSelected, VoidCallback onTap) {
     return FilterChip(
       label: Text(label),
       selected: isSelected,
@@ -627,13 +617,16 @@ class _HomeTabState extends State<HomeTab> {
       selectedColor: Theme.of(context).colorScheme.primaryContainer,
       checkmarkColor: Theme.of(context).colorScheme.primary,
       labelStyle: TextStyle(
-        color: isSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurface,
+        color: isSelected
+            ? Theme.of(context).colorScheme.primary
+            : Theme.of(context).colorScheme.onSurface,
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
       ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
         side: BorderSide(
-          color: isSelected ? Colors.transparent : Theme.of(context).dividerColor,
+          color:
+              isSelected ? Colors.transparent : Theme.of(context).dividerColor,
         ),
       ),
     );
