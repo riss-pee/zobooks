@@ -132,7 +132,7 @@ class _SearchPageState extends State<SearchPage> {
                   itemCount: books.length,
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
-                    childAspectRatio: 0.55,
+                    childAspectRatio: 0.48,
                     mainAxisSpacing: 16,
                     crossAxisSpacing: 16,
                   ),
