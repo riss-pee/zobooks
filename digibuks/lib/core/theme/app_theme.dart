@@ -6,7 +6,7 @@ class AppTheme {
   static const Color primaryColor = Color(0xFF3949AB); // Indigo 600
   static const Color accentColor = Color(0xFFC5A059);  // Muted Gold
   static const Color bgCream = Color(0xFFF5F5F5);      // Light Grey
-  static const Color surfaceGlass = Color(0xFFFFFFFF); 
+  static const Color surfaceGlass = Color(0xFFFFFFFF);
   static const Color textDark = Colors.black;
   static const Color textMuted = Color(0xFF6B7280);
   static const Color errorColor = Color(0xFFBA1A1A);
@@ -45,13 +45,57 @@ class AppTheme {
         fontSize: 30,
         fontWeight: FontWeight.w600,
       ),
-      cardTheme: CardThemeData(
-        elevation: 0,
-        color: surface.withAlpha(isDark ? 100 : 204),
+      headlineMedium: GoogleFonts.outfit(
+        color: textDark,
+        fontSize: 24,
+        fontWeight: FontWeight.w500,
+      ),
+      titleLarge: GoogleFonts.outfit(
+        color: textDark,
+        fontSize: 20,
+        fontWeight: FontWeight.w600,
+      ),
+      titleSmall: GoogleFonts.outfit(
+        color: textDark,
+        fontSize: 14,
+        fontWeight: FontWeight.bold,
+      ),
+      bodyLarge: GoogleFonts.outfit(
+        color: textDark,
+        fontSize: 16,
+        height: 1.5,
+      ),
+      bodyMedium: GoogleFonts.outfit(
+        color: textMuted,
+        fontSize: 14,
+      ),
+      labelMedium: GoogleFonts.outfit(
+        color: textMuted,
+        fontSize: 12,
+      ),
+    ),
+    appBarTheme: const AppBarTheme(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      centerTitle: true,
+      iconTheme: IconThemeData(color: textDark),
+      surfaceTintColor: Colors.transparent,
+    ),
+    cardTheme: CardThemeData(
+      elevation: 0,
+      color: Colors.white.withAlpha(204),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+        side: BorderSide(color: Colors.white.withAlpha(77), width: 1.5),
+      ),
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: primaryColor,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-          side: BorderSide(
-              color: Colors.white.withAlpha(isDark ? 20 : 77), width: 1.5),
+          borderRadius: BorderRadius.circular(16),
         ),
         elevation: 0,
       ),
@@ -71,53 +115,6 @@ class AppTheme {
         borderRadius: BorderRadius.circular(16),
         borderSide: BorderSide(color: textDark.withAlpha(30), width: 1.5),
       ),
-      bodyLarge: GoogleFonts.outfit(
-        color: textDark,
-        fontSize: 16,
-        height: 1.5,
-      ),
-      bodyMedium: GoogleFonts.outfit(
-        color: textMuted,
-        fontSize: 14,
-      ),
-    ),
-    appBarTheme: const AppBarTheme(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-      centerTitle: true,
-      iconTheme: IconThemeData(color: textDark),
-      surfaceTintColor: Colors.transparent,
-    ),
-    cardTheme: CardThemeData(
-      elevation: 0,
-      color: Colors.white.withAlpha(204), // 80% opacity
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(24),
-        side: BorderSide(color: Colors.white.withAlpha(77), width: 1.5),
-      ),
-    ),
-    elevatedButtonTheme: ElevatedButtonThemeData(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        elevation: 0,
-      ),
-    ),
-    inputDecorationTheme: InputDecorationTheme(
-      filled: true,
-      fillColor: Colors.white.withAlpha(127),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide.none,
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: Colors.white.withAlpha(77), width: 1.5),
-      ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
         borderSide: BorderSide(color: primaryColor.withAlpha(102), width: 2),
@@ -135,6 +132,5 @@ class AppTheme {
       surface: Color(0xFF1A1C1E),
       onSurface: Colors.white,
     ),
-    // ... dark theme remains a variation of the liquid system
   );
 }

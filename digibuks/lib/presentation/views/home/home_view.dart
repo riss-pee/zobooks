@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import '../../widgets/custom_bottom_nav.dart';
-import '../../controllers/theme_controller.dart';
 import 'home_tab.dart';
 import 'search_page.dart';
 import '../library/library_view.dart';
@@ -38,23 +36,23 @@ class _HomeViewState extends State<HomeView> {
             Color(0xFFEEEEEE),
           ],
         ),
-        child: Scaffold(
-          extendBody: true,
-          backgroundColor: Colors.transparent,
-          body: IndexedStack(
-            index: _currentIndex,
-            children: _pages,
-          ),
-          bottomNavigationBar: CustomBottomNav(
-            currentIndex: _currentIndex,
-            onTap: (index) {
-              setState(() {
-                _currentIndex = index;
-              });
-            },
-          ),
+      ),
+      child: Scaffold(
+        extendBody: true,
+        backgroundColor: Colors.transparent,
+        body: IndexedStack(
+          index: _currentIndex,
+          children: _pages,
         ),
-      );
-    });
+        bottomNavigationBar: CustomBottomNav(
+          currentIndex: _currentIndex,
+          onTap: (index) {
+            setState(() {
+              _currentIndex = index;
+            });
+          },
+        ),
+      ),
+    );
   }
 }
