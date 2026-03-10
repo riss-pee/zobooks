@@ -88,7 +88,7 @@ class AppTheme {
           fontSize: 14,
         ),
         titleSmall: GoogleFonts.outfit(
-          color: textSecondary,
+          color: textPrimary,
           fontSize: 14,
           fontWeight: FontWeight.bold,
         ),
