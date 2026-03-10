@@ -62,7 +62,10 @@ class ProfileView extends StatelessWidget {
                         const SizedBox(height: 24),
                         Text(
                           'Welcome to DigiBuks',
-                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineMedium
+                              ?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: Colors.black87,
                               ),
@@ -71,9 +74,10 @@ class ProfileView extends StatelessWidget {
                         Text(
                           'Login or create an account to view your profile, manage your books, and more.',
                           textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: Colors.black87,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: Colors.black87,
+                                  ),
                         ),
                         const SizedBox(height: 32),
                         ElevatedButton(
@@ -113,11 +117,13 @@ class ProfileView extends StatelessWidget {
                                 : null,
                             child: user.profileImage == null
                                 ? Text(
-                                    user.name?.substring(0, 1).toUpperCase() ?? 'U',
+                                    user.name?.substring(0, 1).toUpperCase() ??
+                                        'U',
                                     style: TextStyle(
                                       fontSize: 32,
                                       fontWeight: FontWeight.bold,
-                                      color: Theme.of(context).colorScheme.primary,
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
                                     ),
                                   )
                                 : null,
@@ -126,28 +132,37 @@ class ProfileView extends StatelessWidget {
                         const SizedBox(height: 20),
                         Text(
                           user.name ?? 'User',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black,
+                                  ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           user.email,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: Colors.black87,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: Colors.black87,
+                                  ),
                         ),
                         const SizedBox(height: 16),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
                           decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.primary.withAlpha(20),
+                            color: Theme.of(context)
+                                .colorScheme
+                                .primary
+                                .withAlpha(20),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
                             user.role.toUpperCase(),
-                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelSmall
+                                ?.copyWith(
                                   color: Theme.of(context).colorScheme.primary,
                                   fontWeight: FontWeight.bold,
                                   letterSpacing: 1,
@@ -158,7 +173,7 @@ class ProfileView extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  
+
                   // Menu Items in Glass Containers
                   _buildGlassMenuSection(
                     context,
@@ -168,18 +183,20 @@ class ProfileView extends StatelessWidget {
                         context,
                         Icons.person_rounded,
                         'Edit Profile',
-                        () => showSnackSafe('Coming Soon', 'Edit profile feature coming soon'),
+                        () => showSnackSafe(
+                            'Coming Soon', 'Edit profile feature coming soon'),
                       ),
                       _buildMenuItem(
                         context,
                         Icons.phone_rounded,
                         'Phone: ${user.phone ?? "Not set"}',
-                        () => showSnackSafe('Coming Soon', 'Edit phone feature coming soon'),
+                        () => showSnackSafe(
+                            'Coming Soon', 'Edit phone feature coming soon'),
                       ),
                     ],
                   ),
                   const SizedBox(height: 16),
-                  
+
                   _buildGlassMenuSection(
                     context,
                     'Library',
@@ -188,30 +205,34 @@ class ProfileView extends StatelessWidget {
                         context,
                         Icons.auto_stories_rounded,
                         'My Books',
-                        () => showSnackSafe('Coming Soon', 'My books feature coming soon'),
+                        () => showSnackSafe(
+                            'Coming Soon', 'My books feature coming soon'),
                       ),
                       _buildMenuItem(
                         context,
                         Icons.favorite_rounded,
                         'Wishlist',
-                        () => showSnackSafe('Coming Soon', 'Wishlist feature coming soon'),
+                        () => showSnackSafe(
+                            'Coming Soon', 'Wishlist feature coming soon'),
                       ),
                       _buildMenuItem(
                         context,
                         Icons.history_rounded,
                         'Reading History',
-                        () => showSnackSafe('Coming Soon', 'Reading history feature coming soon'),
+                        () => showSnackSafe('Coming Soon',
+                            'Reading history feature coming soon'),
                       ),
                       _buildMenuItem(
                         context,
                         Icons.bookmark_rounded,
                         'Bookmarks',
-                        () => showSnackSafe('Coming Soon', 'Bookmarks feature coming soon'),
+                        () => showSnackSafe(
+                            'Coming Soon', 'Bookmarks feature coming soon'),
                       ),
                     ],
                   ),
                   const SizedBox(height: 16),
-                  
+
                   if (user.role == AppConstants.roleAuthor) ...[
                     _buildGlassMenuSection(
                       context,
@@ -227,13 +248,14 @@ class ProfileView extends StatelessWidget {
                           context,
                           Icons.add_circle_rounded,
                           'Upload Book',
-                          () => showSnackSafe('Coming Soon', 'Upload book feature coming soon'),
+                          () => showSnackSafe(
+                              'Coming Soon', 'Upload book feature coming soon'),
                         ),
                       ],
                     ),
                     const SizedBox(height: 16),
                   ],
-                  
+
                   if (user.role == AppConstants.roleAdmin) ...[
                     _buildGlassMenuSection(
                       context,
@@ -249,27 +271,30 @@ class ProfileView extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
                   ],
-                  
+
                   const SizedBox(height: 32),
-                  
+
                   // Logout Button
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
-                      onPressed: () => _showLogoutDialog(context, authController),
+                      onPressed: () =>
+                          _showLogoutDialog(context, authController),
                       icon: const Icon(Icons.logout_rounded),
                       label: const Text('Logout'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppTheme.errorColor,
                         padding: const EdgeInsets.symmetric(vertical: 18),
-                        side: BorderSide(color: AppTheme.errorColor.withAlpha(100)),
+                        side: BorderSide(
+                            color: AppTheme.errorColor.withAlpha(100)),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 100), // Larger bottom padding for floating navbar
+                  const SizedBox(
+                      height: 100), // Larger bottom padding for floating navbar
                 ],
               ),
             );
@@ -310,7 +335,8 @@ class ProfileView extends StatelessWidget {
       leading: Icon(icon, color: Theme.of(context).colorScheme.primary),
       title: Text(
         title,
-        style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.w500),
+        style:
+            const TextStyle(color: Colors.black87, fontWeight: FontWeight.w500),
       ),
       trailing: const Icon(Icons.chevron_right, color: Colors.black54),
       onTap: onTap,
@@ -336,14 +362,14 @@ class ProfileView extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                    Text(
-                      'Settings',
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            color: Colors.black87,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1,
-                          ),
-                    ),
+                  Text(
+                    'Settings',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          color: Colors.black87,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1,
+                        ),
+                  ),
                   const SizedBox(height: 16),
                   _buildPopupItem(context, Icons.notifications_rounded,
                       'Notifications', () {}),
