@@ -28,23 +28,15 @@ class _HomeViewState extends State<HomeView> {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(() {
-      final isDark = Get.find<ThemeController>().isDarkMode;
-      return Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: isDark
-                ? [
-                    const Color(0xFF0F1113),
-                    const Color(0xFF1A1C20),
-                  ]
-                : [
-                    const Color(0xFFFFFBF0),
-                    const Color(0xFFF7F0E0),
-                  ],
-          ),
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(0xFFF5F5F5),
+            Color(0xFFEEEEEE),
+          ],
         ),
         child: Scaffold(
           extendBody: true,

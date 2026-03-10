@@ -14,23 +14,15 @@ class ProfileView extends StatelessWidget {
     final authController = Get.find<AuthController>();
     final themeController = Get.find<ThemeController>();
 
-    return Obx(() {
-      final isDark = themeController.isDarkMode;
-      return Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: isDark
-                ? [
-                    const Color(0xFF0F1113),
-                    const Color(0xFF1A1C20),
-                  ]
-                : [
-                    const Color(0xFFFFFBF0),
-                    const Color(0xFFF7F0E0),
-                  ],
-          ),
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(0xFFF5F5F5),
+            Color(0xFFEEEEEE),
+          ],
         ),
         child: Scaffold(
           backgroundColor: Colors.transparent,
@@ -66,31 +58,213 @@ class ProfileView extends StatelessWidget {
             ),
           ),
         ),
-      );
-    });
-  }
+        body: Obx(
+          () {
+            final user = authController.currentUser;
+            if (user == null) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: GlassContainer(
+                    padding: const EdgeInsets.all(32),
+                    blur: 20,
+                    opacity: 0.1,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.account_circle_rounded,
+                          size: 100,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        const SizedBox(height: 24),
+                        Text(
+                          'Welcome to DigiBuks',
+                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Login or create an account to view your profile, manage your books, and more.',
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: Colors.black87,
+                              ),
+                        ),
+                        const SizedBox(height: 32),
+                        ElevatedButton(
+                          onPressed: () => Get.toNamed(AppConstants.loginRoute),
+                          child: const Text('Login / Sign Up'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }
 
-  Widget _buildGuestView(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: GlassContainer(
-          padding: const EdgeInsets.all(32),
-          blur: 20,
-          opacity: 0.1,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.account_circle_rounded,
-                size: 100,
-                color: Theme.of(context).colorScheme.primary.withAlpha(50),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                'Welcome to DigiBuks',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
+            return SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+              child: Column(
+                children: [
+                  // Profile Header Glass
+                  GlassContainer(
+                    padding: const EdgeInsets.all(24),
+                    blur: 15,
+                    opacity: 0.1,
+                    child: Column(
+                      children: [
+                        // Profile Picture
+                        Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.grey, width: 2),
+                          ),
+                          child: CircleAvatar(
+                            radius: 50,
+                            backgroundColor: Colors.transparent,
+                            backgroundImage: user.profileImage != null
+                                ? NetworkImage(user.profileImage!)
+                                : null,
+                            child: user.profileImage == null
+                                ? Text(
+                                    user.name?.substring(0, 1).toUpperCase() ?? 'U',
+                                    style: TextStyle(
+                                      fontSize: 32,
+                                      fontWeight: FontWeight.bold,
+                                      color: Theme.of(context).colorScheme.primary,
+                                    ),
+                                  )
+                                : null,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        Text(
+                          user.name ?? 'User',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          user.email,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: Colors.black87,
+                              ),
+                        ),
+                        const SizedBox(height: 16),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.primary.withAlpha(20),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            user.role.toUpperCase(),
+                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1,
+                                ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  
+                  // Menu Items in Glass Containers
+                  _buildGlassMenuSection(
+                    context,
+                    'Account',
+                    [
+                      _buildMenuItem(
+                        context,
+                        Icons.person_rounded,
+                        'Edit Profile',
+                        () => showSnackSafe('Coming Soon', 'Edit profile feature coming soon'),
+                      ),
+                      _buildMenuItem(
+                        context,
+                        Icons.phone_rounded,
+                        'Phone: ${user.phone ?? "Not set"}',
+                        () => showSnackSafe('Coming Soon', 'Edit phone feature coming soon'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  _buildGlassMenuSection(
+                    context,
+                    'Library',
+                    [
+                      _buildMenuItem(
+                        context,
+                        Icons.auto_stories_rounded,
+                        'My Books',
+                        () => showSnackSafe('Coming Soon', 'My books feature coming soon'),
+                      ),
+                      _buildMenuItem(
+                        context,
+                        Icons.favorite_rounded,
+                        'Wishlist',
+                        () => showSnackSafe('Coming Soon', 'Wishlist feature coming soon'),
+                      ),
+                      _buildMenuItem(
+                        context,
+                        Icons.history_rounded,
+                        'Reading History',
+                        () => showSnackSafe('Coming Soon', 'Reading history feature coming soon'),
+                      ),
+                      _buildMenuItem(
+                        context,
+                        Icons.bookmark_rounded,
+                        'Bookmarks',
+                        () => showSnackSafe('Coming Soon', 'Bookmarks feature coming soon'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  if (user.role == AppConstants.roleAuthor) ...[
+                    _buildGlassMenuSection(
+                      context,
+                      'Author',
+                      [
+                        _buildMenuItem(
+                          context,
+                          Icons.dashboard_rounded,
+                          'Author Dashboard',
+                          () => Get.toNamed(AppConstants.authorDashboardRoute),
+                        ),
+                        _buildMenuItem(
+                          context,
+                          Icons.add_circle_rounded,
+                          'Upload Book',
+                          () => showSnackSafe('Coming Soon', 'Upload book feature coming soon'),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  
+                  if (user.role == AppConstants.roleAdmin) ...[
+                    _buildGlassMenuSection(
+                      context,
+                      'Admin',
+                      [
+                        _buildMenuItem(
+                          context,
+                          Icons.admin_panel_settings_rounded,
+                          'Admin Dashboard',
+                          () => Get.toNamed(AppConstants.adminDashboardRoute),
+                        ),
+                      ],
                     ),
               ),
               const SizedBox(height: 12),
@@ -227,10 +401,11 @@ class ProfileView extends StatelessWidget {
           padding: const EdgeInsets.only(left: 12, bottom: 8),
           child: Text(
             title,
-            style: Theme.of(context)
-                .textTheme
-                .titleSmall
-                ?.copyWith(fontWeight: FontWeight.bold),
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  color: Colors.black54,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
+                ),
           ),
         ),
         GlassContainer(
@@ -246,8 +421,11 @@ class ProfileView extends StatelessWidget {
       BuildContext context, IconData icon, String title, VoidCallback onTap) {
     return ListTile(
       leading: Icon(icon, color: Theme.of(context).colorScheme.primary),
-      title: Text(title, style: Theme.of(context).textTheme.bodyMedium),
-      trailing: const Icon(Icons.chevron_right_rounded, size: 20),
+      title: Text(
+        title,
+        style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.w500),
+      ),
+      trailing: const Icon(Icons.chevron_right, color: Colors.black54),
       onTap: onTap,
     );
   }
@@ -271,13 +449,14 @@ class ProfileView extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Settings',
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1,
-                        ),
-                  ),
+                    Text(
+                      'Settings',
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            color: Colors.black87,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1,
+                          ),
+                    ),
                   const SizedBox(height: 16),
                   _buildPopupItem(context, Icons.notifications_rounded,
                       'Notifications', () {}),

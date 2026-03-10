@@ -138,16 +138,16 @@ class _HomeTabState extends State<HomeTab> {
                                 ],
                               ),
                               const SizedBox(height: 32),
-
-                              // Search Bar removed - now on Search page
+                              
+                              // Removed Search Bar and Categories per user request
                             ],
                           ),
                         ),
                       ),
-
+                      
                       const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
-                      // 2. Trending Books Section
+                      // 2. Trending Books Section (New)
                       Obx(() {
                         if (homeController.trendingBooks.isEmpty) {
                           return const SliverToBoxAdapter(child: SizedBox.shrink());
@@ -269,11 +269,14 @@ class _HomeTabState extends State<HomeTab> {
                                   separatorBuilder: (_, __) =>
                                       const SizedBox(width: 16),
                                   itemBuilder: (context, index) {
-                                    final book = group.books[index];
-                                    return SizedBox(
-                                      width: 120,
-                                      child: _buildBookSummaryCard(context, book),
-                                    );
+                                     final book = group.books[index];
+                                     // Create an interim BookModel to reuse BookCard formatting, 
+                                     // or properly update BookCard.
+                                     // For simplicity, converting BookSummaryModel to dynamic to pass to Get arguments or UI correctly
+                                     return SizedBox(
+                                       width: 120,
+                                       child: _buildBookSummaryCard(context, book),
+                                     );
                                   },
                                 ),
                               ),
