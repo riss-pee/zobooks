@@ -33,7 +33,8 @@ class BookCard extends StatelessWidget {
           children: [
             // Book Cover
             ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(20)),
               child: AspectRatio(
                 aspectRatio: 2 / 3,
                 child: Container(
@@ -43,7 +44,8 @@ class BookCard extends StatelessWidget {
                       ? Image.network(
                           book.coverImage!,
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => _buildPlaceholder(),
+                          errorBuilder: (context, error, stackTrace) =>
+                              _buildPlaceholder(),
                         )
                       : _buildPlaceholder(),
                 ),
@@ -72,7 +74,10 @@ class BookCard extends StatelessWidget {
                   Text(
                     book.authorName ?? 'Unknown Author',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppTheme.textMuted,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withValues(alpha: 0.6),
                           fontSize: 11,
                         ),
                     maxLines: 1,
@@ -95,7 +100,10 @@ class BookCard extends StatelessWidget {
                             const SizedBox(width: 4),
                             Text(
                               book.rating!.toStringAsFixed(1),
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.copyWith(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 11,
                                   ),
@@ -149,7 +157,8 @@ class BookCard extends StatelessWidget {
               ),
         ),
       );
-    } else if (book.type == AppConstants.bookTypeRental && book.rentalPrice != null) {
+    } else if (book.type == AppConstants.bookTypeRental &&
+        book.rentalPrice != null) {
       return Text(
         '₹${book.rentalPrice!.toStringAsFixed(0)}/rent',
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -175,4 +184,3 @@ class BookCard extends StatelessWidget {
     return const SizedBox.shrink();
   }
 }
-
