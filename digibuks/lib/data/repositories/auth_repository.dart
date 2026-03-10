@@ -8,9 +8,9 @@ class AuthRepository {
 
   AuthRepository(this._remoteDataSource);
 
-  Future<UserModel> login(String email, String password) async {
+  Future<UserModel> login(String username, String password) async {
     try {
-      final response = await _remoteDataSource.login(email, password);
+      final response = await _remoteDataSource.login(username, password);
       
       // Save tokens
       if (response['access_token'] != null) {
@@ -35,17 +35,19 @@ class AuthRepository {
   }
 
   Future<UserModel> register({
+    required String username,
     required String email,
     required String password,
-    required String name,
+    required String passwordConfirm,
     String? phone,
     String role = 'reader',
   }) async {
     try {
       final response = await _remoteDataSource.register(
+        username: username,
         email: email,
         password: password,
-        name: name,
+        passwordConfirm: passwordConfirm,
         phone: phone,
         role: role,
       );

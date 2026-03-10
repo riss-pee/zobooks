@@ -245,7 +245,7 @@ class ProfileView extends StatelessWidget {
   Widget _buildMenuItem(
       BuildContext context, IconData icon, String title, VoidCallback onTap) {
     return ListTile(
-      leading: Icon(icon),
+      leading: Icon(icon, color: Theme.of(context).colorScheme.primary),
       title: Text(title, style: Theme.of(context).textTheme.bodyMedium),
       trailing: const Icon(Icons.chevron_right_rounded, size: 20),
       onTap: onTap,

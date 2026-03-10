@@ -8,60 +8,18 @@ class AuthRemoteDataSource {
   final ApiClient _apiClient;
   final bool _useMockData;
 
-  AuthRemoteDataSource(this._apiClient, {bool useMockData = true})
+  AuthRemoteDataSource(this._apiClient, {bool useMockData = false})
       : _useMockData = useMockData;
 
-  Future<Map<String, dynamic>> login(String email, String password) async {
+  Future<Map<String, dynamic>> login(String username, String password) async {
     try {
-      AppLogger.i('Attempting login for: $email');
+      AppLogger.i('Attempting login for: $username');
       
-      // Mock authentication for demo
-      if (_useMockData) {
-        await Future.delayed(const Duration(seconds: 1)); // Simulate API delay
-        
-        // Demo credentials - accept any email/password or use specific ones
-        final isDemoLogin = email.isNotEmpty && password.isNotEmpty;
-        
-        if (!isDemoLogin) {
-          throw ApiException(
-            message: 'Email and password are required',
-            statusCode: 400,
-          );
-        }
-        
-        // Determine role based on email (for demo)
-        String role = AppConstants.roleReader;
-        if (email.contains('admin')) {
-          role = AppConstants.roleAdmin;
-        } else if (email.contains('author')) {
-          role = AppConstants.roleAuthor;
-        }
-        
-        final mockUser = UserModel(
-          id: 'demo_user_${DateTime.now().millisecondsSinceEpoch}',
-          email: email,
-          name: email.split('@')[0].replaceAll('.', ' ').split(' ').map((word) => 
-            word.isEmpty ? '' : word[0].toUpperCase() + word.substring(1)
-          ).join(' '),
-          phone: '+91 9876543210',
-          role: role,
-          profileImage: null,
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        );
-        
-        return {
-          'access_token': 'demo_access_token_${DateTime.now().millisecondsSinceEpoch}',
-          'refresh_token': 'demo_refresh_token_${DateTime.now().millisecondsSinceEpoch}',
-          'user': mockUser.toJson(),
-        };
-      }
-      
-      // Real API call (when backend is ready)
+      // Real API call
       final response = await _apiClient.post(
-        '/auth/login',
+        '/users/auth/login',
         data: {
-          'email': email,
+          'username': username,
           'password': password,
         },
       );
@@ -82,66 +40,40 @@ class AuthRemoteDataSource {
   }
 
   Future<Map<String, dynamic>> register({
+    required String username,
     required String email,
     required String password,
-    required String name,
+    required String passwordConfirm,
     String? phone,
     String role = 'reader',
   }) async {
     try {
-      AppLogger.i('Attempting registration for: $email');
+      AppLogger.i('Attempting registration for: $username');
       
-      // Mock registration for demo
-      if (_useMockData) {
-        await Future.delayed(const Duration(seconds: 1)); // Simulate API delay
-        
-        // Check if email already exists (mock check)
-        if (email.isEmpty || password.isEmpty || name.isEmpty) {
-          throw ApiException(
-            message: 'All required fields must be filled',
-            statusCode: 400,
-          );
-        }
-        
-        final mockUser = UserModel(
-          id: 'demo_user_${DateTime.now().millisecondsSinceEpoch}',
-          email: email,
-          name: name,
-          phone: phone,
-          role: role,
-          profileImage: null,
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        );
-        
-        return {
-          'access_token': 'demo_access_token_${DateTime.now().millisecondsSinceEpoch}',
-          'refresh_token': 'demo_refresh_token_${DateTime.now().millisecondsSinceEpoch}',
-          'user': mockUser.toJson(),
-        };
-      }
-      
-      // Real API call (when backend is ready)
-      final response = await _apiClient.post(
-        '/auth/register',
+      // Real API call for registration
+      await _apiClient.post(
+        '/users/auth/register',
         data: {
+          'username': username,
           'email': email,
           'password': password,
-          'name': name,
-          'phone': phone,
+          'password_confirm': passwordConfirm,
+          if (phone != null && phone.isNotEmpty) 'phone': phone,
           'role': role,
         },
       );
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        AppLogger.i('Registration successful');
-        return response.data as Map<String, dynamic>;
-      } else {
-        throw ApiException(
-          message: 'Registration failed',
-          statusCode: response.statusCode,
-        );
-      }
+      // Registration endpoint doesn't return tokens, so we auto-login
+      AppLogger.i('Registration successful, auto-logging in...');
+      final loginResponse = await _apiClient.post(
+        '/users/auth/login',
+        data: {
+          'username': username,
+          'password': password,
+        },
+      );
+      
+      return loginResponse.data as Map<String, dynamic>;
     } catch (e) {
       AppLogger.e('Registration error', e);
       rethrow;

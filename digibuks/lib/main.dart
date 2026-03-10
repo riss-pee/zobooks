@@ -5,6 +5,11 @@ import 'core/utils/storage_helper.dart';
 import 'presentation/routes/app_routes.dart';
 import 'core/constants/app_constants.dart';
 import 'presentation/controllers/theme_controller.dart';
+import 'core/network/api_client.dart';
+import 'data/datasources/remote/auth_remote_datasource.dart';
+import 'data/repositories/auth_repository.dart';
+import 'presentation/controllers/auth_controller.dart';
+import 'presentation/controllers/book_controller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -12,8 +17,17 @@ void main() async {
   // Initialize storage
   await StorageHelper.init();
   
-  // Initialize Global Controllers
+  // Initialize Global System Controllers
   Get.put(ThemeController());
+  
+  // Initialize App Dependencies
+  final apiClient = Get.put(ApiClient());
+  final authRemoteDataSource = Get.put(
+    AuthRemoteDataSource(apiClient),
+  );
+  final authRepository = Get.put(AuthRepository(authRemoteDataSource));
+  Get.put(AuthController(authRepository));
+  Get.put(BookController());
   
   runApp(const DigiBuksApp());
 }

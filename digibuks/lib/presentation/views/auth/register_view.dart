@@ -14,14 +14,13 @@ class RegisterView extends StatefulWidget {
 
 class _RegisterViewState extends State<RegisterView> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _obscurePassword = true.obs;
   final _obscureConfirmPassword = true.obs;
-  final _selectedRole = AppConstants.roleReader.obs;
   late final AuthController _authController;
 
   @override
@@ -33,7 +32,7 @@ class _RegisterViewState extends State<RegisterView> {
 
   @override
   void dispose() {
-    _nameController.dispose();
+    _usernameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
     _passwordController.dispose();
@@ -54,13 +53,14 @@ class _RegisterViewState extends State<RegisterView> {
   void _handleRegister() {
     if (_formKey.currentState!.validate()) {
       _authController.register(
+        username: _usernameController.text.trim(),
         email: _emailController.text.trim(),
         password: _passwordController.text,
-        name: _nameController.text.trim(),
+        passwordConfirm: _confirmPasswordController.text,
         phone: _phoneController.text.trim().isEmpty
             ? null
             : _phoneController.text.trim(),
-        role: _selectedRole.value,
+        role: AppConstants.roleReader,
       );
     }
   }
@@ -71,99 +71,84 @@ class _RegisterViewState extends State<RegisterView> {
       appBar: AppBar(
         title: const Text('Create Account'),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 20),
-                // Name Field
-                TextFormField(
-                  controller: _nameController,
-                  textInputAction: TextInputAction.next,
-                  decoration: InputDecoration(
-                    labelText: 'Full Name',
-                    hintText: 'Enter your full name',
-                    prefixIcon: const Icon(Icons.person_outlined),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  validator: (value) => Validators.validateRequired(
-                    value,
-                    'Name',
-                  ),
-                ),
-                const SizedBox(height: 20),
-                // Email Field
-                TextFormField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  textInputAction: TextInputAction.next,
-                  decoration: InputDecoration(
-                    labelText: 'Email',
-                    hintText: 'Enter your email',
-                    prefixIcon: const Icon(Icons.email_outlined),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  validator: Validators.validateEmail,
-                ),
-                const SizedBox(height: 20),
-                // Phone Field (Optional)
-                TextFormField(
-                  controller: _phoneController,
-                  keyboardType: TextInputType.phone,
-                  textInputAction: TextInputAction.next,
-                  decoration: InputDecoration(
-                    labelText: 'Phone Number (Optional)',
-                    hintText: 'Enter your phone number',
-                    prefixIcon: const Icon(Icons.phone_outlined),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  validator: (value) {
-                    if (value != null && value.isNotEmpty) {
-                      return Validators.validatePhone(value);
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 20),
-                // Role Selection
-                Obx(
-                  () => DropdownButtonFormField<String>(
-                    value: _selectedRole.value,
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topRight,
+            end: Alignment.bottomLeft,
+            colors: [
+              Color(0xFFF5F5F5),
+              Color(0xFFEEEEEE),
+              Color(0xFFE0E0E0),
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 20),
+                  // Username Field
+                  TextFormField(
+                    controller: _usernameController,
+                    textInputAction: TextInputAction.next,
                     decoration: InputDecoration(
-                      labelText: 'Account Type',
-                      prefixIcon: const Icon(Icons.account_circle_outlined),
+                      labelText: 'Username',
+                      hintText: 'Enter your username',
+                      prefixIcon: const Icon(Icons.person_outlined),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    items: const [
-                      DropdownMenuItem(
-                        value: AppConstants.roleReader,
-                        child: Text('Reader'),
+                    validator: (value) => Validators.validateRequired(
+                      value,
+                      'Username',
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  // Email Field
+                  TextFormField(
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.next,
+                    decoration: InputDecoration(
+                      labelText: 'Email',
+                      hintText: 'Enter your email address',
+                      prefixIcon: const Icon(Icons.email_outlined),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      DropdownMenuItem(
-                        value: AppConstants.roleAuthor,
-                        child: Text('Author'),
+                    ),
+                    validator: Validators.validateEmail,
+                  ),
+                  const SizedBox(height: 20),
+                
+                  TextFormField(
+                    controller: _phoneController,
+                    keyboardType: TextInputType.phone,
+                    textInputAction: TextInputAction.next,
+                    decoration: InputDecoration(
+                      labelText: 'Phone Number',
+                      hintText: 'Enter your phone number',
+                      prefixIcon: const Icon(Icons.phone_outlined),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                    ],
-                    onChanged: (value) {
-                      if (value != null) {
-                        _selectedRole.value = value;
+                    ),
+                    validator: (value) {
+                      if (value != null && value.isNotEmpty) {
+                        return Validators.validatePhone(value);
                       }
+                      return null;
                     },
                   ),
-                ),
-                const SizedBox(height: 20),
+                  const SizedBox(height: 20),
                 // Password Field
                 Obx(
                   () => TextFormField(
@@ -263,7 +248,8 @@ class _RegisterViewState extends State<RegisterView> {
                     ),
                   ],
                 ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

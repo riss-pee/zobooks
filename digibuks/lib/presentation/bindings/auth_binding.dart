@@ -10,10 +10,8 @@ class AuthBinding extends Bindings {
     // Initialize dependencies
     final apiClient = Get.put(ApiClient());
     
-    // Demo Mode: useMockData = true (default)
-    // Real API Mode: useMockData = false (when backend is ready)
     final authRemoteDataSource = Get.put(
-      AuthRemoteDataSource(apiClient, useMockData: true),
+      AuthRemoteDataSource(apiClient),
     );
     
     final authRepository = Get.put(AuthRepository(authRemoteDataSource));

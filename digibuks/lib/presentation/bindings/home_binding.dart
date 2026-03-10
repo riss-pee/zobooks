@@ -19,7 +19,7 @@ class HomeBinding extends Bindings {
     // Initialize Auth dependencies if not already initialized
     if (!Get.isRegistered<AuthRemoteDataSource>()) {
       final apiClient = Get.find<ApiClient>();
-      Get.put(AuthRemoteDataSource(apiClient, useMockData: true));
+      Get.put(AuthRemoteDataSource(apiClient));
     }
     
     if (!Get.isRegistered<AuthRepository>()) {

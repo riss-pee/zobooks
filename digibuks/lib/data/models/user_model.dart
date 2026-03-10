@@ -20,18 +20,29 @@ class UserModel {
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
+    // API returns `username`, fallback to `email` if it ever exists
+    final emailStr = json['username'] ?? json['email'] ?? '';
+    
+    // Extract role from array
+    String roleStr = 'reader';
+    if (json['roles'] != null && json['roles'] is List && (json['roles'] as List).isNotEmpty) {
+      roleStr = json['roles'][0].toString();
+    } else if (json['role'] != null) {
+      roleStr = json['role'];
+    }
+
     return UserModel(
       id: json['id'] ?? '',
-      email: json['email'] ?? '',
-      name: json['name'],
+      email: emailStr, // Keep internal field as email/username 
+      name: json['full_name'] ?? json['name'],
       phone: json['phone'],
-      role: json['role'] ?? 'reader',
+      role: roleStr,
       profileImage: json['profile_image'],
       createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'])
+          ? DateTime.tryParse(json['created_at'])
           : null,
       updatedAt: json['updated_at'] != null
-          ? DateTime.parse(json['updated_at'])
+          ? DateTime.tryParse(json['updated_at'])
           : null,
     );
   }
@@ -39,14 +50,15 @@ class UserModel {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'email': email,
-      'name': name,
+      'username': email, // Output back as username
+      'full_name': name,
       'phone': phone,
-      'role': role,
+      'roles': [role],
       'profile_image': profileImage,
       'created_at': createdAt?.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
     };
   }
 }
+
 

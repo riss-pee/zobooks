@@ -45,9 +45,9 @@ class ReaderView extends StatelessWidget {
                       const Color(0xFF0D0F11),
                     ]
                   : [
-                      const Color(0xFFFFFBF0),
-                      const Color(0xFFF7F0E0),
-                      const Color(0xFFECE4D0),
+                      const Color(0xFFF5F5F5),
+                      const Color(0xFFEEEEEE),
+                      const Color(0xFFE0E0E0),
                     ],
             ),
           ),
