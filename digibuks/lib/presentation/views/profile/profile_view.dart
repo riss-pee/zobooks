@@ -22,8 +22,8 @@ class ProfileView extends StatelessWidget {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            Color(0xFFFFFBF0),
-            Color(0xFFF7F0E0),
+            Color(0xFFF5F5F5),
+            Color(0xFFEEEEEE),
           ],
         ),
       ),
@@ -58,20 +58,23 @@ class ProfileView extends StatelessWidget {
                         Icon(
                           Icons.account_circle_rounded,
                           size: 100,
-                          color: Theme.of(context).colorScheme.primary.withAlpha(50),
+                          color: Theme.of(context).colorScheme.primary,
                         ),
                         const SizedBox(height: 24),
                         Text(
                           'Welcome to DigiBuks',
                           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
+                                color: Colors.black87,
                               ),
                         ),
                         const SizedBox(height: 12),
                         Text(
                           'Login or create an account to view your profile, manage your books, and more.',
                           textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodyMedium,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: Colors.black87,
+                              ),
                         ),
                         const SizedBox(height: 32),
                         ElevatedButton(
@@ -101,11 +104,11 @@ class ProfileView extends StatelessWidget {
                           padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 2),
+                            border: Border.all(color: Colors.grey, width: 2),
                           ),
                           child: CircleAvatar(
                             radius: 50,
-                            backgroundColor: Colors.white.withAlpha(50),
+                            backgroundColor: Colors.transparent,
                             backgroundImage: user.profileImage != null
                                 ? NetworkImage(user.profileImage!)
                                 : null,
@@ -126,12 +129,15 @@ class ProfileView extends StatelessWidget {
                           user.name ?? 'User',
                           style: Theme.of(context).textTheme.titleLarge?.copyWith(
                                 fontWeight: FontWeight.bold,
+                                color: Colors.black,
                               ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           user.email,
-                          style: Theme.of(context).textTheme.bodyMedium,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: Colors.black87,
+                              ),
                         ),
                         const SizedBox(height: 16),
                         Container(
@@ -283,7 +289,7 @@ class ProfileView extends StatelessWidget {
           child: Text(
             title,
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: AppTheme.textMuted,
+                  color: Colors.black54,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1,
                 ),
@@ -308,9 +314,12 @@ class ProfileView extends StatelessWidget {
     VoidCallback onTap,
   ) {
     return ListTile(
-      leading: Icon(icon),
-      title: Text(title),
-      trailing: const Icon(Icons.chevron_right),
+      leading: Icon(icon, color: Theme.of(context).colorScheme.primary),
+      title: Text(
+        title,
+        style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.w500),
+      ),
+      trailing: const Icon(Icons.chevron_right, color: Colors.black54),
       onTap: onTap,
     );
   }
@@ -333,14 +342,14 @@ class ProfileView extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Settings',
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          color: AppTheme.textMuted,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1,
-                        ),
-                  ),
+                    Text(
+                      'Settings',
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            color: Colors.black87,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1,
+                          ),
+                    ),
                   const SizedBox(height: 16),
                   _buildPopupItem(
                     context,

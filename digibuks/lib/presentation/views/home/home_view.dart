@@ -30,8 +30,8 @@ class _HomeViewState extends State<HomeView> {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            Color(0xFFFFFBF0),
-            Color(0xFFF7F0E0),
+            Color(0xFFF5F5F5),
+            Color(0xFFEEEEEE),
           ],
         ),
       ),

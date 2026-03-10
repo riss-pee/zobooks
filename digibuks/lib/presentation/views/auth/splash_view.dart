@@ -43,9 +43,9 @@ class _SplashViewState extends State<SplashView> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(0xFFFFFBF0),
-              Color(0xFFF7F0E0),
-              Color(0xFFECE4D0),
+              Color(0xFFF5F5F5),
+              Color(0xFFEEEEEE),
+              Color(0xFFE0E0E0),
             ],
           ),
         ),

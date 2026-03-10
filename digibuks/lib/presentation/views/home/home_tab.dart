@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/book_controller.dart';
 import '../../controllers/auth_controller.dart';
+import '../../../data/models/grouped_books_model.dart';
 import 'home_controller.dart';
 import '../../widgets/book_card.dart';
 import '../../widgets/loading_shimmer.dart';
@@ -126,35 +127,57 @@ class _HomeTabState extends State<HomeTab> {
                               ),
                               const SizedBox(height: 32),
                               
-                              // Search Bar
-                              AppSearchBar(
-                                controller: _searchController,
-                                onFilter: () => _showFilterDialog(context, bookController),
-                              ),
+                              // Removed Search Bar and Categories per user request
                             ],
                           ),
                         ),
                       ),
-
-                      // 2. Categories
-                      SliverToBoxAdapter(
-                        child: SizedBox(
-                          height: 50,
-                          child: ListView.separated(
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            scrollDirection: Axis.horizontal,
-                            itemCount: _categories.length,
-                            separatorBuilder: (_, __) => const SizedBox(width: 10),
-                            itemBuilder: (context, index) {
-                              final cat = _categories[index];
-                              final isSelected = _selectedCategory == cat['label'];
-                              return _buildCategoryChip(context, cat, isSelected, bookController);
-                            },
-                          ),
-                        ),
-                      ),
                       
-                      const SliverToBoxAdapter(child: SizedBox(height: 24)),
+                      const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+                      // 2. Trending Books Section (New)
+                      Obx(() {
+                        if (homeController.trendingBooks.isEmpty) {
+                          return const SliverToBoxAdapter(child: SizedBox.shrink());
+                        }
+                        
+                        return SliverMainAxisGroup(
+                          slivers: [
+                            SliverToBoxAdapter(
+                              child: _buildSectionHeader(context, 'Trending Now', () {}),
+                            ),
+                            SliverToBoxAdapter(
+                              child: SizedBox(
+                                height: 260,
+                                child: ListView.separated(
+                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                                  scrollDirection: Axis.horizontal,
+                                  itemCount: homeController.trendingBooks.length,
+                                  separatorBuilder: (_, __) => const SizedBox(width: 16),
+                                  itemBuilder: (context, index) {
+                                    final book = homeController.trendingBooks[index];
+                                    
+                                    final summaryBook = BookSummaryModel(
+                                      id: book.id,
+                                      title: book.title,
+                                      coverUrl: book.coverUrl,
+                                      authors: book.authors,
+                                      price: book.price,
+                                      isFree: book.isFree,
+                                    );
+                                    
+                                    return SizedBox(
+                                      width: 120,
+                                      child: _buildBookSummaryCard(context, summaryBook),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                            const SliverToBoxAdapter(child: SizedBox(height: 12)),
+                          ],
+                        );
+                      }),
 
                       // 3. Featured Section
                       if (bookController.featuredBooks.isNotEmpty) ...[
@@ -171,7 +194,7 @@ class _HomeTabState extends State<HomeTab> {
                         ),
                         SliverToBoxAdapter(
                           child: SizedBox(
-                            height: 280,
+                            height: 220,
                             child: PageView.builder(
                               controller: _featuredController,
                               itemCount: bookController.featuredBooks.length,
@@ -198,7 +221,7 @@ class _HomeTabState extends State<HomeTab> {
                             ),
                           ),
                         ),
-                        const SliverToBoxAdapter(child: SizedBox(height: 32)),
+                        const SliverToBoxAdapter(child: SizedBox(height: 16)),
                       ],
 
                       // 4. Dynamic Categories from API
@@ -212,7 +235,7 @@ class _HomeTabState extends State<HomeTab> {
                             ),
                             SliverToBoxAdapter(
                               child: SizedBox(
-                                height: 340,
+                                height: 260,
                                 child: ListView.separated(
                                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                                   scrollDirection: Axis.horizontal,
@@ -224,14 +247,14 @@ class _HomeTabState extends State<HomeTab> {
                                      // or properly update BookCard.
                                      // For simplicity, converting BookSummaryModel to dynamic to pass to Get arguments or UI correctly
                                      return SizedBox(
-                                       width: 150,
+                                       width: 120,
                                        child: _buildBookSummaryCard(context, book),
                                      );
                                   },
                                 ),
                               ),
                             ),
-                            const SliverToBoxAdapter(child: SizedBox(height: 24)),
+                            const SliverToBoxAdapter(child: SizedBox(height: 12)),
                           ],
                         );
                       }).toList(),

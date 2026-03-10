@@ -40,19 +40,19 @@ class AuthController extends GetxController {
     }
   }
 
-  Future<void> login(String email, String password) async {
+  Future<void> login(String username, String password) async {
     try {
       _isLoading.value = true;
       _errorMessage.value = '';
 
-      final user = await _authRepository.login(email, password);
+      final user = await _authRepository.login(username, password);
       _currentUser.value = user;
       _isAuthenticated.value = true;
 
-      AppLogger.i('Login successful: ${user.email}');
+      AppLogger.i('Login successful: ${user.email}'); // email holds username
       
-      // Navigate based on user role
-      _navigateAfterLogin(user.role);
+      // Navigate to Home regardless of role for the Reader app
+      Get.offAllNamed(AppConstants.homeRoute);
     } on ApiException catch (e) {
       _errorMessage.value = e.message;
       AppLogger.e('Login failed: ${e.message}');
@@ -75,9 +75,10 @@ class AuthController extends GetxController {
   }
 
   Future<void> register({
+    required String username,
     required String email,
     required String password,
-    required String name,
+    required String passwordConfirm,
     String? phone,
     String role = AppConstants.roleReader,
   }) async {
@@ -86,9 +87,10 @@ class AuthController extends GetxController {
       _errorMessage.value = '';
 
       final user = await _authRepository.register(
+        username: username,
         email: email,
         password: password,
-        name: name,
+        passwordConfirm: passwordConfirm,
         phone: phone,
         role: role,
       );
@@ -97,8 +99,8 @@ class AuthController extends GetxController {
 
       AppLogger.i('Registration successful: ${user.email}');
       
-      // Navigate based on user role
-      _navigateAfterLogin(user.role);
+      // Navigate to Home
+      Get.offAllNamed(AppConstants.homeRoute);
     } on ApiException catch (e) {
       _errorMessage.value = e.message;
       AppLogger.e('Registration failed: ${e.message}');

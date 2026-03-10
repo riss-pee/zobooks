@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  // Liquid Glass Palette: Warm Neutrals + Indigo
+  // Brand Palette: Grey + Black
   static const Color primaryColor = Color(0xFF3949AB); // Indigo 600
   static const Color accentColor = Color(0xFFC5A059);  // Muted Gold
-  static const Color bgCream = Color(0xFFFFFBF0);     // Warm Cream
+  static const Color bgCream = Color(0xFFF5F5F5);      // Light Grey
   static const Color surfaceGlass = Color(0xFFFFFFFF); 
-  static const Color textDark = Color(0xFF1A1C1E);
+  static const Color textDark = Colors.black;
   static const Color textMuted = Color(0xFF6B7280);
   static const Color errorColor = Color(0xFFBA1A1A);
 
@@ -93,14 +93,18 @@ class AppTheme {
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: Colors.white.withAlpha(127),
+      fillColor: Colors.white,
+      hintStyle: const TextStyle(color: textMuted, fontWeight: FontWeight.normal),
+      labelStyle: const TextStyle(color: textDark, fontWeight: FontWeight.w500),
+      prefixIconColor: textMuted,
+      suffixIconColor: textMuted,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
         borderSide: BorderSide.none,
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: Colors.white.withAlpha(77), width: 1.5),
+        borderSide: BorderSide(color: textDark.withAlpha(30), width: 1.5),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),

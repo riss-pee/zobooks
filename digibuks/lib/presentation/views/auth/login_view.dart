@@ -17,7 +17,7 @@ class LoginView extends StatefulWidget {
 
 class _LoginViewState extends State<LoginView> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _obscurePassword = true.obs;
   late final AuthController _authController;
@@ -31,7 +31,7 @@ class _LoginViewState extends State<LoginView> {
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -39,7 +39,7 @@ class _LoginViewState extends State<LoginView> {
   void _handleLogin() {
     if (_formKey.currentState!.validate()) {
       _authController.login(
-        _emailController.text.trim(),
+        _usernameController.text.trim(),
         _passwordController.text,
       );
     }
@@ -56,9 +56,9 @@ class _LoginViewState extends State<LoginView> {
             begin: Alignment.topRight,
             end: Alignment.bottomLeft,
             colors: [
-              Color(0xFFFFFBF0),
-              Color(0xFFF7F0E0),
-              Color(0xFFECE4D0),
+              Color(0xFFF5F5F5), // Light grey
+              Color(0xFFEEEEEE),
+              Color(0xFFE0E0E0),
             ],
           ),
         ),
@@ -120,17 +120,22 @@ class _LoginViewState extends State<LoginView> {
                           ),
                           const SizedBox(height: 24),
                           
-                          // Email Field
+                          // Username Field
                           TextFormField(
-                            controller: _emailController,
-                            keyboardType: TextInputType.emailAddress,
+                            controller: _usernameController,
+                            keyboardType: TextInputType.text,
                             textInputAction: TextInputAction.next,
                             decoration: const InputDecoration(
-                              labelText: 'Email',
-                              hintText: 'Enter your email',
-                              prefixIcon: Icon(Icons.email_outlined),
+                              labelText: 'Username',
+                              hintText: 'Enter your username',
+                              prefixIcon: Icon(Icons.person_outline),
                             ),
-                            validator: Validators.validateEmail,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter your username';
+                              }
+                              return null;
+                            },
                           ),
                           const SizedBox(height: 20),
                           
@@ -144,7 +149,7 @@ class _LoginViewState extends State<LoginView> {
                               decoration: InputDecoration(
                                 labelText: 'Password',
                                 hintText: 'Enter your password',
-                                prefixIcon: const Icon(Icons.lock_outlined),
+                                prefixIcon: const Icon(Icons.lock_outline),
                                 suffixIcon: IconButton(
                                   icon: Icon(
                                     _obscurePassword.value
@@ -197,45 +202,6 @@ class _LoginViewState extends State<LoginView> {
                                       ),
                                     ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                    
-                    // Demo Info Glass Card
-                    GlassContainer(
-                      padding: const EdgeInsets.all(16),
-                      blur: 5,
-                      opacity: 0.1,
-                      color: Theme.of(context).colorScheme.primary,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.info_outline,
-                                color: Theme.of(context).colorScheme.primary,
-                                size: 20,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Demo Mode',
-                                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                      color: Theme.of(context).colorScheme.primary,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Use any email and password to login.\n'
-                            'Add "admin" or "author" to email for role-based access.',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: Theme.of(context).colorScheme.onSurface.withAlpha(0xB3),
-                                ),
                           ),
                         ],
                       ),
