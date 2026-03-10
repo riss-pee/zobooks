@@ -6,6 +6,12 @@ class ThemeController extends GetxController {
   final _themeMode = ThemeMode.system.obs;
 
   ThemeMode get themeMode => _themeMode.value;
+  bool get isDarkMode {
+    if (_themeMode.value == ThemeMode.system) {
+      return Get.isPlatformDarkMode;
+    }
+    return _themeMode.value == ThemeMode.dark;
+  }
 
   @override
   void onInit() {
