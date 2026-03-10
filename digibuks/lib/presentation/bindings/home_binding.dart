@@ -5,6 +5,8 @@ import '../controllers/payment_controller.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../data/datasources/remote/auth_remote_datasource.dart';
 import '../../core/network/api_client.dart';
+import '../../data/repositories/home_repository.dart';
+import '../views/home/home_controller.dart';
 
 class HomeBinding extends Bindings {
   @override
@@ -39,6 +41,16 @@ class HomeBinding extends Bindings {
     if (!Get.isRegistered<PaymentController>()) {
       Get.put(PaymentController());
     }
+
+    // Initialize Home Data fetcher
+    if (!Get.isRegistered<HomeRepository>()) {
+      final apiClient = Get.find<ApiClient>();
+      Get.put(HomeRepository(apiClient));
+    }
+
+    if (!Get.isRegistered<HomeController>()) {
+      final homeRepository = Get.find<HomeRepository>();
+      Get.put(HomeController(homeRepository));
+    }
   }
 }
-

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/book_controller.dart';
 import '../../controllers/auth_controller.dart';
+import 'home_controller.dart';
 import '../../widgets/book_card.dart';
 import '../../widgets/loading_shimmer.dart';
 import '../../widgets/search_bar.dart';
@@ -48,6 +49,7 @@ class _HomeTabState extends State<HomeTab> {
     // Controllers
     final bookController = Get.find<BookController>();
     final authController = Get.find<AuthController>();
+    final homeController = Get.find<HomeController>();
     final userName = authController.currentUser?.name ?? 'Reader';
 
     return Scaffold(
@@ -55,9 +57,12 @@ class _HomeTabState extends State<HomeTab> {
       body: SafeArea(
         bottom: false,
         child: RefreshIndicator(
-          onRefresh: () => bookController.loadBooks(),
+          onRefresh: () async {
+             bookController.loadBooks();
+             homeController.fetchBooks();
+          },
           child: Obx(
-            () => bookController.isLoading
+            () => homeController.isLoading.value
                 ? _buildLoadingView()
                 : CustomScrollView(
                     slivers: [
@@ -173,10 +178,6 @@ class _HomeTabState extends State<HomeTab> {
                               onPageChanged: (p) => setState(() => _featuredIndex = p),
                               itemBuilder: (context, index) {
                                 final book = bookController.featuredBooks[index];
-                                // Calculate scale for carousel effect
-                                // Since state changes only on full page change, strictly visual scaling 
-                                // inside builder usually requires AnimatedBuilder with controller, 
-                                // but for simplicity we use simple margin active/inactive logic.
                                 final active = index == _featuredIndex;
                                 return AnimatedContainer(
                                   duration: const Duration(milliseconds: 300),
@@ -200,66 +201,40 @@ class _HomeTabState extends State<HomeTab> {
                         const SliverToBoxAdapter(child: SizedBox(height: 32)),
                       ],
 
-                      // 4. Recommended (Horizontal List)
-                      SliverToBoxAdapter(
-                        child: _buildSectionHeader(context, 'Recommended for you', () {}),
-                      ),
-                      SliverToBoxAdapter(
-                        child: SizedBox(
-                          height: 340,
-                          child: ListView.separated(
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                            scrollDirection: Axis.horizontal,
-                            itemCount: bookController.books.length.clamp(0, 5),
-                            separatorBuilder: (_, __) => const SizedBox(width: 16),
-                            itemBuilder: (context, index) {
-                               // Assuming we show a subset as recommended
-                               final book = bookController.books[index];
-                               return SizedBox(
-                                 width: 150,
-                                 child: BookCard(
-                                   book: book,
-                                   onTap: () => Get.toNamed(AppConstants.bookDetailRoute, arguments: book),
-                                 ),
-                               );
-                            },
-                          ),
-                        ),
-                      ),
-
-                      const SliverToBoxAdapter(child: SizedBox(height: 24)),
-
-                      // 5. New Arrivals / All Books Grid
-                      SliverToBoxAdapter(
-                        child: _buildSectionHeader(context, 'New Arrivals', () {}),
-                      ),
-                      
-                      SliverPadding(
-                        padding: const EdgeInsets.all(20),
-                        sliver: SliverGrid(
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            childAspectRatio: 0.48,
-                            crossAxisSpacing: 16,
-                            mainAxisSpacing: 16,
-                          ),
-                          delegate: SliverChildBuilderDelegate(
-                            (context, index) {
-                              // Skipping the ones shown in recommended could be better, 
-                              // but for now just showing reversed list to vary content
-                              final reversedIndex = bookController.books.length - 1 - index;
-                              if (reversedIndex < 0) return null;
-                              
-                              final book = bookController.books[reversedIndex];
-                              return BookCard(
-                                book: book,
-                                onTap: () => Get.toNamed(AppConstants.bookDetailRoute, arguments: book),
-                              );
-                            },
-                            childCount: bookController.books.length,
-                          ),
-                        ),
-                      ),
+                      // 4. Dynamic Categories from API
+                      ...homeController.groupedBooks.map((group) {
+                        if (group.books.isEmpty) return const SliverToBoxAdapter(child: SizedBox.shrink());
+                        
+                        return SliverMainAxisGroup(
+                          slivers: [
+                            SliverToBoxAdapter(
+                              child: _buildSectionHeader(context, group.category, () {}),
+                            ),
+                            SliverToBoxAdapter(
+                              child: SizedBox(
+                                height: 340,
+                                child: ListView.separated(
+                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                                  scrollDirection: Axis.horizontal,
+                                  itemCount: group.books.length,
+                                  separatorBuilder: (_, __) => const SizedBox(width: 16),
+                                  itemBuilder: (context, index) {
+                                     final book = group.books[index];
+                                     // Create an interim BookModel to reuse BookCard formatting, 
+                                     // or properly update BookCard.
+                                     // For simplicity, converting BookSummaryModel to dynamic to pass to Get arguments or UI correctly
+                                     return SizedBox(
+                                       width: 150,
+                                       child: _buildBookSummaryCard(context, book),
+                                     );
+                                  },
+                                ),
+                              ),
+                            ),
+                            const SliverToBoxAdapter(child: SizedBox(height: 24)),
+                          ],
+                        );
+                      }).toList(),
                       
                       // Bottom padding for safer scrolling above navbar
                       const SliverToBoxAdapter(child: SizedBox(height: 20)),
@@ -414,6 +389,106 @@ class _HomeTabState extends State<HomeTab> {
                 ),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBookSummaryCard(BuildContext context, dynamic book) {
+    return GestureDetector(
+      onTap: () {
+         // Create mock full book argument from API until BookDetail handles ID or SummaryModel
+         final mockBookArg = {
+           'id': book.id,
+           'title': book.title,
+           'coverImage': book.coverUrl,
+           'authorName': book.authors.isNotEmpty ? book.authors.first : 'Unknown',
+           'price': book.price,
+           'isFree': book.isFree,
+         };
+         Get.toNamed(AppConstants.bookDetailRoute, arguments: mockBookArg);
+      },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Cover Image
+          Expanded(
+            child: Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withAlpha(10),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: book.coverUrl.isNotEmpty
+                    ? Image.network(
+                        book.coverUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => const Center(child: Icon(Icons.broken_image)),
+                      )
+                    : Center(
+                        child: Icon(
+                          Icons.menu_book,
+                          size: 40,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant.withAlpha(100),
+                        ),
+                      ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          
+          // Original layout with Title & Author
+          Text(
+            book.title,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  height: 1.2,
+                ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            book.authors.isNotEmpty ? book.authors.first : 'Unknown',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          
+          const SizedBox(height: 8),
+          
+          // Price Info
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: book.isFree 
+                      ? Colors.green.withAlpha(20) 
+                      : Theme.of(context).colorScheme.primary.withAlpha(20),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  book.isFree ? 'Free' : '₹${book.price}',
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        color: book.isFree ? Colors.green : Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

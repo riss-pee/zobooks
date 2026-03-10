@@ -56,8 +56,10 @@ class ApiClient {
         queryParameters: queryParameters,
         options: options,
       );
+      print('API SUCCESS: ${response.realUri}');
       return response;
     } on DioException catch (e) {
+      print('API ERROR URI: ${e.response?.realUri} CODE: ${e.response?.statusCode} MSG: ${e.message}');
       throw ApiException.fromDioError(e);
     }
   }
