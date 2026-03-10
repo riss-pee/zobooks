@@ -45,113 +45,108 @@ class _SearchPageState extends State<SearchPage> {
   Widget build(BuildContext context) {
     final bookController = Get.find<BookController>();
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 20),
-              Text(
-                'Explore Books',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-              ),
-              const SizedBox(height: 20),
-
-              // 1. Search Bar
-              AppSearchBar(
-                controller: _searchController,
-                onFilter:
-                    () {}, // Filter logic can be integrated or simplified here
-              ),
-              const SizedBox(height: 24),
-
-              // 2. Keywords (Categories)
-              SizedBox(
-                height: 40,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: _categories.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: 10),
-                  itemBuilder: (context, index) {
-                    final cat = _categories[index];
-                    final isSelected = _selectedCategory == cat['label'];
-                    return _buildCategoryChip(cat, isSelected, bookController);
-                  },
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // 3. Dropdown Buttons
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildDropdown(
-                      label: 'Language',
-                      value: _selectedLanguage,
-                      items: ['All', 'English', 'Mizo'],
-                      onChanged: (val) {
-                        setState(() => _selectedLanguage = val!);
-                        bookController
-                            .filterByLanguage(val == 'All' ? '' : val!);
-                      },
-                    ),
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 20),
+            Text(
+              'Explore Books',
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.primary,
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _buildDropdown(
-                      label: 'Sort By',
-                      value: _sortBy,
-                      items: [
-                        'Newest',
-                        'Oldest',
-                        'Price: Low to High',
-                        'Price: High to Low'
-                      ],
-                      onChanged: (val) {
-                        setState(() => _sortBy = val!);
-                        // Add sort logic if controller supports it
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
+            ),
+            const SizedBox(height: 20),
 
-              // 4. Book Cards (Results)
-              Expanded(
-                child: Obx(() {
-                  final books = bookController.filteredBooks;
-                  if (books.isEmpty) {
-                    return const Center(child: Text('No books found'));
-                  }
-                  return GridView.builder(
-                    padding: const EdgeInsets.only(bottom: 100),
-                    itemCount: books.length,
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      childAspectRatio: 0.65,
-                      mainAxisSpacing: 16,
-                      crossAxisSpacing: 16,
-                    ),
-                    itemBuilder: (context, index) {
-                      return BookCard(
-                        book: books[index],
-                        onTap: () => Get.toNamed(AppConstants.bookDetailRoute,
-                            arguments: books[index]),
-                      );
+            // 1. Search Bar
+            AppSearchBar(
+              controller: _searchController,
+              onFilter:
+                  () {}, // Filter logic can be integrated or simplified here
+            ),
+            const SizedBox(height: 24),
+
+            // 2. Keywords (Categories)
+            SizedBox(
+              height: 40,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: _categories.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 10),
+                itemBuilder: (context, index) {
+                  final cat = _categories[index];
+                  final isSelected = _selectedCategory == cat['label'];
+                  return _buildCategoryChip(cat, isSelected, bookController);
+                },
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // 3. Dropdown Buttons
+            Row(
+              children: [
+                Expanded(
+                  child: _buildDropdown(
+                    label: 'Language',
+                    value: _selectedLanguage,
+                    items: ['All', 'English', 'Mizo'],
+                    onChanged: (val) {
+                      setState(() => _selectedLanguage = val!);
+                      bookController.filterByLanguage(val == 'All' ? '' : val!);
                     },
-                  );
-                }),
-              ),
-            ],
-          ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildDropdown(
+                    label: 'Sort By',
+                    value: _sortBy,
+                    items: [
+                      'Newest',
+                      'Oldest',
+                      'Price: Low to High',
+                      'Price: High to Low'
+                    ],
+                    onChanged: (val) {
+                      setState(() => _sortBy = val!);
+                      // Add sort logic if controller supports it
+                    },
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+
+            // 4. Book Cards (Results)
+            Expanded(
+              child: Obx(() {
+                final books = bookController.filteredBooks;
+                if (books.isEmpty) {
+                  return const Center(child: Text('No books found'));
+                }
+                return GridView.builder(
+                  padding: const EdgeInsets.only(bottom: 120),
+                  itemCount: books.length,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    childAspectRatio: 0.55,
+                    mainAxisSpacing: 16,
+                    crossAxisSpacing: 16,
+                  ),
+                  itemBuilder: (context, index) {
+                    return BookCard(
+                      book: books[index],
+                      onTap: () => Get.toNamed(AppConstants.bookDetailRoute,
+                          arguments: books[index]),
+                    );
+                  },
+                );
+              }),
+            ),
+          ],
         ),
       ),
     );
