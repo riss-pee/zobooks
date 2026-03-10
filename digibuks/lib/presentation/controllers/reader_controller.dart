@@ -7,23 +7,26 @@ import '../../core/utils/storage_helper.dart';
 
 class ReaderController extends GetxController {
   final BookModel? book = Get.arguments as BookModel?;
-  
+
   // Reading state
   final _currentPage = 0.obs;
   final _totalPages = 0.obs;
   final _isLoading = true.obs;
   final _isFullScreen = false.obs;
-  
+
   // Reading settings
   final _fontSize = 16.0.obs;
   final _isDarkMode = false.obs;
+  final _themeType = 'light'.obs; // 'light', 'sepia', 'dark'
+  final _fontFamily = 'Outfit'.obs;
+  final _textAlign = 'left'.obs; // 'left', 'justify'
   final _brightness = 1.0.obs;
   final _lineHeight = 1.5.obs;
-  
+
   // Bookmarks
   final _bookmarks = <int>[].obs;
   final _notes = <String, String>{}.obs; // page -> note
-  
+
   // Reading progress
   final _readingProgress = 0.0.obs;
   final _lastReadPosition = 0.obs;
@@ -35,6 +38,9 @@ class ReaderController extends GetxController {
   bool get isFullScreen => _isFullScreen.value;
   double get fontSize => _fontSize.value;
   bool get isDarkMode => _isDarkMode.value;
+  String get themeType => _themeType.value;
+  String get fontFamily => _fontFamily.value;
+  String get textAlign => _textAlign.value;
   double get brightness => _brightness.value;
   double get lineHeight => _lineHeight.value;
   List<int> get bookmarks => _bookmarks;
@@ -56,10 +62,10 @@ class ReaderController extends GetxController {
   Future<void> _initializeReader() async {
     try {
       _isLoading.value = true;
-      
+
       // Simulate loading book
       await Future.delayed(const Duration(milliseconds: 500));
-      
+
       // Set total pages based on book
       if (book!.pageCount != null) {
         _totalPages.value = book!.pageCount!;
@@ -67,10 +73,10 @@ class ReaderController extends GetxController {
         // Default pages for demo
         _totalPages.value = 100;
       }
-      
+
       // Load last read position
       _currentPage.value = _lastReadPosition.value;
-      
+
       _isLoading.value = false;
       AppLogger.i('Reader initialized for book: ${book!.title}');
     } catch (e) {
@@ -108,7 +114,18 @@ class ReaderController extends GetxController {
   Future<void> _loadSettings() async {
     try {
       _fontSize.value = StorageHelper.getDouble('reader_font_size') ?? 16.0;
-      _isDarkMode.value = StorageHelper.getBool('reader_dark_mode') ?? false;
+      _themeType.value =
+          StorageHelper.getString('reader_theme_type') ?? 'light';
+      _fontFamily.value =
+          StorageHelper.getString('reader_font_family') ?? 'Outfit';
+      _textAlign.value = StorageHelper.getString('reader_text_align') ?? 'left';
+
+      if (_themeType.value == 'dark') {
+        _isDarkMode.value = true;
+      } else {
+        _isDarkMode.value = false;
+      }
+
       _brightness.value = StorageHelper.getDouble('reader_brightness') ?? 1.0;
       _lineHeight.value = StorageHelper.getDouble('reader_line_height') ?? 1.5;
     } catch (e) {
@@ -148,9 +165,28 @@ class ReaderController extends GetxController {
     }
   }
 
+  void setThemeType(String type) {
+    _themeType.value = type;
+    _isDarkMode.value = (type == 'dark');
+    StorageHelper.saveString('reader_theme_type', type);
+    StorageHelper.saveBool('reader_dark_mode', _isDarkMode.value);
+  }
+
+  void setFontFamily(String family) {
+    _fontFamily.value = family;
+    StorageHelper.saveString('reader_font_family', family);
+  }
+
+  void setTextAlign(String align) {
+    _textAlign.value = align;
+    StorageHelper.saveString('reader_text_align', align);
+  }
+
   void toggleDarkMode() {
     _isDarkMode.value = !_isDarkMode.value;
+    _themeType.value = _isDarkMode.value ? 'dark' : 'light';
     StorageHelper.saveBool('reader_dark_mode', _isDarkMode.value);
+    StorageHelper.saveString('reader_theme_type', _themeType.value);
   }
 
   void setBrightness(double value) {
@@ -170,7 +206,8 @@ class ReaderController extends GetxController {
   void toggleBookmark() {
     if (_bookmarks.contains(_currentPage.value)) {
       _bookmarks.remove(_currentPage.value);
-      showSnackSafe('Bookmark Removed', 'Bookmark removed from page ${_currentPage.value + 1}');
+      showSnackSafe('Bookmark Removed',
+          'Bookmark removed from page ${_currentPage.value + 1}');
     } else {
       _bookmarks.add(_currentPage.value);
       showSnackSafe('Bookmarked', 'Page ${_currentPage.value + 1} bookmarked');
@@ -195,7 +232,7 @@ class ReaderController extends GetxController {
     if (_totalPages.value > 0) {
       _readingProgress.value = _currentPage.value / _totalPages.value;
       _lastReadPosition.value = _currentPage.value;
-      
+
       // Save progress
       final progressKey = 'reading_progress_${book!.id}';
       StorageHelper.saveDouble(progressKey, _readingProgress.value);
@@ -218,4 +255,3 @@ class ReaderController extends GetxController {
     return '$percentage%';
   }
 }
-

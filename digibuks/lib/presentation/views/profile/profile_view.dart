@@ -5,7 +5,6 @@ import '../../controllers/auth_controller.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../controllers/theme_controller.dart';
-
 import '../../widgets/glass_container.dart';
 
 class ProfileView extends StatelessWidget {
@@ -13,8 +12,8 @@ class ProfileView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Use find or putIfAbsent to handle case where controller might not be initialized
     final authController = Get.find<AuthController>();
+    final themeController = Get.find<ThemeController>();
 
     return Container(
       decoration: const BoxDecoration(
@@ -280,7 +279,8 @@ class ProfileView extends StatelessWidget {
     );
   }
 
-  Widget _buildGlassMenuSection(BuildContext context, String title, List<Widget> items) {
+  Widget _buildGlassMenuSection(
+      BuildContext context, String title, List<Widget> items) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -298,21 +298,14 @@ class ProfileView extends StatelessWidget {
         GlassContainer(
           blur: 10,
           opacity: 0.1,
-          child: Column(
-            children: items,
-          ),
+          child: Column(children: items),
         ),
       ],
     );
   }
 
-
   Widget _buildMenuItem(
-    BuildContext context,
-    IconData icon,
-    String title,
-    VoidCallback onTap,
-  ) {
+      BuildContext context, IconData icon, String title, VoidCallback onTap) {
     return ListTile(
       leading: Icon(icon, color: Theme.of(context).colorScheme.primary),
       title: Text(
@@ -335,8 +328,9 @@ class ProfileView extends StatelessWidget {
             color: Colors.transparent,
             child: GlassContainer(
               padding: const EdgeInsets.all(24),
-              blur: 25,
-              opacity: 0.1,
+              blur: 40,
+              opacity:
+                  Theme.of(context).brightness == Brightness.dark ? 0.3 : 0.25,
               borderRadius: 32,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -351,35 +345,19 @@ class ProfileView extends StatelessWidget {
                           ),
                     ),
                   const SizedBox(height: 16),
+                  _buildPopupItem(context, Icons.notifications_rounded,
+                      'Notifications', () {}),
                   _buildPopupItem(
-                    context,
-                    Icons.notifications_rounded,
-                    'Notifications',
-                    () {
-                      Navigator.pop(context);
-                      showSnackSafe('Notifications', 'Settings opened');
-                    },
-                  ),
-                  _buildPopupItem(
-                    context,
-                    Icons.language_rounded,
-                    'Language',
-                    () {
-                      Navigator.pop(context);
-                      showSnackSafe('Language', 'Language selector opened');
-                    },
-                  ),
-                  const SizedBox(height: 8),
-                  // Theme Toggle Section
-                  _buildThemeToggleSection(context),
+                      context, Icons.language_rounded, 'Language', () {}),
                   const SizedBox(height: 16),
+                  _buildThemeToggleSection(context),
+                  const SizedBox(height: 24),
                   Center(
                     child: TextButton(
                       onPressed: () => Navigator.pop(context),
-                      child: Text(
-                        'Close',
-                        style: TextStyle(color: Theme.of(context).colorScheme.primary),
-                      ),
+                      child: Text('Close',
+                          style: TextStyle(
+                              color: Theme.of(context).colorScheme.primary)),
                     ),
                   ),
                 ],
@@ -392,60 +370,36 @@ class ProfileView extends StatelessWidget {
   }
 
   Widget _buildThemeToggleSection(BuildContext context) {
-    final themeController = Get.find<ThemeController>();
-    return Obx(
-      () => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(left: 4, bottom: 8),
-            child: Text(
-              'Theme',
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: AppTheme.textMuted,
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-          ),
-          Row(
-            children: [
-              _buildThemeToggleOption(
-                context,
-                ThemeMode.light,
-                'Light',
-                Icons.light_mode_rounded,
-                themeController,
-              ),
-              const SizedBox(width: 8),
-              _buildThemeToggleOption(
-                context,
-                ThemeMode.dark,
-                'Dark',
-                Icons.dark_mode_rounded,
-                themeController,
-              ),
-              const SizedBox(width: 8),
-              _buildThemeToggleOption(
-                context,
-                ThemeMode.system,
-                'System',
-                Icons.brightness_auto_rounded,
-                themeController,
-              ),
-            ],
-          ),
-        ],
-      ),
+    final controller = Get.find<ThemeController>();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Theme',
+          style: Theme.of(context)
+              .textTheme
+              .titleSmall
+              ?.copyWith(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 12),
+        Obx(() => Row(
+              children: [
+                _buildThemeToggleOption(context, ThemeMode.light, 'Light',
+                    Icons.light_mode_rounded, controller),
+                const SizedBox(width: 8),
+                _buildThemeToggleOption(context, ThemeMode.dark, 'Dark',
+                    Icons.dark_mode_rounded, controller),
+                const SizedBox(width: 8),
+                _buildThemeToggleOption(context, ThemeMode.system, 'System',
+                    Icons.brightness_auto_rounded, controller),
+              ],
+            )),
+      ],
     );
   }
 
-  Widget _buildThemeToggleOption(
-    BuildContext context,
-    ThemeMode mode,
-    String label,
-    IconData icon,
-    ThemeController controller,
-  ) {
+  Widget _buildThemeToggleOption(BuildContext context, ThemeMode mode,
+      String label, IconData icon, ThemeController controller) {
     bool isSelected = controller.themeMode == mode;
     return Expanded(
       child: InkWell(
@@ -455,28 +409,23 @@ class ProfileView extends StatelessWidget {
           duration: const Duration(milliseconds: 300),
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: isSelected ? Theme.of(context).colorScheme.primary : Colors.white12,
+            color: isSelected
+                ? Theme.of(context).colorScheme.primary
+                : Colors.white12,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: isSelected ? Colors.transparent : Colors.white10,
-            ),
+                color: isSelected ? Colors.transparent : Colors.white10),
           ),
           child: Column(
             children: [
-              Icon(
-                icon,
-                size: 20,
-                color: isSelected ? Colors.white : Colors.grey[400],
-              ),
+              Icon(icon,
+                  size: 20,
+                  color: isSelected ? Colors.white : Colors.grey[400]),
               const SizedBox(height: 4),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                  color: isSelected ? Colors.white : Colors.grey[400],
-                ),
-              ),
+              Text(label,
+                  style: TextStyle(
+                      fontSize: 10,
+                      color: isSelected ? Colors.white : Colors.grey[400])),
             ],
           ),
         ),
@@ -485,25 +434,18 @@ class ProfileView extends StatelessWidget {
   }
 
   Widget _buildPopupItem(
-    BuildContext context,
-    IconData icon,
-    String title,
-    VoidCallback onTap,
-  ) {
+      BuildContext context, IconData icon, String title, VoidCallback onTap) {
     return ListTile(
       contentPadding: EdgeInsets.zero,
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: Colors.white.withAlpha(50),
+          color: Colors.white.withAlpha(30),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Icon(icon, size: 20),
       ),
-      title: Text(
-        title,
-        style: const TextStyle(fontWeight: FontWeight.w500),
-      ),
+      title: Text(title, style: Theme.of(context).textTheme.bodyMedium),
       trailing: const Icon(Icons.chevron_right_rounded, size: 20),
       onTap: onTap,
     );
@@ -517,9 +459,8 @@ class ProfileView extends StatelessWidget {
         content: const Text('Are you sure you want to logout?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel')),
           TextButton(
             onPressed: () {
               Navigator.pop(context);

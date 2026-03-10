@@ -51,37 +51,25 @@ class ReaderView extends StatelessWidget {
                     ],
             ),
           ),
-          child: SafeArea(
-            child: Stack(
-              children: [
-                // Reader Content
-                Column(
-                  children: [
-                    if (!controller.isFullScreen) const SizedBox(height: 80),
-                    Expanded(
-                      child: _buildReaderContent(context, controller),
-                    ),
-                    if (!controller.isFullScreen) const SizedBox(height: 90),
-                  ],
+          child: Stack(
+            children: [
+              // Reader Content
+              _buildReaderContent(context, controller),
+
+              // Top App Bar - Animated
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+                top: controller.isFullScreen ? -100 : 25,
+                left: 16,
+                right: 16,
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 300),
+                  opacity: controller.isFullScreen ? 0.0 : 1.0,
+                  child: _buildAppBar(context, controller),
                 ),
-                // Top App Bar
-                if (!controller.isFullScreen)
-                  Positioned(
-                    top: 10,
-                    left: 16,
-                    right: 16,
-                    child: _buildAppBar(context, controller),
-                  ),
-                // Bottom Controls
-                if (!controller.isFullScreen)
-                  Positioned(
-                    bottom: 20,
-                    left: 16,
-                    right: 16,
-                    child: _buildBottomControls(context, controller),
-                  ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -91,14 +79,16 @@ class ReaderView extends StatelessWidget {
   Widget _buildAppBar(BuildContext context, ReaderController controller) {
     return GlassContainer(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-      blur: 20,
+      blur: 40,
       opacity: controller.isDarkMode ? 0.25 : 0.15,
       borderRadius: 20,
       color: controller.isDarkMode ? Colors.black : Colors.white,
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.arrow_back_rounded),
+            icon: Icon(Icons.arrow_back_rounded,
+                color:
+                    controller.isDarkMode ? Colors.white : AppTheme.textDark),
             onPressed: () => Navigator.of(context).pop(),
           ),
           Expanded(
@@ -110,7 +100,9 @@ class ReaderView extends StatelessWidget {
                   controller.book!.title,
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: controller.isDarkMode ? Colors.white : AppTheme.textDark,
+                        color: controller.isDarkMode
+                            ? Colors.white
+                            : AppTheme.textDark,
                       ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -119,94 +111,27 @@ class ReaderView extends StatelessWidget {
                   Text(
                     'Page ${controller.currentPage + 1} of ${controller.totalPages}',
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: controller.isDarkMode ? Colors.white70 : AppTheme.textMuted,
+                          color: controller.isDarkMode
+                              ? Colors.white70
+                              : AppTheme.textMuted,
                         ),
                   ),
               ],
             ),
           ),
           IconButton(
-            icon: Icon(
-              controller.isBookmarked(controller.currentPage)
-                  ? Icons.bookmark_rounded
-                  : Icons.bookmark_border_rounded,
-            ),
-            onPressed: () => controller.toggleBookmark(),
-          ),
-          IconButton(
-            icon: Icon(
-              controller.isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
-            ),
-            onPressed: () => controller.toggleDarkMode(),
-          ),
-          PopupMenuButton(
-            icon: const Icon(Icons.more_vert_rounded),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'fullscreen',
-                child: Row(
-                  children: [
-                    Icon(Icons.fullscreen_rounded, size: 20),
-                    SizedBox(width: 12),
-                    Text('Full Screen'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'bookmarks',
-                child: Row(
-                  children: [
-                    Icon(Icons.bookmarks_rounded, size: 20),
-                    SizedBox(width: 12),
-                    Text('Bookmarks'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'notes',
-                child: Row(
-                  children: [
-                    Icon(Icons.notes_rounded, size: 20),
-                    SizedBox(width: 12),
-                    Text('Notes'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'settings',
-                child: Row(
-                  children: [
-                    Icon(Icons.settings_rounded, size: 20),
-                    SizedBox(width: 12),
-                    Text('Settings'),
-                  ],
-                ),
-              ),
-            ],
-            onSelected: (value) {
-              switch (value) {
-                case 'fullscreen':
-                  controller.toggleFullScreen();
-                  break;
-                case 'bookmarks':
-                  _showBookmarksDialog(context, controller);
-                  break;
-                case 'notes':
-                  _showNotesDialog(context, controller);
-                  break;
-                case 'settings':
-                  _showSettingsDialog(context, controller);
-                  break;
-              }
-            },
+            icon: Icon(Icons.more_vert_rounded,
+                color:
+                    controller.isDarkMode ? Colors.white : AppTheme.textDark),
+            onPressed: () => _showSettingsDialog(context, controller),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildReaderContent(BuildContext context, ReaderController controller) {
+  Widget _buildReaderContent(
+      BuildContext context, ReaderController controller) {
     if (controller.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -221,14 +146,34 @@ class ReaderView extends StatelessWidget {
 
   Widget _buildPDFReader(BuildContext context, ReaderController controller) {
     final content = SampleContent.getSampleContent(controller.book?.id ?? '');
-    final textColor = controller.isDarkMode ? Colors.white : AppTheme.textDark;
-    final mutedTextColor = controller.isDarkMode ? Colors.white70 : AppTheme.textMuted;
-    
+
+    // Determine colors based on theme type
+    Color bgColor;
+    Color textColor;
+    Color mutedTextColor;
+
+    switch (controller.themeType) {
+      case 'sepia':
+        bgColor = const Color(0xFFF4ECD8);
+        textColor = const Color(0xFF5B4636);
+        mutedTextColor = const Color(0xFF5B4636).withOpacity(0.7);
+        break;
+      case 'dark':
+        bgColor = const Color(0xFF1E1E1E);
+        textColor = const Color(0xFFE2E2E6);
+        mutedTextColor = const Color(0xFFE2E2E6).withOpacity(0.7);
+        break;
+      default: // light
+        bgColor = Colors.white;
+        textColor = const Color(0xFF1A1C1E);
+        mutedTextColor = const Color(0xFF1A1C1E).withOpacity(0.6);
+    }
+
     return GlassContainer(
       blur: 5,
       opacity: controller.isDarkMode ? 0.08 : 0.05,
       borderRadius: 24,
-      color: controller.isDarkMode ? Colors.black12 : Colors.white,
+      color: bgColor,
       child: SingleChildScrollView(
         padding: EdgeInsets.all(controller.fontSize + 4),
         child: Column(
@@ -239,7 +184,7 @@ class ReaderView extends StatelessWidget {
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: textColor,
-                    fontFamily: 'Outfit',
+                    fontFamily: controller.fontFamily,
                   ),
             ),
             const SizedBox(height: 8),
@@ -248,7 +193,7 @@ class ReaderView extends StatelessWidget {
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: mutedTextColor,
                     fontStyle: FontStyle.italic,
-                    fontFamily: 'Outfit',
+                    fontFamily: controller.fontFamily,
                   ),
             ),
             Divider(height: 48, color: textColor.withOpacity(0.1)),
@@ -258,9 +203,11 @@ class ReaderView extends StatelessWidget {
                 fontSize: controller.fontSize,
                 height: controller.lineHeight,
                 color: textColor.withOpacity(0.9),
-                fontFamily: 'Outfit',
+                fontFamily: controller.fontFamily,
               ),
-              textAlign: TextAlign.justify,
+              textAlign: controller.textAlign == 'justify'
+                  ? TextAlign.justify
+                  : TextAlign.left,
             ),
             const SizedBox(height: 40),
             // Progress
@@ -271,17 +218,18 @@ class ReaderView extends StatelessWidget {
                   child: LinearProgressIndicator(
                     value: controller.readingProgress,
                     minHeight: 6,
-                    backgroundColor: controller.isDarkMode ? Colors.white12 : Colors.black12,
-                    valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
+                    backgroundColor: textColor.withOpacity(0.1),
+                    valueColor:
+                        AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
                   ),
                 ),
                 const SizedBox(height: 12),
                 Text(
                   'Progress: ${controller.getProgressText()}',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: mutedTextColor,
-                    fontFamily: 'Outfit',
-                  ),
+                        color: mutedTextColor,
+                        fontFamily: 'Outfit',
+                      ),
                 ),
               ],
             ),
@@ -290,13 +238,17 @@ class ReaderView extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 TextButton.icon(
-                  onPressed: controller.currentPage > 0 ? () => controller.previousPage() : null,
+                  onPressed: controller.currentPage > 0
+                      ? () => controller.previousPage()
+                      : null,
                   icon: const Icon(Icons.chevron_left_rounded),
                   label: const Text('Previous'),
                   style: TextButton.styleFrom(foregroundColor: textColor),
                 ),
                 TextButton.icon(
-                  onPressed: controller.currentPage < controller.totalPages - 1 ? () => controller.nextPage() : null,
+                  onPressed: controller.currentPage < controller.totalPages - 1
+                      ? () => controller.nextPage()
+                      : null,
                   icon: const Text('Next'),
                   label: const Icon(Icons.chevron_right_rounded),
                   style: TextButton.styleFrom(foregroundColor: textColor),
@@ -311,10 +263,12 @@ class ReaderView extends StatelessWidget {
   }
 
   Widget _buildEPUBReader(BuildContext context, ReaderController controller) {
-    final content = SampleContent.getEPUBSampleContent(controller.book?.id ?? '');
+    final content =
+        SampleContent.getEPUBSampleContent(controller.book?.id ?? '');
     final textColor = controller.isDarkMode ? Colors.white : AppTheme.textDark;
-    final mutedTextColor = controller.isDarkMode ? Colors.white70 : AppTheme.textMuted;
-    
+    final mutedTextColor =
+        controller.isDarkMode ? Colors.white70 : AppTheme.textMuted;
+
     return GlassContainer(
       blur: 5,
       opacity: controller.isDarkMode ? 0.08 : 0.05,
@@ -361,17 +315,19 @@ class ReaderView extends StatelessWidget {
                   child: LinearProgressIndicator(
                     value: controller.readingProgress,
                     minHeight: 6,
-                    backgroundColor: controller.isDarkMode ? Colors.white12 : Colors.black12,
-                    valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
+                    backgroundColor:
+                        controller.isDarkMode ? Colors.white12 : Colors.black12,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                        Theme.of(context).colorScheme.primary),
                   ),
                 ),
                 const SizedBox(height: 12),
                 Text(
                   'Progress: ${controller.getProgressText()}',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: mutedTextColor,
-                    fontFamily: 'Outfit',
-                  ),
+                        color: mutedTextColor,
+                        fontFamily: 'Outfit',
+                      ),
                 ),
               ],
             ),
@@ -380,13 +336,17 @@ class ReaderView extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 TextButton.icon(
-                  onPressed: controller.currentPage > 0 ? () => controller.previousPage() : null,
+                  onPressed: controller.currentPage > 0
+                      ? () => controller.previousPage()
+                      : null,
                   icon: const Icon(Icons.chevron_left_rounded),
                   label: const Text('Previous'),
                   style: TextButton.styleFrom(foregroundColor: textColor),
                 ),
                 TextButton.icon(
-                  onPressed: controller.currentPage < controller.totalPages - 1 ? () => controller.nextPage() : null,
+                  onPressed: controller.currentPage < controller.totalPages - 1
+                      ? () => controller.nextPage()
+                      : null,
                   icon: const Text('Next'),
                   label: const Icon(Icons.chevron_right_rounded),
                   style: TextButton.styleFrom(foregroundColor: textColor),
@@ -400,175 +360,402 @@ class ReaderView extends StatelessWidget {
     );
   }
 
-  Widget _buildBottomControls(BuildContext context, ReaderController controller) {
-    return GlassContainer(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      blur: 30,
-      opacity: 0.1,
-      borderRadius: 24,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildControlIcon(Icons.bookmark_add_rounded, 'Bookmark', () => controller.toggleBookmark()),
-          _buildControlIcon(Icons.note_add_rounded, 'Note', () => _showAddNoteDialog(context, controller)),
-          _buildControlIcon(Icons.text_fields_rounded, 'Text', () => _showFontSizeDialog(context, controller)),
-          _buildControlIcon(Icons.brightness_medium_rounded, 'Brightness', () => _showBrightnessDialog(context, controller)),
-          _buildControlIcon(Icons.settings_rounded, 'Settings', () => _showSettingsDialog(context, controller)),
-        ],
+  void _showSettingsDialog(BuildContext context, ReaderController controller) {
+    Get.bottomSheet(
+      Obx(() => Container(
+            decoration: BoxDecoration(
+              color: controller.isDarkMode
+                  ? const Color(0xFF1E1E2C)
+                  : const Color(0xFFF8F9FA),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(32)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 20,
+                  offset: const Offset(0, -5),
+                ),
+              ],
+            ),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.only(
+                  left: 24, right: 24, top: 12, bottom: 32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Drag Handle
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: controller.isDarkMode
+                            ? Colors.white24
+                            : Colors.black12,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Header
+                  Text(
+                    'Reader Settings',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color:
+                          controller.isDarkMode ? Colors.white : Colors.black87,
+                      fontFamily: 'Outfit',
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Actions Section
+                  _buildSectionTitle('ACTIONS', controller),
+                  const SizedBox(height: 12),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        _buildActionTile(
+                          icon: controller.isFullScreen
+                              ? Icons.fullscreen_exit_rounded
+                              : Icons.fullscreen_rounded,
+                          label: 'Full Screen',
+                          onTap: () {
+                            controller.toggleFullScreen();
+                            Get.back();
+                          },
+                          controller: controller,
+                        ),
+                        const SizedBox(width: 12),
+                        _buildActionTile(
+                          icon: Icons.bookmarks_rounded,
+                          label: 'Bookmarks',
+                          onTap: () {
+                            Get.back();
+                            _showBookmarksDialog(context, controller);
+                          },
+                          controller: controller,
+                        ),
+                        const SizedBox(width: 12),
+                        _buildActionTile(
+                          icon: Icons.notes_rounded,
+                          label: 'Notes',
+                          onTap: () {
+                            Get.back();
+                            _showNotesDialog(context, controller);
+                          },
+                          controller: controller,
+                        ),
+                        const SizedBox(width: 12),
+                        _buildActionTile(
+                          icon: Icons.note_add_rounded,
+                          label: 'Add Note',
+                          onTap: () {
+                            Get.back();
+                            _showAddNoteDialog(context, controller);
+                          },
+                          controller: controller,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Themes
+                  _buildSectionTitle('THEME', controller),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      _buildThemeButton('Light', 'light', controller),
+                      const SizedBox(width: 12),
+                      _buildThemeButton('Sepia', 'sepia', controller),
+                      const SizedBox(width: 12),
+                      _buildThemeButton('Dark', 'dark', controller),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Font Size
+                  _buildSectionTitle('FONT SIZE', controller),
+                  _buildSlider(
+                    value: controller.fontSize,
+                    min: 12,
+                    max: 32,
+                    onChanged: (v) => controller.setFontSize(v),
+                    label: '${controller.fontSize.toInt()}',
+                    controller: controller,
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Font Family
+                  _buildSectionTitle('FONT', controller),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _buildFontButton('Outfit', controller),
+                      _buildFontButton('Georgia', controller),
+                      _buildFontButton('Montserrat', controller),
+                      _buildFontButton('Mono', controller),
+                      _buildFontButton('Open Sans', controller),
+                      _buildFontButton('Inter', controller),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Text Align
+                  _buildSectionTitle('TEXT ALIGN', controller),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      _buildAlignButton('Left', 'left',
+                          Icons.align_horizontal_left_rounded, controller),
+                      const SizedBox(width: 12),
+                      _buildAlignButton('Justify', 'justify',
+                          Icons.align_horizontal_right_rounded, controller),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Line Height
+                  _buildSectionTitle('LINE HEIGHT', controller),
+                  _buildSlider(
+                    value: controller.lineHeight,
+                    min: 1.0,
+                    max: 2.5,
+                    onChanged: (v) => controller.setLineHeight(v),
+                    label: controller.lineHeight.toStringAsFixed(1),
+                    controller: controller,
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Brightness
+                  _buildSectionTitle('BRIGHTNESS', controller),
+                  _buildSlider(
+                    value: controller.brightness,
+                    min: 0.0,
+                    max: 1.0,
+                    onChanged: (v) => controller.setBrightness(v),
+                    label: '${(controller.brightness * 100).toInt()}%',
+                    controller: controller,
+                  ),
+                  const SizedBox(height: 16),
+                ],
+              ),
+            ),
+          )),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+    );
+  }
+
+  Widget _buildActionTile({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    required ReaderController controller,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 80,
+        height: 80,
+        decoration: BoxDecoration(
+          color: controller.isDarkMode ? Colors.white10 : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: controller.isDarkMode ? Colors.white24 : Colors.black12,
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon,
+                color: controller.isDarkMode ? Colors.white : AppTheme.textDark,
+                size: 24),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 10,
+                color: controller.isDarkMode ? Colors.white70 : Colors.black54,
+                fontFamily: 'Outfit',
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildControlIcon(IconData icon, String tooltip, VoidCallback onTap) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
+  Widget _buildSectionTitle(String title, ReaderController controller) {
+    return Text(
+      title,
+      style: TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.bold,
+        letterSpacing: 1.2,
+        color: controller.isDarkMode ? Colors.white54 : Colors.black45,
+        fontFamily: 'Outfit',
+      ),
+    );
+  }
+
+  Widget _buildThemeButton(
+      String label, String type, ReaderController controller) {
+    final isSelected = controller.themeType == type;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => controller.setThemeType(type),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? AppTheme.primaryColor
+                : (controller.isDarkMode ? Colors.white10 : Colors.white),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isSelected
+                  ? AppTheme.primaryColor
+                  : (controller.isDarkMode ? Colors.white24 : Colors.black12),
+            ),
+          ),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: isSelected
+                  ? Colors.white
+                  : (controller.isDarkMode ? Colors.white70 : Colors.black87),
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFontButton(String font, ReaderController controller) {
+    final isSelected = controller.fontFamily == font;
+    return GestureDetector(
+      onTap: () => controller.setFontFamily(font),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppTheme.primaryColor
+              : (controller.isDarkMode ? Colors.white10 : Colors.white),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: isSelected
+                ? AppTheme.primaryColor
+                : (controller.isDarkMode ? Colors.white24 : Colors.black12),
+          ),
+        ),
+        child: Text(
+          font,
+          style: TextStyle(
+            color: isSelected
+                ? Colors.white
+                : (controller.isDarkMode ? Colors.white70 : Colors.black87),
+            fontFamily: font == 'Mono' ? 'monospace' : font,
+            fontSize: 14,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAlignButton(
+      String label, String align, IconData icon, ReaderController controller) {
+    final isSelected = controller.textAlign == align;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => controller.setTextAlign(align),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? AppTheme.primaryColor
+                : (controller.isDarkMode ? Colors.white10 : Colors.white),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isSelected
+                  ? AppTheme.primaryColor
+                  : (controller.isDarkMode ? Colors.white24 : Colors.black12),
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon,
+                  size: 18,
+                  color: isSelected
+                      ? Colors.white
+                      : (controller.isDarkMode
+                          ? Colors.white70
+                          : Colors.black87)),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  color: isSelected
+                      ? Colors.white
+                      : (controller.isDarkMode
+                          ? Colors.white70
+                          : Colors.black87),
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSlider({
+    required double value,
+    required double min,
+    required double max,
+    required Function(double) onChanged,
+    required String label,
+    required ReaderController controller,
+  }) {
+    return Row(
       children: [
-        IconButton(
-          icon: Icon(icon, size: 22),
-          onPressed: onTap,
-          tooltip: tooltip,
+        Expanded(
+          child: Slider(
+            value: value,
+            min: min,
+            max: max,
+            onChanged: (v) => onChanged(v),
+            activeColor: AppTheme.primaryColor,
+            inactiveColor:
+                controller.isDarkMode ? Colors.white10 : Colors.black12,
+          ),
+        ),
+        SizedBox(
+          width: 40,
+          child: Text(
+            label,
+            textAlign: TextAlign.end,
+            style: TextStyle(
+              fontSize: 12,
+              color: controller.isDarkMode ? Colors.white70 : Colors.black54,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ),
       ],
-    );
-  }
-
-  void _showSettingsDialog(BuildContext context, ReaderController controller) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Reader Settings'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Font Size
-              ListTile(
-                leading: const Icon(Icons.format_size),
-                title: Text('Font Size: ${controller.fontSize.toInt()}'),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.remove),
-                      onPressed: () {
-                        controller.setFontSize(controller.fontSize - 1);
-                      },
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.add),
-                      onPressed: () {
-                        controller.setFontSize(controller.fontSize + 1);
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              // Line Height
-              ListTile(
-                leading: const Icon(Icons.format_line_spacing),
-                title: Text('Line Height: ${controller.lineHeight.toStringAsFixed(1)}'),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.remove),
-                      onPressed: () {
-                        controller.setLineHeight(controller.lineHeight - 0.1);
-                      },
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.add),
-                      onPressed: () {
-                        controller.setLineHeight(controller.lineHeight + 0.1);
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              // Dark Mode
-              SwitchListTile(
-                title: const Text('Dark Mode'),
-                value: controller.isDarkMode,
-                onChanged: (value) => controller.toggleDarkMode(),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showFontSizeDialog(BuildContext context, ReaderController controller) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Font Size'),
-        content: StatefulBuilder(
-          builder: (context, setState) => Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('${controller.fontSize.toInt()}'),
-              Slider(
-                value: controller.fontSize,
-                min: 12,
-                max: 24,
-                divisions: 12,
-                label: controller.fontSize.toInt().toString(),
-                onChanged: (value) {
-                  controller.setFontSize(value);
-                  setState(() {});
-                },
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Done'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showBrightnessDialog(BuildContext context, ReaderController controller) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Brightness'),
-        content: StatefulBuilder(
-          builder: (context, setState) => Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('${(controller.brightness * 100).toInt()}%'),
-              Slider(
-                value: controller.brightness,
-                min: 0.0,
-                max: 1.0,
-                divisions: 10,
-                label: '${(controller.brightness * 100).toInt()}%',
-                onChanged: (value) {
-                  controller.setBrightness(value);
-                  setState(() {});
-                },
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Done'),
-          ),
-        ],
-      ),
     );
   }
 
@@ -653,7 +840,7 @@ class ReaderView extends StatelessWidget {
 
   void _showAddNoteDialog(BuildContext context, ReaderController controller) {
     final noteController = TextEditingController();
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
