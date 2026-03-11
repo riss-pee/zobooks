@@ -20,9 +20,11 @@ class BookCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GlassContainer(
+      border: Border.all(
+        color: Theme.of(context).colorScheme.primary.withOpacity(0.7),
+        width: 2,
+      ),
       padding: EdgeInsets.zero,
-      blur: 10,
-      opacity: 0.1,
       borderRadius: 20,
       child: InkWell(
         onTap: onTap,

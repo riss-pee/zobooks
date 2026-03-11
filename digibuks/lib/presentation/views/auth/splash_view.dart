@@ -36,17 +36,7 @@ class _SplashViewState extends State<SplashView> {
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFFF5F5F5),
-              Color(0xFFEEEEEE),
-              Color(0xFFE0E0E0),
-            ],
-          ),
-        ),
+        color: Theme.of(context).scaffoldBackgroundColor,
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(vertical: 40),
@@ -59,6 +49,7 @@ class _SplashViewState extends State<SplashView> {
                   width: 264,
                   height: 264,
                   fit: BoxFit.contain,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
                 const SizedBox(height: 80),
                 const CircularProgressIndicator(strokeWidth: 2),

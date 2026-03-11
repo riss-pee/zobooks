@@ -14,31 +14,21 @@ class ProfileView extends StatelessWidget {
   Widget build(BuildContext context) {
     final authController = Get.find<AuthController>();
 
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Color(0xFFF5F5F5),
-            Color(0xFFEEEEEE),
-          ],
-        ),
-      ),
-      child: Scaffold(
+    return Scaffold(
+      extendBody: true,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBar(
+        title: const Text('Profile'),
         backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          title: const Text('Profile'),
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.settings_rounded),
-              onPressed: () => _showSettingsWindow(context),
-            ),
-          ],
-        ),
-        body: Obx(
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_rounded),
+            onPressed: () => _showSettingsWindow(context),
+          ),
+        ],
+      ),
+      body: Obx(
           () {
             final user = authController.currentUser;
             if (user == null) {
@@ -63,7 +53,7 @@ class ProfileView extends StatelessWidget {
                           'Welcome to DigiBuks',
                           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
-                                color: Colors.black87,
+                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.87),
                               ),
                         ),
                         const SizedBox(height: 12),
@@ -71,7 +61,7 @@ class ProfileView extends StatelessWidget {
                           'Login or create an account to view your profile, manage your books, and more.',
                           textAlign: TextAlign.center,
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: Colors.black87,
+                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.87),
                               ),
                         ),
                         const SizedBox(height: 32),
@@ -127,14 +117,14 @@ class ProfileView extends StatelessWidget {
                           user.name ?? 'User',
                           style: Theme.of(context).textTheme.titleLarge?.copyWith(
                                 fontWeight: FontWeight.bold,
-                                color: Colors.black,
+                                color: Theme.of(context).colorScheme.onSurface,
                               ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           user.email,
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: Colors.black87,
+                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.87),
                               ),
                         ),
                         const SizedBox(height: 16),
@@ -274,7 +264,6 @@ class ProfileView extends StatelessWidget {
             );
           },
         ),
-      ),
     );
   }
 
@@ -288,7 +277,7 @@ class ProfileView extends StatelessWidget {
           child: Text(
             title,
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: Colors.black54,
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.54),
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1,
                 ),
@@ -309,9 +298,9 @@ class ProfileView extends StatelessWidget {
       leading: Icon(icon, color: Theme.of(context).colorScheme.primary),
       title: Text(
         title,
-        style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.w500),
+        style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w500),
       ),
-      trailing: const Icon(Icons.chevron_right, color: Colors.black54),
+      trailing: Icon(Icons.chevron_right, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.54)),
       onTap: onTap,
     );
   }
@@ -338,7 +327,7 @@ class ProfileView extends StatelessWidget {
                   Text(
                     'Settings',
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          color: Colors.black87,
+                          color: Theme.of(context).colorScheme.onSurface,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 1,
                         ),
