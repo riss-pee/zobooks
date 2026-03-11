@@ -14,19 +14,7 @@ class SearchPage extends StatefulWidget {
 
 class _SearchPageState extends State<SearchPage> {
   final _searchController = TextEditingController();
-  String _selectedCategory = 'All';
-  String _selectedLanguage = 'All';
-  String _sortBy = 'Newest';
   bool _isFilterExpanded = false;
-
-  final List<Map<String, dynamic>> _categories = [
-    {'label': 'All', 'icon': Icons.apps},
-    {'label': 'Fiction', 'icon': Icons.auto_stories},
-    {'label': 'Non‑Fiction', 'icon': Icons.menu_book},
-    {'label': 'Poetry', 'icon': Icons.library_books},
-    {'label': 'History', 'icon': Icons.history_edu},
-    {'label': 'Education', 'icon': Icons.school},
-  ];
 
   @override
   void initState() {
@@ -83,11 +71,13 @@ class _SearchPageState extends State<SearchPage> {
             ),
             if (_isFilterExpanded) const SizedBox(height: 16),
 
-
-
             // 4. Book Cards (Results)
             Expanded(
               child: Obx(() {
+                if (bookController.isLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
                 final books = bookController.filteredBooks;
                 if (books.isEmpty) {
                   return const Center(child: Text('No books found'));
@@ -118,10 +108,24 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   Widget _buildFilterSection(BookController bookController) {
+    final selectedCategory = bookController.selectedGenre.isEmpty
+        ? 'All'
+        : bookController.selectedGenre;
+    final selectedLanguage = bookController.selectedLanguage.isEmpty
+        ? 'All'
+        : bookController.selectedLanguage;
+    final categories = bookController.availableCategories.isEmpty
+        ? const ['All']
+        : bookController.availableCategories;
+    final languages = bookController.availableLanguages.isEmpty
+        ? const ['All']
+        : bookController.availableLanguages;
+
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha(50),
+        color:
+            Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha(50),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Theme.of(context).dividerColor.withAlpha(30)),
       ),
@@ -139,16 +143,12 @@ class _SearchPageState extends State<SearchPage> {
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: _categories.map((cat) {
-              final isSelected = _selectedCategory == cat['label'];
+            children: categories.map((category) {
+              final isSelected = selectedCategory == category;
               return GestureDetector(
                 onTap: () {
-                  setState(() {
-                    _selectedCategory = cat['label'];
-                  });
-                  bookController.filterByGenre(
-                      cat['label'] == 'All' ? '' : cat['label']);
-                  // We do not close the entire popdown here to allow modifying language/sort
+                  bookController
+                      .filterByGenre(category == 'All' ? '' : category);
                 },
                 child: Container(
                   padding:
@@ -161,13 +161,14 @@ class _SearchPageState extends State<SearchPage> {
                     border: isSelected
                         ? null
                         : Border.all(
-                            color: Theme.of(context).dividerColor.withAlpha(50)),
+                            color:
+                                Theme.of(context).dividerColor.withAlpha(50)),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        cat['icon'] as IconData,
+                        _categoryIcon(category),
                         size: 16,
                         color: isSelected
                             ? Colors.white
@@ -175,7 +176,7 @@ class _SearchPageState extends State<SearchPage> {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        cat['label'],
+                        category,
                         style: TextStyle(
                           color: isSelected
                               ? Colors.white
@@ -197,19 +198,19 @@ class _SearchPageState extends State<SearchPage> {
               Expanded(
                 child: _buildDropdown(
                   label: 'Language',
-                  value: _selectedLanguage,
-                  items: ['All', 'English', 'Mizo'],
+                  value: selectedLanguage,
+                  items: languages,
                   onChanged: (val) {
-                    setState(() => _selectedLanguage = val!);
                     bookController.filterByLanguage(val == 'All' ? '' : val!);
                   },
+                  itemLabelBuilder: _formatLanguageLabel,
                 ),
               ),
               const SizedBox(width: 16),
               Expanded(
                 child: _buildDropdown(
                   label: 'Sort By',
-                  value: _sortBy,
+                  value: bookController.sortBy,
                   items: [
                     'Newest',
                     'Oldest',
@@ -217,8 +218,9 @@ class _SearchPageState extends State<SearchPage> {
                     'Price: High to Low'
                   ],
                   onChanged: (val) {
-                    setState(() => _sortBy = val!);
-                    // Add sort logic if controller supports it
+                    if (val != null) {
+                      bookController.setSortBy(val);
+                    }
                   },
                 ),
               ),
@@ -234,7 +236,10 @@ class _SearchPageState extends State<SearchPage> {
     required String value,
     required List<String> items,
     required ValueChanged<String?> onChanged,
+    String Function(String item)? itemLabelBuilder,
   }) {
+    final selectedValue = items.contains(value) ? value : items.first;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -259,7 +264,7 @@ class _SearchPageState extends State<SearchPage> {
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
-              value: value,
+              value: selectedValue,
               isExpanded: true,
               icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 20),
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -268,7 +273,7 @@ class _SearchPageState extends State<SearchPage> {
               items: items.map((String item) {
                 return DropdownMenuItem<String>(
                   value: item,
-                  child: Text(item),
+                  child: Text(itemLabelBuilder?.call(item) ?? item),
                 );
               }).toList(),
               onChanged: onChanged,
@@ -277,5 +282,38 @@ class _SearchPageState extends State<SearchPage> {
         ),
       ],
     );
+  }
+
+  String _formatLanguageLabel(String language) {
+    switch (language.toLowerCase()) {
+      case 'en':
+        return 'English';
+      case 'mizo':
+        return 'Mizo';
+      case 'all':
+        return 'All';
+      default:
+        if (language.isEmpty) {
+          return 'All';
+        }
+        return language[0].toUpperCase() + language.substring(1);
+    }
+  }
+
+  IconData _categoryIcon(String category) {
+    switch (category.toLowerCase()) {
+      case 'history':
+        return Icons.history_edu;
+      case 'novel':
+        return Icons.auto_stories;
+      case 'sci-fi':
+        return Icons.rocket_launch_outlined;
+      case 'horror':
+        return Icons.nightlight_round;
+      case 'all':
+        return Icons.apps;
+      default:
+        return Icons.menu_book;
+    }
   }
 }

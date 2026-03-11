@@ -58,12 +58,8 @@ class BookModel {
       fileUrl: json['file_url'],
       fileType: json['file_type'] ?? 'pdf',
       language: json['language'] ?? 'english',
-      genres: json['genres'] != null
-          ? List<String>.from(json['genres'])
-          : [],
-      tags: json['tags'] != null
-          ? List<String>.from(json['tags'])
-          : [],
+      genres: json['genres'] != null ? List<String>.from(json['genres']) : [],
+      tags: json['tags'] != null ? List<String>.from(json['tags']) : [],
       price: json['price']?.toDouble(),
       rentalPrice: json['rental_price']?.toDouble(),
       rentalDays: json['rental_days'],
@@ -81,6 +77,50 @@ class BookModel {
       updatedAt: json['updated_at'] != null
           ? DateTime.parse(json['updated_at'])
           : null,
+    );
+  }
+
+  factory BookModel.fromPublishedBookJson(Map<String, dynamic> json) {
+    final authors = (json['authors'] as List<dynamic>?)
+            ?.map((author) => author.toString())
+            .toList() ??
+        const <String>[];
+    final categories = (json['categories'] as List<dynamic>?)
+            ?.map((category) => category.toString())
+            .toList() ??
+        const <String>[];
+    final priceValue = json['price'];
+    final isFree = json['is_free'] == true;
+
+    return BookModel(
+      id: json['id']?.toString() ?? '',
+      title: json['title']?.toString() ?? '',
+      description: json['description']?.toString(),
+      authorId: '',
+      authorName: authors.isNotEmpty ? authors.join(', ') : null,
+      coverImage: json['cover_url']?.toString(),
+      fileUrl: null,
+      fileType: 'pdf',
+      language: json['language']?.toString() ?? 'english',
+      genres: categories,
+      tags: const [],
+      price: priceValue is num ? priceValue.toDouble() : null,
+      rentalPrice: null,
+      rentalDays: null,
+      type: isFree ? 'free' : 'purchase',
+      isPublished: true,
+      rating: null,
+      reviewCount: null,
+      pageCount: json['chapters_count'] is num
+          ? (json['chapters_count'] as num).toInt()
+          : null,
+      publishedAt: json['created_at'] != null
+          ? DateTime.tryParse(json['created_at'].toString())
+          : null,
+      createdAt: json['created_at'] != null
+          ? DateTime.tryParse(json['created_at'].toString())
+          : null,
+      updatedAt: null,
     );
   }
 
@@ -111,4 +151,3 @@ class BookModel {
     };
   }
 }
-
