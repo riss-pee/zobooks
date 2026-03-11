@@ -6,6 +6,7 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../controllers/theme_controller.dart';
 import '../../widgets/glass_container.dart';
+import '../../../core/utils/snackbar_helper.dart';
 
 class ProfileView extends StatelessWidget {
   const ProfileView({super.key});
@@ -13,24 +14,13 @@ class ProfileView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final authController = Get.find<AuthController>();
-    final themeController = Get.find<ThemeController>();
 
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Color(0xFFF5F5F5),
-            Color(0xFFEEEEEE),
-          ],
-        ),
-      ),
-      child: Scaffold(
+    return Scaffold(
+      extendBody: true,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBar(
+        title: const Text('Profile'),
         backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          title: const Text('Profile'),
-          backgroundColor: Colors.transparent,
           elevation: 0,
           actions: [
             IconButton(
@@ -67,17 +57,16 @@ class ProfileView extends StatelessWidget {
                               .headlineMedium
                               ?.copyWith(
                                 fontWeight: FontWeight.bold,
-                                color: Colors.black87,
+                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.87),
                               ),
                         ),
                         const SizedBox(height: 12),
                         Text(
                           'Login or create an account to view your profile, manage your books, and more.',
                           textAlign: TextAlign.center,
-                          style:
-                              Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: Colors.black87,
-                                  ),
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: Theme.of(context).colorScheme.onSurface.withAlpha(200),
+                              ),
                         ),
                         const SizedBox(height: 32),
                         ElevatedButton(
@@ -132,19 +121,17 @@ class ProfileView extends StatelessWidget {
                         const SizedBox(height: 20),
                         Text(
                           user.name ?? 'User',
-                          style:
-                              Theme.of(context).textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black,
-                                  ),
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           user.email,
-                          style:
-                              Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: Colors.black87,
-                                  ),
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: Theme.of(context).colorScheme.onSurface.withAlpha(200),
+                              ),
                         ),
                         const SizedBox(height: 16),
                         Container(
@@ -293,14 +280,12 @@ class ProfileView extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(
-                      height: 100), // Larger bottom padding for floating navbar
+                  const SizedBox(height: 100), // Larger bottom padding for floating navbar
                 ],
               ),
             );
           },
         ),
-      ),
     );
   }
 
@@ -314,7 +299,7 @@ class ProfileView extends StatelessWidget {
           child: Text(
             title,
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: Colors.black54,
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.54),
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1,
                 ),
@@ -335,10 +320,9 @@ class ProfileView extends StatelessWidget {
       leading: Icon(icon, color: Theme.of(context).colorScheme.primary),
       title: Text(
         title,
-        style:
-            const TextStyle(color: Colors.black87, fontWeight: FontWeight.w500),
+        style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w500),
       ),
-      trailing: const Icon(Icons.chevron_right, color: Colors.black54),
+      trailing: Icon(Icons.chevron_right, color: Theme.of(context).colorScheme.onSurface.withAlpha(150)),
       onTap: onTap,
     );
   }
@@ -365,7 +349,7 @@ class ProfileView extends StatelessWidget {
                   Text(
                     'Settings',
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          color: Colors.black87,
+                          color: Theme.of(context).colorScheme.onSurface,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 1,
                         ),
@@ -437,21 +421,21 @@ class ProfileView extends StatelessWidget {
           decoration: BoxDecoration(
             color: isSelected
                 ? Theme.of(context).colorScheme.primary
-                : Colors.white12,
+                : Theme.of(context).colorScheme.onSurface.withAlpha(15),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-                color: isSelected ? Colors.transparent : Colors.white10),
+                color: isSelected ? Colors.transparent : Theme.of(context).colorScheme.onSurface.withAlpha(20)),
           ),
           child: Column(
             children: [
               Icon(icon,
                   size: 20,
-                  color: isSelected ? Colors.white : Colors.grey[400]),
+                  color: isSelected ? Theme.of(context).colorScheme.onPrimary : Theme.of(context).colorScheme.onSurface.withAlpha(150)),
               const SizedBox(height: 4),
               Text(label,
                   style: TextStyle(
                       fontSize: 10,
-                      color: isSelected ? Colors.white : Colors.grey[400])),
+                      color: isSelected ? Theme.of(context).colorScheme.onPrimary : Theme.of(context).colorScheme.onSurface.withAlpha(150))),
             ],
           ),
         ),
@@ -466,7 +450,7 @@ class ProfileView extends StatelessWidget {
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: Colors.white.withAlpha(30),
+          color: Theme.of(context).colorScheme.onSurface.withAlpha(15),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Icon(icon, size: 20),

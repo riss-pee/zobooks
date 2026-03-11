@@ -48,20 +48,10 @@ class _LoginViewState extends State<LoginView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topRight,
-            end: Alignment.bottomLeft,
-            colors: [
-              Color(0xFFF5F5F5), // Light grey
-              Color(0xFFEEEEEE),
-              Color(0xFFE0E0E0),
-            ],
-          ),
-        ),
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
@@ -106,8 +96,7 @@ class _LoginViewState extends State<LoginView> {
                     GlassContainer(
                       padding: const EdgeInsets.all(24),
                       blur: 20,
-                      opacity: 0.4,
-                      color: Colors.white,
+                      opacity: Theme.of(context).brightness == Brightness.dark ? 0.2 : 0.4,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [

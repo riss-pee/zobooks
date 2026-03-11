@@ -44,7 +44,7 @@ class _HomeTabState extends State<HomeTab> {
     final userName = authController.currentUser?.name ?? 'Reader';
 
     return Scaffold(
-      backgroundColor: Colors.transparent, // Let parent or decoration handle it
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         bottom: false,
         child: RefreshIndicator(
@@ -287,7 +287,7 @@ class _HomeTabState extends State<HomeTab> {
                       }).toList(),
 
                       // Bottom padding for safer scrolling above navbar
-                      const SliverToBoxAdapter(child: SizedBox(height: 20)),
+                      const SliverToBoxAdapter(child: SizedBox(height: 120)),
                     ],
                   ),
           ),
@@ -433,8 +433,8 @@ class _HomeTabState extends State<HomeTab> {
                 color: Theme.of(context).colorScheme.surfaceContainerHighest,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withAlpha(10),
-                    blurRadius: 8,
+                    color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                    blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
                 ],

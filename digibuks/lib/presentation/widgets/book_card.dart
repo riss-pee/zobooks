@@ -21,8 +21,6 @@ class BookCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GlassContainer(
       padding: EdgeInsets.zero,
-      blur: 10,
-      opacity: 0.1,
       borderRadius: 20,
       child: InkWell(
         onTap: onTap,

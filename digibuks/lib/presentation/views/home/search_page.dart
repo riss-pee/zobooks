@@ -17,6 +17,7 @@ class _SearchPageState extends State<SearchPage> {
   String _selectedCategory = 'All';
   String _selectedLanguage = 'All';
   String _sortBy = 'Newest';
+  bool _isFilterExpanded = false;
 
   final List<Map<String, dynamic>> _categories = [
     {'label': 'All', 'icon': Icons.apps},
@@ -64,61 +65,25 @@ class _SearchPageState extends State<SearchPage> {
             // 1. Search Bar
             AppSearchBar(
               controller: _searchController,
-              onFilter:
-                  () {}, // Filter logic can be integrated or simplified here
+              onFilter: () {
+                setState(() {
+                  _isFilterExpanded = !_isFilterExpanded;
+                });
+              },
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
 
-            // 2. Keywords (Categories)
-            SizedBox(
-              height: 40,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: _categories.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 10),
-                itemBuilder: (context, index) {
-                  final cat = _categories[index];
-                  final isSelected = _selectedCategory == cat['label'];
-                  return _buildCategoryChip(cat, isSelected, bookController);
-                },
-              ),
+            // 2. Expandable Filter Section
+            AnimatedSize(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+              child: _isFilterExpanded
+                  ? _buildFilterSection(bookController)
+                  : const SizedBox.shrink(),
             ),
-            const SizedBox(height: 24),
+            if (_isFilterExpanded) const SizedBox(height: 16),
 
-            // 3. Dropdown Buttons
-            Row(
-              children: [
-                Expanded(
-                  child: _buildDropdown(
-                    label: 'Language',
-                    value: _selectedLanguage,
-                    items: ['All', 'English', 'Mizo'],
-                    onChanged: (val) {
-                      setState(() => _selectedLanguage = val!);
-                      bookController.filterByLanguage(val == 'All' ? '' : val!);
-                    },
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildDropdown(
-                    label: 'Sort By',
-                    value: _sortBy,
-                    items: [
-                      'Newest',
-                      'Oldest',
-                      'Price: Low to High',
-                      'Price: High to Low'
-                    ],
-                    onChanged: (val) {
-                      setState(() => _sortBy = val!);
-                      // Add sort logic if controller supports it
-                    },
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
+
 
             // 4. Book Cards (Results)
             Expanded(
@@ -128,7 +93,7 @@ class _SearchPageState extends State<SearchPage> {
                   return const Center(child: Text('No books found'));
                 }
                 return GridView.builder(
-                  padding: const EdgeInsets.only(bottom: 120),
+                  padding: const EdgeInsets.only(bottom: 150),
                   itemCount: books.length,
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
@@ -152,38 +117,114 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
-  Widget _buildCategoryChip(
-      Map<String, dynamic> cat, bool isSelected, BookController controller) {
-    return GestureDetector(
-      onTap: () {
-        setState(() => _selectedCategory = cat['label']);
-        controller.filterByGenre(cat['label'] == 'All' ? '' : cat['label']);
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: isSelected
-              ? Theme.of(context).colorScheme.primary
-              : Theme.of(context)
-                  .colorScheme
-                  .surfaceContainerHighest
-                  .withAlpha(100),
-          borderRadius: BorderRadius.circular(20),
-          border: isSelected
-              ? null
-              : Border.all(color: Theme.of(context).dividerColor.withAlpha(50)),
-        ),
-        child: Text(
-          cat['label'],
-          style: TextStyle(
-            color: isSelected
-                ? Colors.white
-                : Theme.of(context).colorScheme.onSurface,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-            fontSize: 12,
+  Widget _buildFilterSection(BookController bookController) {
+    return Container(
+      padding: const EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha(50),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Theme.of(context).dividerColor.withAlpha(30)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Keywords',
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
           ),
-        ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: _categories.map((cat) {
+              final isSelected = _selectedCategory == cat['label'];
+              return GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _selectedCategory = cat['label'];
+                  });
+                  bookController.filterByGenre(
+                      cat['label'] == 'All' ? '' : cat['label']);
+                  // We do not close the entire popdown here to allow modifying language/sort
+                },
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(context).colorScheme.surface,
+                    borderRadius: BorderRadius.circular(20),
+                    border: isSelected
+                        ? null
+                        : Border.all(
+                            color: Theme.of(context).dividerColor.withAlpha(50)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        cat['icon'] as IconData,
+                        size: 16,
+                        color: isSelected
+                            ? Colors.white
+                            : Theme.of(context).colorScheme.onSurface,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        cat['label'],
+                        style: TextStyle(
+                          color: isSelected
+                              ? Colors.white
+                              : Theme.of(context).colorScheme.onSurface,
+                          fontWeight:
+                              isSelected ? FontWeight.bold : FontWeight.w500,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(
+                child: _buildDropdown(
+                  label: 'Language',
+                  value: _selectedLanguage,
+                  items: ['All', 'English', 'Mizo'],
+                  onChanged: (val) {
+                    setState(() => _selectedLanguage = val!);
+                    bookController.filterByLanguage(val == 'All' ? '' : val!);
+                  },
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildDropdown(
+                  label: 'Sort By',
+                  value: _sortBy,
+                  items: [
+                    'Newest',
+                    'Oldest',
+                    'Price: Low to High',
+                    'Price: High to Low'
+                  ],
+                  onChanged: (val) {
+                    setState(() => _sortBy = val!);
+                    // Add sort logic if controller supports it
+                  },
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
