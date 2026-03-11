@@ -16,13 +16,7 @@ class CustomBottomNav extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         child: GlassContainer(
-          blur: 20,
-          opacity: 0.15,
           borderRadius: 28,
-          border: Border.all(
-            color: Colors.white.withAlpha(77),
-            width: 1.5,
-          ),
           child: NavigationBar(
             selectedIndex: currentIndex,
             onDestinationSelected: onTap,

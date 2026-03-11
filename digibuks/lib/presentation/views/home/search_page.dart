@@ -93,7 +93,7 @@ class _SearchPageState extends State<SearchPage> {
                   return const Center(child: Text('No books found'));
                 }
                 return GridView.builder(
-                  padding: const EdgeInsets.only(bottom: 120),
+                  padding: const EdgeInsets.only(bottom: 150),
                   itemCount: books.length,
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
