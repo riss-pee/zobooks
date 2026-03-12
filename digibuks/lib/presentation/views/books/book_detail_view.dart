@@ -8,203 +8,201 @@ import '../../../data/models/book_model.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../widgets/glass_container.dart';
-import '../payment/payment_view.dart';
 
-class BookDetailView extends StatelessWidget {
+class BookDetailView extends StatefulWidget {
   const BookDetailView({super.key});
 
   @override
+  State<BookDetailView> createState() => _BookDetailViewState();
+}
+
+class _BookDetailViewState extends State<BookDetailView> {
+  late BookModel initialBook;
+  final bookController = Get.find<BookController>();
+  final authController = Get.find<AuthController>();
+  final themeController = Get.find<ThemeController>();
+  final paymentController = Get.find<PaymentController>();
+
+  @override
+  void initState() {
+    super.initState();
+    // Use the passed argument as the fallback initial book.
+    final arg = Get.arguments as BookModel?;
+    if (arg != null) {
+      initialBook = arg;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        bookController.fetchBookDetails(initialBook.id);
+        // Check ownership if user is authenticated
+        if (authController.isAuthenticated) {
+          paymentController.checkOwnership(initialBook.id);
+        }
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final book = Get.arguments as BookModel?;
-    if (book == null) {
+    if (Get.arguments == null) {
       return Scaffold(
         appBar: AppBar(title: const Text('Book Details')),
         body: const Center(child: Text('Book not found')),
       );
     }
 
-    final bookController = Get.find<BookController>();
-    final authController = Get.find<AuthController>();
-    final themeController = Get.find<ThemeController>();
-
     return Obx(() {
       final isDark = themeController.isDarkMode;
-      return Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: isDark
-                ? [
-                    const Color(0xFF0F1113),
-                    const Color(0xFF1A1C20),
-                  ]
-                : [
-                    const Color(0xFFFFFBF0),
-                    const Color(0xFFF7F0E0),
-                  ],
-          ),
-        ),
-        child: Scaffold(
+      final book = bookController.currentBook.value ?? initialBook;
+      
+      return Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        appBar: AppBar(
           backgroundColor: Colors.transparent,
-          body: CustomScrollView(
-            slivers: [
-              // Liquid Glass App Bar
-              SliverAppBar(
-                expandedHeight: 350,
-                pinned: true,
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                leading: IconButton(
-                  icon: const Icon(Icons.arrow_back_rounded),
-                  onPressed: () => Get.back(),
-                ),
-                flexibleSpace: FlexibleSpaceBar(
-                  background: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      // Background Image or Placeholder
-                      book.coverImage != null
-                          ? Image.network(
-                              book.coverImage!,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  _buildPlaceholder(context),
-                            )
-                          : _buildPlaceholder(context),
-                      // Frosted Glass Header Overlay
-                      Positioned(
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        child: GlassContainer(
-                          height: 80,
-                          blur: 15,
-                          opacity: isDark ? 0.3 : 0.2,
-                          borderRadius: 0,
-                          child: Container(), // Empty, just for the effect
-                        ),
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_rounded),
+            onPressed: () => Get.back(),
+          ),
+          title: Text(
+            book.title,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          centerTitle: true,
+        ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Cover Image - centered and compact
+              Center(
+                child: Container(
+                  height: 220,
+                  width: 150,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Theme.of(context).colorScheme.primary.withOpacity(0.15),
+                        blurRadius: 16,
+                        offset: const Offset(0, 6),
                       ),
                     ],
                   ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: book.coverImage != null && book.coverImage!.isNotEmpty
+                        ? Image.network(
+                            book.coverImage!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => _buildPlaceholder(context),
+                          )
+                        : _buildPlaceholder(context),
+                  ),
                 ),
               ),
-              // Content Area
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Title Section with Glass
-                      GlassContainer(
-                        padding: const EdgeInsets.all(20),
-                        blur: 10,
-                        opacity: 0.1,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              book.title,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .headlineSmall
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    fontFamily: 'Outfit',
-                                  ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'By ${book.authorName ?? "Unknown Author"}',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleMedium
-                                  ?.copyWith(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurface
-                                        .withOpacity(0.7),
-                                    fontFamily: 'Outfit',
-                                  ),
-                            ),
-                            const SizedBox(height: 16),
-                            if (book.rating != null)
-                              Row(
-                                children: [
-                                  ...List.generate(5, (index) {
-                                    return Icon(
-                                      index < book.rating!.floor()
-                                          ? Icons.star_rounded
-                                          : Icons.star_outline_rounded,
-                                      color: Colors.amber,
-                                      size: 20,
-                                    );
-                                  }),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    '${book.rating!.toStringAsFixed(1)}',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontFamily: 'Outfit',
-                                    ),
-                                  ),
-                                  if (book.reviewCount != null) ...[
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      '(${book.reviewCount} reviews)',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodySmall
-                                          ?.copyWith(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .onSurface
-                                                .withOpacity(0.5),
-                                            fontFamily: 'Outfit',
-                                          ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      // Meta Info (Language, Pages, Genre)
-                      _buildMetaSection(context, book),
-                      const SizedBox(height: 24),
-                      // Description Section
-                      Text(
-                        'Description',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              const SizedBox(height: 16),
+
+              // Title & Author - centered
+              Center(
+                child: Text(
+                  book.title,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Center(
+                child: Text(
+                  _getAuthorsDisplay(book),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Meta Row: Language, Price, Chapters button
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildMetaItem(context, Icons.language_rounded, 'Language',
+                      _getLanguageDisplay(book.language)),
+                  _buildMetaItem(
+                      context,
+                      Icons.monetization_on_rounded,
+                      'Price',
+                      book.price != null && book.price! > 0
+                          ? '₹${book.price!.toStringAsFixed(0)}'
+                          : 'Free'),
+                  // Chapters button as a meta item
+                  if (book.chapters.isNotEmpty)
+                    GestureDetector(
+                      onTap: () => _showChaptersModal(context, book),
+                      child: Column(
+                        children: [
+                          Icon(Icons.list_alt_rounded,
+                              size: 24,
+                              color: Theme.of(context).colorScheme.primary.withOpacity(0.7)),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Chapters',
+                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                                ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${book.chapters.length}',
+                            style: const TextStyle(
                               fontWeight: FontWeight.bold,
-                              fontFamily: 'Outfit',
+                              fontSize: 14,
                             ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 12),
-                      Text(
-                        book.description ??
-                            'No description available for this book.',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              height: 1.6,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurface
-                                  .withOpacity(0.8),
-                              fontFamily: 'Outfit',
-                            ),
-                      ),
-                      const SizedBox(height: 32),
-                      // Actions Section
-                      _buildActionButtons(
-                          context, book, bookController, authController),
-                      const SizedBox(height: 40),
-                    ],
+                    ),
+                ],
+              ),
+              const SizedBox(height: 20),
+
+              // Loading indicator
+              if (bookController.isLoadingDetails.value)
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 16.0),
+                    child: CircularProgressIndicator(),
                   ),
                 ),
-              ),
+
+              // Description
+              if (book.description != null && book.description!.isNotEmpty) ...[
+                Text(
+                  'About this book',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  book.description!,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    height: 1.5,
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.75),
+                  ),
+                ),
+                const SizedBox(height: 20),
+              ],
+
+              // Action Buttons
+              _buildActionButtons(context, book, bookController, authController),
+              const SizedBox(height: 32),
             ],
           ),
         ),
@@ -225,20 +223,23 @@ class BookDetailView extends StatelessWidget {
     );
   }
 
-  Widget _buildMetaSection(BuildContext context, BookModel book) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        _buildMetaItem(context, Icons.language_rounded, 'Language',
-            book.language.toUpperCase()),
-        if (book.pageCount != null)
-          _buildMetaItem(
-              context, Icons.menu_book_rounded, 'Pages', '${book.pageCount}'),
-        _buildMetaItem(context, Icons.category_rounded, 'Genre',
-            book.genres.isNotEmpty ? book.genres.first : 'General'),
-      ],
-    );
+  String _getAuthorsDisplay(BookModel book) {
+    if (book.authors.isNotEmpty) {
+      return book.authors.map((a) => a.name).join(', ');
+    }
+    return book.authorName ?? 'Unknown Author';
   }
+
+  String _getLanguageDisplay(String code) {
+    const languageMap = {
+      'en': 'English',
+      'mizo': 'Mizo',
+
+    };
+    return languageMap[code.toLowerCase()] ?? code.toUpperCase();
+  }
+
+  // _buildMetaSection removed - meta items now inline in build()
 
   Widget _buildMetaItem(
       BuildContext context, IconData icon, String label, String value) {
@@ -252,7 +253,6 @@ class BookDetailView extends StatelessWidget {
           label,
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
                 color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
-                fontFamily: 'Outfit',
               ),
         ),
         const SizedBox(height: 4),
@@ -261,7 +261,6 @@ class BookDetailView extends StatelessWidget {
           style: const TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 14,
-            fontFamily: 'Outfit',
           ),
         ),
       ],
@@ -296,7 +295,7 @@ class BookDetailView extends StatelessWidget {
               label: Text(
                 isInWishlist ? 'In Wishlist' : 'Add to Wishlist',
                 style: const TextStyle(
-                    fontFamily: 'Outfit', fontWeight: FontWeight.bold),
+fontWeight: FontWeight.bold),
               ),
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 18),
@@ -312,9 +311,19 @@ class BookDetailView extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: () {
-                if (hasAccess || book.type == AppConstants.bookTypeFree) {
+              onPressed: paymentController.isProcessing
+                  ? null
+                  : () {
+                if (hasAccess) {
                   Get.toNamed(AppConstants.readerRoute, arguments: book);
+                } else if (book.type == AppConstants.bookTypeFree || (book.price == null || book.price! <= 0)) {
+                  if (!authController.isAuthenticated) {
+                    _showLoginRequiredModal(context);
+                  } else {
+                    paymentController.claimFreeBook(book);
+                  }
+                } else if (!authController.isAuthenticated) {
+                  _showLoginRequiredModal(context);
                 } else if (book.type == AppConstants.bookTypeRental) {
                   _handleRental(context, book);
                 } else {
@@ -333,20 +342,32 @@ class BookDetailView extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(hasAccess || book.type == AppConstants.bookTypeFree
+                  Icon(hasAccess
                       ? Icons.auto_stories_rounded
-                      : Icons.shopping_bag_rounded),
+                      : (book.type == AppConstants.bookTypeFree || (book.price == null || book.price! <= 0))
+                          ? Icons.download_rounded
+                          : Icons.shopping_bag_rounded),
                   const SizedBox(width: 12),
-                  Text(
-                    hasAccess || book.type == AppConstants.bookTypeFree
+                  paymentController.isProcessing
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(
+                    hasAccess
                         ? 'Read Now'
-                        : book.type == AppConstants.bookTypeRental
-                            ? 'Rent for ₹${book.rentalPrice?.toStringAsFixed(0)}'
-                            : 'Buy for ₹${book.price?.toStringAsFixed(0)}',
+                        : (book.type == AppConstants.bookTypeFree || (book.price == null || book.price! <= 0))
+                            ? 'Get Free'
+                            : book.type == AppConstants.bookTypeRental
+                                ? 'Rent for ₹${book.rentalPrice?.toStringAsFixed(0)}'
+                                : 'Buy for ₹${book.price?.toStringAsFixed(0)}',
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      fontFamily: 'Outfit',
                     ),
                   ),
                 ],
@@ -361,7 +382,6 @@ class BookDetailView extends StatelessWidget {
                 color: Colors.green[600],
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
-                fontFamily: 'Outfit',
               ),
             ),
           ],
@@ -370,11 +390,88 @@ class BookDetailView extends StatelessWidget {
     });
   }
 
+  void _showLoginRequiredModal(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Theme.of(context).scaffoldBackgroundColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).dividerColor,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Icon(
+                Icons.lock_outline_rounded,
+                size: 48,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Login Required',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'You need to log in to purchase this book.',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    Get.toNamed(AppConstants.loginRoute);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: const Text(
+                    'Log In',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   void _handlePurchase(BuildContext context, BookModel book) {
-    Get.to(() => PaymentView(
-          book: book,
-          paymentType: 'purchase',
-        ));
+    final paymentController = Get.find<PaymentController>();
+    paymentController.purchaseBook(book);
   }
 
   void _handleRental(BuildContext context, BookModel book) {
@@ -394,7 +491,6 @@ class BookDetailView extends StatelessWidget {
               'Rental Options',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
-                    fontFamily: 'Outfit',
                   ),
             ),
             const SizedBox(height: 24),
@@ -432,6 +528,115 @@ class BookDetailView extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  void _showChaptersModal(BuildContext context, BookModel book) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.6,
+          minChildSize: 0.4,
+          maxChildSize: 0.9,
+          builder: (_, controller) {
+            return Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).scaffoldBackgroundColor,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: Column(
+                children: [
+                  // Handle indicator
+                  Center(
+                    child: Container(
+                      margin: const EdgeInsets.only(top: 12, bottom: 16),
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).dividerColor,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  // Title
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Chapters',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                        ),
+                        ),
+                        Text(
+                          '${book.chapters.length} Items',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: Theme.of(context).colorScheme.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Divider(),
+                  // List
+                  Expanded(
+                    child: ListView.builder(
+                      controller: controller,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      itemCount: book.chapters.length,
+                      itemBuilder: (context, index) {
+                        final chapter = book.chapters[index];
+                        return ListTile(
+                          contentPadding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                          leading: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Center(
+                              child: Text(
+                                '${chapter.index}',
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                          title: Text(
+                            chapter.title,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Text(
+                            '${chapter.wordCount} words • ${chapter.sectionType.replaceAll('_', ' ').capitalizeFirst}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                            ),
+                          ),
+                          trailing: const Icon(Icons.chevron_right_rounded, size: 20),
+                          onTap: () {
+                            Navigator.pop(context); // Close modal
+                            // Future: Action to go directly to this chapter in ReaderView
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }

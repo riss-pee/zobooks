@@ -102,7 +102,7 @@ class AuthRemoteDataSource {
       }
       
       // Real API call
-      final response = await _apiClient.get('/auth/me');
+      final response = await _apiClient.get('/users/auth/me');
 
       if (response.statusCode == 200) {
         return UserModel.fromJson(response.data['user'] as Map<String, dynamic>);
@@ -127,7 +127,7 @@ class AuthRemoteDataSource {
         return;
       }
       
-      await _apiClient.post('/auth/logout');
+      await _apiClient.post('/users/auth/logout');
     } catch (e) {
       AppLogger.e('Logout error', e);
       // Even if API call fails, we should clear local storage
@@ -147,7 +147,7 @@ class AuthRemoteDataSource {
       }
       
       final response = await _apiClient.post(
-        '/auth/refresh',
+        '/users/auth/refresh',
         data: {'refresh_token': refreshToken},
       );
 

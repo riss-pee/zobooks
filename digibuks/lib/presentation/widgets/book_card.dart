@@ -38,6 +38,19 @@ class BookCard extends StatelessWidget {
                 child: Container(
                   width: double.infinity,
                   color: Theme.of(context).colorScheme.primary.withAlpha(20),
+                  foregroundDecoration: BoxDecoration(
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                    border: Border(
+                      left: BorderSide(
+                        color: Colors.white.withOpacity(0.5),
+                        width: 3.5,
+                      ),
+                      right: BorderSide(
+                        color: Colors.black.withOpacity(0.1),
+                        width: 1.0,
+                      ),
+                    ),
+                  ),
                   child: book.coverImage != null
                       ? Image.network(
                           book.coverImage!,

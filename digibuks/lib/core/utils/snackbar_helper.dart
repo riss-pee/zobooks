@@ -13,31 +13,33 @@ void showSnackSafe(
   Duration? duration,
 }) {
   void showAttempt() {
-    final ctx = Get.overlayContext;
-    // If overlay context not available, retry later.
-    // Some GetX versions report overlayContext as non-nullable; keep the
-    // defensive null-check for safety across versions.
-    // ignore: unnecessary_null_comparison
-    if (ctx == null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => showAttempt());
-      return;
-    }
+    try {
+      final ctx = Get.overlayContext;
+      // ignore: unnecessary_null_comparison
+      if (ctx == null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => showAttempt());
+        return;
+      }
 
-    // If overlay isn't ready yet, retry later.
-    if (Overlay.of(ctx) == null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => showAttempt());
-      return;
-    }
+      // Try to access the overlay — if it throws, retry later
+      try {
+        Overlay.of(ctx);
+      } catch (_) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => showAttempt());
+        return;
+      }
 
-    // Safe to show snackbar now
-    Get.snackbar(
-      title,
-      message,
-      snackPosition: snackPosition ?? SnackPosition.BOTTOM,
-      backgroundColor: backgroundColor,
-      colorText: colorText,
-      duration: duration,
-    );
+      Get.snackbar(
+        title,
+        message,
+        snackPosition: snackPosition ?? SnackPosition.BOTTOM,
+        backgroundColor: backgroundColor,
+        colorText: colorText,
+        duration: duration,
+      );
+    } catch (_) {
+      // Silently fail if we still can't show — avoid crashing the app
+    }
   }
 
   showAttempt();

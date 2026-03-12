@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../controllers/book_controller.dart';
 import '../../controllers/auth_controller.dart';
 import '../../../data/models/grouped_books_model.dart';
+import '../../../data/models/book_model.dart';
 import 'home_controller.dart';
 import '../../widgets/book_card.dart';
 import '../../widgets/loading_shimmer.dart';
@@ -305,16 +306,29 @@ class _HomeTabState extends State<HomeTab> {
 
   Widget _buildFeaturedCard(BuildContext context, dynamic book) {
     return GestureDetector(
-      onTap: () => Get.toNamed(AppConstants.bookDetailRoute, arguments: book),
+      onTap: () {
+        final mockBook = BookModel(
+          id: book.id,
+          title: book.title,
+          coverImage: book.coverUrl,
+          authorName: book.authors.isNotEmpty ? book.authors.first : 'Unknown',
+          authorId: 'unknown',
+          price: book.price,
+          fileType: 'pdf', 
+          language: book.language,
+          type: book.isFree ? AppConstants.bookTypeFree : AppConstants.bookTypePurchase,
+        );
+        Get.toNamed(AppConstants.bookDetailRoute, arguments: mockBook);
+      },
       child: Stack(
         fit: StackFit.expand,
         children: [
           // Image
           ClipRRect(
             borderRadius: BorderRadius.circular(20),
-            child: book.coverImage != null
+            child: book.coverUrl != null && book.coverUrl.toString().isNotEmpty
                 ? Image.network(
-                    book.coverImage!,
+                    book.coverUrl,
                     fit: BoxFit.cover,
                   )
                 : Container(
@@ -409,17 +423,18 @@ class _HomeTabState extends State<HomeTab> {
   Widget _buildBookSummaryCard(BuildContext context, dynamic book) {
     return GestureDetector(
       onTap: () {
-        // Create mock full book argument from API until BookDetail handles ID or SummaryModel
-        final mockBookArg = {
-          'id': book.id,
-          'title': book.title,
-          'coverImage': book.coverUrl,
-          'authorName':
-              book.authors.isNotEmpty ? book.authors.first : 'Unknown',
-          'price': book.price,
-          'isFree': book.isFree,
-        };
-        Get.toNamed(AppConstants.bookDetailRoute, arguments: mockBookArg);
+        final mockBook = BookModel(
+          id: book.id,
+          title: book.title,
+          coverImage: book.coverUrl,
+          authorName: book.authors.isNotEmpty ? book.authors.first : 'Unknown',
+          authorId: 'unknown',
+          price: book.price,
+          fileType: 'pdf', // Default placeholder
+          language: 'english', // Default placeholder
+          type: book.isFree ? AppConstants.bookTypeFree : AppConstants.bookTypePurchase,
+        );
+        Get.toNamed(AppConstants.bookDetailRoute, arguments: mockBook);
       },
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -438,6 +453,19 @@ class _HomeTabState extends State<HomeTab> {
                     offset: const Offset(0, 4),
                   ),
                 ],
+              ),
+              foregroundDecoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                border: Border(
+                  left: BorderSide(
+                    color: Colors.white.withOpacity(0.5),
+                    width: 3.5,
+                  ),
+                  right: BorderSide(
+                    color: Colors.black.withOpacity(0.1),
+                    width: 1.0,
+                  ),
+                ),
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(16),

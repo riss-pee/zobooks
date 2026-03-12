@@ -21,7 +21,7 @@ class PaymentView extends StatelessWidget {
   Widget build(BuildContext context) {
     // `book` is required and non-nullable; no null check needed.
 
-    final paymentController = Get.put(PaymentController());
+    final paymentController = Get.find<PaymentController>();
 
     return Scaffold(
       appBar: AppBar(
@@ -202,49 +202,13 @@ class PaymentView extends StatelessWidget {
     BuildContext context,
     PaymentController controller,
   ) async {
-    // `book` is non-nullable
-    // Capture navigator state before async gaps to avoid using BuildContext
-    // synchronously after awaits (use_build_context_synchronously).
-    final navigator = Navigator.of(context);
-    
-    bool success = false;
-    
+    // The new PaymentController opens Razorpay natively.
+    // It handles success/failure via callbacks.
     if (paymentType == 'purchase') {
-      success = await controller.purchaseBook(book);
-    } else if (paymentType == 'rental' && rentalDays != null) {
-      success = await controller.rentBook(book, rentalDays!);
+      controller.purchaseBook(book);
     }
-
-    if (success) {
-      // Use captured navigator to pop routes. This avoids calling Get.back()
-      // (which triggers Get's snackbar cleanup) and avoids using the
-      // BuildContext after async gaps.
-      try {
-        navigator.pop(); // Close payment screen
-      } catch (_) {}
-      try {
-        navigator.pop(); // Close book detail screen
-      } catch (_) {}
-
-      showSnackSafe(
-        'Success',
-        paymentType == 'purchase'
-            ? 'Book purchased successfully!'
-            : 'Book rented successfully!',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: AppTheme.successColor,
-        colorText: Colors.white,
-        duration: const Duration(seconds: 3),
-      );
-    } else {
-      showSnackSafe(
-        'Payment Failed',
-        'Please try again',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: AppTheme.errorColor,
-        colorText: Colors.white,
-      );
-    }
+    // Close this payment summary screen — Razorpay checkout opens on top
+    Navigator.of(context).pop();
   }
 }
 

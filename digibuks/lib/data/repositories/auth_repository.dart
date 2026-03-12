@@ -1,3 +1,4 @@
+import 'dart:convert';
 import '../datasources/remote/auth_remote_datasource.dart';
 import '../../core/utils/storage_helper.dart';
 import '../../core/utils/logger.dart';
@@ -23,7 +24,7 @@ class AuthRepository {
       // Save user data
       if (response['user'] != null) {
         final user = UserModel.fromJson(response['user'] as Map<String, dynamic>);
-        await StorageHelper.saveString('user_data', user.toJson().toString());
+        await StorageHelper.saveString('user_data', jsonEncode(user.toJson()));
         return user;
       }
       
@@ -63,7 +64,7 @@ class AuthRepository {
       // Save user data
       if (response['user'] != null) {
         final user = UserModel.fromJson(response['user'] as Map<String, dynamic>);
-        await StorageHelper.saveString('user_data', user.toJson().toString());
+        await StorageHelper.saveString('user_data', jsonEncode(user.toJson()));
         return user;
       }
       
@@ -72,6 +73,20 @@ class AuthRepository {
       AppLogger.e('Register repository error', e);
       rethrow;
     }
+  }
+
+  /// Restore user from local storage (no API call)
+  Future<UserModel?> restoreUser() async {
+    try {
+      final userData = StorageHelper.getString('user_data');
+      if (userData != null && userData.isNotEmpty) {
+        final json = jsonDecode(userData) as Map<String, dynamic>;
+        return UserModel.fromJson(json);
+      }
+    } catch (e) {
+      AppLogger.e('Error restoring user from storage', e);
+    }
+    return null;
   }
 
   Future<UserModel> getCurrentUser() async {

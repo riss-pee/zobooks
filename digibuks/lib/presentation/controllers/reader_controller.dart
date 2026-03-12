@@ -1,41 +1,63 @@
+import 'dart:async';
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import '../../core/utils/snackbar_helper.dart';
 import '../../data/models/book_model.dart';
-// Removed unused imports: sample_content and app_constants were not used here
+import '../../data/repositories/reader_repository.dart';
 import '../../core/utils/logger.dart';
 import '../../core/utils/storage_helper.dart';
 
 class ReaderController extends GetxController {
+  final ReaderRepository _readerRepository;
+
+  ReaderController(this._readerRepository);
+
   final BookModel? book = Get.arguments as BookModel?;
 
-  // Reading state
-  final _currentPage = 0.obs;
-  final _totalPages = 0.obs;
+  // ── Core state ───────────────────────────────────────────────
   final _isLoading = true.obs;
+  final _isChapterLoading = false.obs;
+  final _currentChapterIndex = 0.obs;
+  final _chapters = <Map<String, dynamic>>[].obs;
+  final _currentChapterContent = ''.obs;
+  final _currentChapterTitle = ''.obs;
   final _isFullScreen = false.obs;
 
-  // Reading settings
+  // DRM
+  String? _drmSessionId;
+  String _deviceId = 'flutter-app';
+
+  // Chapter content cache: chapterIndex -> content
+  final Map<int, String> _chapterCache = {};
+
+  // ── Reading settings ─────────────────────────────────────────
   final _fontSize = 16.0.obs;
   final _isDarkMode = false.obs;
-  final _themeType = 'light'.obs; // 'light', 'sepia', 'dark'
-  final _fontFamily = 'Outfit'.obs;
-  final _textAlign = 'left'.obs; // 'left', 'justify'
+  final _themeType = 'light'.obs;
+  final _fontFamily = 'Georgia'.obs;
+  final _textAlign = 'left'.obs;
   final _brightness = 1.0.obs;
   final _lineHeight = 1.5.obs;
 
-  // Bookmarks
-  final _bookmarks = <int>[].obs;
-  final _notes = <String, String>{}.obs; // page -> note
+  // ── Bookmarks & Highlights ───────────────────────────────────
+  final _bookmarks = <Map<String, dynamic>>[].obs;
+  final _highlights = <Map<String, dynamic>>[].obs;
 
-  // Reading progress
+  // ── Progress ─────────────────────────────────────────────────
   final _readingProgress = 0.0.obs;
-  final _lastReadPosition = 0.obs;
+  Timer? _syncDebounce;
+  final ScrollController scrollController = ScrollController();
 
-  // Getters
-  int get currentPage => _currentPage.value;
-  int get totalPages => _totalPages.value;
+  // ── Getters ──────────────────────────────────────────────────
   bool get isLoading => _isLoading.value;
+  bool get isChapterLoading => _isChapterLoading.value;
+  int get currentChapterIndex => _currentChapterIndex.value;
+  List<Map<String, dynamic>> get chapters => _chapters;
+  int get totalChapters => _chapters.length;
+  String get currentChapterContent => _currentChapterContent.value;
+  String get currentChapterTitle => _currentChapterTitle.value;
   bool get isFullScreen => _isFullScreen.value;
+
   double get fontSize => _fontSize.value;
   bool get isDarkMode => _isDarkMode.value;
   String get themeType => _themeType.value;
@@ -43,123 +65,427 @@ class ReaderController extends GetxController {
   String get textAlign => _textAlign.value;
   double get brightness => _brightness.value;
   double get lineHeight => _lineHeight.value;
-  List<int> get bookmarks => _bookmarks;
-  Map<String, String> get notes => _notes;
+
+  List<Map<String, dynamic>> get bookmarks => _bookmarks;
+  List<Map<String, dynamic>> get highlights => _highlights;
   double get readingProgress => _readingProgress.value;
-  int get lastReadPosition => _lastReadPosition.value;
+
+  // Keep old getters for compatibility
+  int get currentPage => _currentChapterIndex.value;
+  int get totalPages => _chapters.length;
 
   @override
   void onInit() {
     super.onInit();
     if (book != null) {
-      _initializeReader();
-      _loadReadingProgress();
-      _loadBookmarks();
       _loadSettings();
+      _initializeReader();
     }
   }
+
+  @override
+  void onClose() {
+    _syncDebounce?.cancel();
+    // Sync progress one final time on close
+    _syncProgressNow();
+    scrollController.dispose();
+    super.onClose();
+  }
+
+  // ── Initialization ───────────────────────────────────────────
 
   Future<void> _initializeReader() async {
     try {
       _isLoading.value = true;
 
-      // Simulate loading book
-      await Future.delayed(const Duration(milliseconds: 500));
-
-      // Set total pages based on book
-      if (book!.pageCount != null) {
-        _totalPages.value = book!.pageCount!;
-      } else {
-        // Default pages for demo
-        _totalPages.value = 100;
+      // 1. Create DRM session
+      try {
+        final drmResult = await _readerRepository.createDrmSession(
+          bookId: book!.id,
+          deviceId: _deviceId,
+        );
+        _drmSessionId = drmResult['session_id'];
+        AppLogger.i('DRM session created: $_drmSessionId');
+      } catch (e) {
+        AppLogger.e('DRM session failed (continuing without)', e);
+        // Continue without DRM — backend may allow it for some books
       }
 
-      // Load last read position
-      _currentPage.value = _lastReadPosition.value;
+      // 2. Fetch chapter list
+      final chapterList = await _readerRepository.listChapters(book!.id);
+      _chapters.value = chapterList;
+      AppLogger.i('Loaded ${chapterList.length} chapters');
+
+      if (_chapters.isEmpty) {
+        _isLoading.value = false;
+        return;
+      }
+
+      // 3. Load saved progress to resume
+      int startChapter = 0;
+      try {
+        final progress = await _readerRepository.getProgress(book!.id);
+        final lastPosition = progress['last_position'] as Map<String, dynamic>?;
+        if (lastPosition != null && lastPosition['chapter_index'] != null) {
+          startChapter = lastPosition['chapter_index'] as int;
+          // Clamp to valid range
+          if (startChapter >= _chapters.length) startChapter = 0;
+        }
+        _readingProgress.value = (progress['progress_percent'] as num?)?.toDouble() ?? 0.0;
+      } catch (e) {
+        AppLogger.e('Could not load progress (starting from beginning)', e);
+      }
+
+      // 4. Load first chapter content
+      await _loadChapter(startChapter);
+
+      // 5. Load bookmarks & highlights in parallel
+      _loadBookmarks();
+      _loadHighlights();
 
       _isLoading.value = false;
-      AppLogger.i('Reader initialized for book: ${book!.title}');
     } catch (e) {
-      AppLogger.e('Error initializing reader', e);
+      AppLogger.e('Reader initialization failed', e);
       _isLoading.value = false;
+      showSnackSafe('Error', 'Failed to load book: $e',
+          snackPosition: SnackPosition.BOTTOM);
     }
   }
 
-  Future<void> _loadReadingProgress() async {
+  // ── Chapter loading ──────────────────────────────────────────
+
+  Future<void> _loadChapter(int index) async {
+    if (index < 0 || index >= _chapters.length) return;
+
+    _currentChapterIndex.value = index;
+    _currentChapterTitle.value = _chapters[index]['title'] ?? 'Chapter ${index + 1}';
+
+    // Check cache first
+    if (_chapterCache.containsKey(index)) {
+      _currentChapterContent.value = _chapterCache[index]!;
+      _prefetchNextChapter(index);
+      return;
+    }
+
+    _isChapterLoading.value = true;
     try {
-      final progressKey = 'reading_progress_${book!.id}';
-      final progress = StorageHelper.getDouble(progressKey);
-      if (progress != null) {
-        _readingProgress.value = progress;
-        _lastReadPosition.value = (progress * _totalPages.value).toInt();
-      }
+      final chapterData = await _readerRepository.getChapterContent(
+        bookId: book!.id,
+        chapterIndex: _chapters[index]['index'] as int,
+        drmSessionId: _drmSessionId,
+      );
+
+      final rawContent = _parseContent(chapterData['content'] as String? ?? '');
+      // Strip duplicate chapter title from start of content
+      final content = _removeDuplicateTitle(rawContent, _currentChapterTitle.value);
+      _chapterCache[index] = content;
+      _currentChapterContent.value = content;
+
+      // Scroll to top
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (scrollController.hasClients) {
+          scrollController.jumpTo(0.0);
+        }
+      });
+
+      // Prefetch next chapter
+      _prefetchNextChapter(index);
     } catch (e) {
-      AppLogger.e('Error loading reading progress', e);
+      AppLogger.e('Error loading chapter $index', e);
+      _currentChapterContent.value = 'Failed to load chapter. Please try again.';
+    } finally {
+      _isChapterLoading.value = false;
     }
   }
+
+  /// Prefetch the next chapter silently
+  void _prefetchNextChapter(int currentIndex) {
+    final nextIndex = currentIndex + 1;
+    if (nextIndex < _chapters.length && !_chapterCache.containsKey(nextIndex)) {
+      // Fire and forget
+      _readerRepository
+          .getChapterContent(
+            bookId: book!.id,
+            chapterIndex: _chapters[nextIndex]['index'] as int,
+            drmSessionId: _drmSessionId,
+          )
+          .then((data) {
+        final rawContent = _parseContent(data['content'] as String? ?? '');
+        final nextTitle = _chapters[nextIndex]['title'] ?? '';
+        _chapterCache[nextIndex] = _removeDuplicateTitle(rawContent, nextTitle);
+        AppLogger.i('Prefetched chapter ${nextIndex + 1}');
+      }).catchError((e) {
+        AppLogger.e('Prefetch failed for chapter ${nextIndex + 1}', e);
+      });
+    }
+  }
+
+  /// Parse XHTML content to plain text with paragraph breaks
+  String _parseContent(String xhtml) {
+    if (xhtml.isEmpty) return '';
+
+    String text = xhtml;
+    // 1. Remove <style>...</style> blocks entirely (CSS rules showing as text)
+    text = text.replaceAll(RegExp(r'<style[^>]*>[\s\S]*?</style>', caseSensitive: false), '');
+    // 2. Remove <script>...</script> blocks
+    text = text.replaceAll(RegExp(r'<script[^>]*>[\s\S]*?</script>', caseSensitive: false), '');
+    // 3. Remove <!-- comments -->
+    text = text.replaceAll(RegExp(r'<!--[\s\S]*?-->'), '');
+    // 4. Replace common XHTML paragraph/break tags with newlines
+    text = text.replaceAll(RegExp(r'<br\s*/?>'), '\n');
+    text = text.replaceAll(RegExp(r'</p>'), '\n\n');
+    text = text.replaceAll(RegExp(r'</div>'), '\n\n');
+    text = text.replaceAll(RegExp(r'</h[1-6]>'), '\n\n');
+    text = text.replaceAll(RegExp(r'</li>'), '\n');
+    // 5. Strip all remaining HTML tags
+    text = text.replaceAll(RegExp(r'<[^>]*>'), '');
+    // 6. Decode HTML entities
+    text = text.replaceAll('&amp;', '&');
+    text = text.replaceAll('&lt;', '<');
+    text = text.replaceAll('&gt;', '>');
+    text = text.replaceAll('&quot;', '"');
+    text = text.replaceAll('&#39;', "'");
+    text = text.replaceAll('&nbsp;', ' ');
+    text = text.replaceAll('&mdash;', '—');
+    text = text.replaceAll('&ndash;', '–');
+    text = text.replaceAll('&lsquo;', ''');
+    text = text.replaceAll('&rsquo;', ''');
+    text = text.replaceAll('&ldquo;', '\u201C');
+    text = text.replaceAll('&rdquo;', '\u201D');
+    text = text.replaceAll('&hellip;', '…');
+    // 7. Clean up excessive whitespace
+    text = text.replaceAll(RegExp(r'\n{3,}'), '\n\n');
+    text = text.replaceAll(RegExp(r' {2,}'), ' ');
+    text = text.trim();
+
+    return text;
+  }
+
+  /// Remove duplicate chapter title from the start of parsed content
+  String _removeDuplicateTitle(String content, String title) {
+    if (title.isEmpty || content.isEmpty) return content;
+    final trimmedTitle = title.trim();
+    final trimmedContent = content.trimLeft();
+    // Check if content starts with the title (case-insensitive)
+    if (trimmedContent.toLowerCase().startsWith(trimmedTitle.toLowerCase())) {
+      return trimmedContent.substring(trimmedTitle.length).trimLeft();
+    }
+    return content;
+  }
+
+  // ── Navigation ───────────────────────────────────────────────
+
+  Future<void> goToChapter(int index) async {
+    if (index < 0 || index >= _chapters.length) return;
+    if (index == _currentChapterIndex.value) return;
+
+    await _loadChapter(index);
+    _updateProgress();
+  }
+
+  Future<void> nextChapter() async {
+    if (_currentChapterIndex.value < _chapters.length - 1) {
+      await goToChapter(_currentChapterIndex.value + 1);
+    }
+  }
+
+  Future<void> previousChapter() async {
+    if (_currentChapterIndex.value > 0) {
+      await goToChapter(_currentChapterIndex.value - 1);
+    }
+  }
+
+  // Keep old methods for compatibility
+  void goToPage(int page) => goToChapter(page);
+  void nextPage() => nextChapter();
+  void previousPage() => previousChapter();
+
+  // ── Progress ─────────────────────────────────────────────────
+
+  void _updateProgress() {
+    if (_chapters.isEmpty) return;
+    _readingProgress.value =
+        ((_currentChapterIndex.value + 1) / _chapters.length) * 100;
+
+    // Debounce sync: wait 2 seconds after last chapter change
+    _syncDebounce?.cancel();
+    _syncDebounce = Timer(const Duration(seconds: 2), _syncProgressNow);
+  }
+
+  Future<void> _syncProgressNow() async {
+    if (book == null || _chapters.isEmpty) return;
+    try {
+      final currentChapter = _chapters[_currentChapterIndex.value];
+      await _readerRepository.syncProgress(
+        bookId: book!.id,
+        chapterId: currentChapter['id'] as String?,
+        progressPercent: _readingProgress.value,
+        lastPosition: {
+          'chapter_index': _currentChapterIndex.value,
+          'chapter_id': currentChapter['id'],
+        },
+      );
+      AppLogger.i('Progress synced: ${_readingProgress.value.toStringAsFixed(1)}%');
+    } catch (e) {
+      AppLogger.e('Progress sync failed', e);
+    }
+  }
+
+  String getProgressText() {
+    if (_chapters.isEmpty) return '0%';
+    return '${_readingProgress.value.toStringAsFixed(0)}%';
+  }
+
+  // ── Bookmarks ────────────────────────────────────────────────
 
   Future<void> _loadBookmarks() async {
+    if (book == null) return;
     try {
-      final bookmarksKey = 'bookmarks_${book!.id}';
-      final bookmarksJson = StorageHelper.getString(bookmarksKey);
-      if (bookmarksJson != null) {
-        // Parse bookmarks from JSON (simplified for demo)
-        _bookmarks.value = [];
+      final result = await _readerRepository.getBookmarks(book!.id);
+      final list = result['bookmarks'];
+      if (list is List) {
+        _bookmarks.value = List<Map<String, dynamic>>.from(
+          list.map((e) => Map<String, dynamic>.from(e)),
+        );
       }
     } catch (e) {
       AppLogger.e('Error loading bookmarks', e);
     }
   }
 
-  Future<void> _loadSettings() async {
-    try {
-      _fontSize.value = StorageHelper.getDouble('reader_font_size') ?? 16.0;
-      _themeType.value =
-          StorageHelper.getString('reader_theme_type') ?? 'light';
-      _fontFamily.value =
-          StorageHelper.getString('reader_font_family') ?? 'Outfit';
-      _textAlign.value = StorageHelper.getString('reader_text_align') ?? 'left';
+  Future<void> toggleBookmark() async {
+    if (book == null || _chapters.isEmpty) return;
 
-      if (_themeType.value == 'dark') {
-        _isDarkMode.value = true;
-      } else {
-        _isDarkMode.value = false;
+    final currentChapter = _chapters[_currentChapterIndex.value];
+
+    // Check if already bookmarked
+    final existing = _bookmarks.firstWhereOrNull(
+      (b) => b['chapter_id']?.toString() == currentChapter['id']?.toString(),
+    );
+
+    if (existing != null) {
+      // Delete bookmark
+      try {
+        await _readerRepository.deleteBookmark(existing['id'].toString());
+        _bookmarks.removeWhere(
+          (b) => b['id'].toString() == existing['id'].toString(),
+        );
+        showSnackSafe('Bookmark Removed', 'Bookmark removed',
+            snackPosition: SnackPosition.BOTTOM);
+      } catch (e) {
+        AppLogger.e('Error deleting bookmark', e);
       }
+    } else {
+      // Create bookmark
+      try {
+        final result = await _readerRepository.createBookmark(
+          bookId: book!.id,
+          chapterId: currentChapter['id'] as String?,
+          location: {
+            'chapter_index': _currentChapterIndex.value,
+            'chapter_title': currentChapter['title'],
+          },
+        );
+        if (result['bookmark'] != null) {
+          _bookmarks.add(Map<String, dynamic>.from(result['bookmark']));
+        }
+        showSnackSafe(
+          'Bookmarked',
+          '${currentChapter['title']} bookmarked',
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      } catch (e) {
+        AppLogger.e('Error creating bookmark', e);
+      }
+    }
+  }
 
-      _brightness.value = StorageHelper.getDouble('reader_brightness') ?? 1.0;
-      _lineHeight.value = StorageHelper.getDouble('reader_line_height') ?? 1.5;
+  bool isCurrentChapterBookmarked() {
+    if (_chapters.isEmpty) return false;
+    final currentChapter = _chapters[_currentChapterIndex.value];
+    return _bookmarks.any(
+      (b) => b['chapter_id']?.toString() == currentChapter['id']?.toString(),
+    );
+  }
+
+  Future<void> deleteBookmark(String bookmarkId) async {
+    try {
+      await _readerRepository.deleteBookmark(bookmarkId);
+      _bookmarks.removeWhere((b) => b['id'].toString() == bookmarkId);
+      showSnackSafe('Bookmark Removed', 'Bookmark removed',
+          snackPosition: SnackPosition.BOTTOM);
     } catch (e) {
-      AppLogger.e('Error loading reader settings', e);
+      AppLogger.e('Error deleting bookmark', e);
     }
   }
 
-  void goToPage(int page) {
-    if (page >= 0 && page < _totalPages.value) {
-      _currentPage.value = page;
-      _updateReadingProgress();
+  // Keep old method for compatibility
+  bool isBookmarked(int page) => isCurrentChapterBookmarked();
+
+  // ── Highlights ───────────────────────────────────────────────
+
+  Future<void> _loadHighlights() async {
+    if (book == null) return;
+    try {
+      final result = await _readerRepository.getHighlights(book!.id);
+      final list = result['highlights'];
+      if (list is List) {
+        _highlights.value = List<Map<String, dynamic>>.from(
+          list.map((e) => Map<String, dynamic>.from(e)),
+        );
+      }
+    } catch (e) {
+      AppLogger.e('Error loading highlights', e);
     }
   }
 
-  void nextPage() {
-    if (_currentPage.value < _totalPages.value - 1) {
-      _currentPage.value++;
-      _updateReadingProgress();
+  Future<void> addHighlight(String text, {String color = 'yellow', String? note}) async {
+    if (book == null || _chapters.isEmpty) return;
+    final currentChapter = _chapters[_currentChapterIndex.value];
+    try {
+      final result = await _readerRepository.createHighlight(
+        bookId: book!.id,
+        chapterId: currentChapter['id'] as String?,
+        text: text,
+        color: color,
+        location: {
+          'chapter_index': _currentChapterIndex.value,
+          'chapter_title': currentChapter['title'],
+        },
+        note: note,
+      );
+      if (result['highlight'] != null) {
+        _highlights.add(Map<String, dynamic>.from(result['highlight']));
+      }
+      showSnackSafe('Highlighted', 'Text highlighted',
+          snackPosition: SnackPosition.BOTTOM);
+    } catch (e) {
+      AppLogger.e('Error creating highlight', e);
     }
   }
 
-  void previousPage() {
-    if (_currentPage.value > 0) {
-      _currentPage.value--;
-      _updateReadingProgress();
+  Future<void> deleteHighlight(String highlightId) async {
+    try {
+      await _readerRepository.deleteHighlight(highlightId);
+      _highlights.removeWhere((h) => h['id'].toString() == highlightId);
+    } catch (e) {
+      AppLogger.e('Error deleting highlight', e);
     }
   }
 
-  void toggleFullScreen() {
-    _isFullScreen.value = !_isFullScreen.value;
+  // ── Notes (compatibility shim) ──────────────────────────────
+  void addNote(String note) {
+    addHighlight('Note on ${currentChapterTitle}', note: note);
   }
+
+  String? getNote(int page) => null;
+
+  // ── UI Settings ──────────────────────────────────────────────
+
+  void toggleFullScreen() => _isFullScreen.value = !_isFullScreen.value;
 
   void setFontSize(double size) {
-    if (size >= 12 && size <= 24) {
+    if (size >= 12 && size <= 32) {
       _fontSize.value = size;
       StorageHelper.saveDouble('reader_font_size', size);
     }
@@ -169,7 +495,6 @@ class ReaderController extends GetxController {
     _themeType.value = type;
     _isDarkMode.value = (type == 'dark');
     StorageHelper.saveString('reader_theme_type', type);
-    StorageHelper.saveBool('reader_dark_mode', _isDarkMode.value);
   }
 
   void setFontFamily(String family) {
@@ -185,7 +510,6 @@ class ReaderController extends GetxController {
   void toggleDarkMode() {
     _isDarkMode.value = !_isDarkMode.value;
     _themeType.value = _isDarkMode.value ? 'dark' : 'light';
-    StorageHelper.saveBool('reader_dark_mode', _isDarkMode.value);
     StorageHelper.saveString('reader_theme_type', _themeType.value);
   }
 
@@ -203,55 +527,17 @@ class ReaderController extends GetxController {
     }
   }
 
-  void toggleBookmark() {
-    if (_bookmarks.contains(_currentPage.value)) {
-      _bookmarks.remove(_currentPage.value);
-      showSnackSafe('Bookmark Removed',
-          'Bookmark removed from page ${_currentPage.value + 1}');
-    } else {
-      _bookmarks.add(_currentPage.value);
-      showSnackSafe('Bookmarked', 'Page ${_currentPage.value + 1} bookmarked');
-    }
-    _saveBookmarks();
-  }
-
-  bool isBookmarked(int page) {
-    return _bookmarks.contains(page);
-  }
-
-  void addNote(String note) {
-    _notes[_currentPage.value.toString()] = note;
-    showSnackSafe('Note Added', 'Note added to page ${_currentPage.value + 1}');
-  }
-
-  String? getNote(int page) {
-    return _notes[page.toString()];
-  }
-
-  void _updateReadingProgress() {
-    if (_totalPages.value > 0) {
-      _readingProgress.value = _currentPage.value / _totalPages.value;
-      _lastReadPosition.value = _currentPage.value;
-
-      // Save progress
-      final progressKey = 'reading_progress_${book!.id}';
-      StorageHelper.saveDouble(progressKey, _readingProgress.value);
-    }
-  }
-
-  Future<void> _saveBookmarks() async {
+  void _loadSettings() {
     try {
-      // Save bookmarks as JSON (simplified for demo)
-      // In real app, serialize the list properly to a key like
-      // 'bookmarks_${book!.id}' and persist via StorageHelper.
+      _fontSize.value = StorageHelper.getDouble('reader_font_size') ?? 16.0;
+      _themeType.value = StorageHelper.getString('reader_theme_type') ?? 'light';
+      _fontFamily.value = StorageHelper.getString('reader_font_family') ?? 'Georgia';
+      _textAlign.value = StorageHelper.getString('reader_text_align') ?? 'left';
+      _isDarkMode.value = (_themeType.value == 'dark');
+      _brightness.value = StorageHelper.getDouble('reader_brightness') ?? 1.0;
+      _lineHeight.value = StorageHelper.getDouble('reader_line_height') ?? 1.5;
     } catch (e) {
-      AppLogger.e('Error saving bookmarks', e);
+      AppLogger.e('Error loading reader settings', e);
     }
-  }
-
-  String getProgressText() {
-    if (_totalPages.value == 0) return '0%';
-    final percentage = (_readingProgress.value * 100).toInt();
-    return '$percentage%';
   }
 }

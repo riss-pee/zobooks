@@ -3,8 +3,13 @@ import '../../core/utils/snackbar_helper.dart';
 import '../../data/models/book_model.dart';
 import '../../data/models/sample_books.dart';
 import '../../core/utils/logger.dart';
+import '../../data/repositories/home_repository.dart';
 
 class BookController extends GetxController {
+  final HomeRepository _repository;
+
+  BookController(this._repository);
+
   // Observable state
   final _books = <BookModel>[].obs;
   final _featuredBooks = <BookModel>[].obs;
@@ -13,6 +18,9 @@ class BookController extends GetxController {
   final _selectedLanguage = ''.obs;
   final _isLoading = false.obs;
   final _wishlist = <String>[].obs; // Book IDs
+  
+  final Rx<BookModel?> currentBook = Rx<BookModel?>(null);
+  final RxBool isLoadingDetails = false.obs;
 
   // Getters
   List<BookModel> get books => _books;
@@ -117,5 +125,20 @@ class BookController extends GetxController {
   void loadWishlist() {
     // Load from storage in real app
     _wishlist.value = [];
+  }
+
+  Future<void> fetchBookDetails(String id) async {
+    try {
+      isLoadingDetails.value = true;
+      currentBook.value = null; // Clear previous data
+      
+      final book = await _repository.getBookDetails(id);
+      currentBook.value = book;
+    } catch (e) {
+      AppLogger.e('Error loading book details', e);
+      showSnackSafe('Error', 'Failed to load book details');
+    } finally {
+      isLoadingDetails.value = false;
+    }
   }
 }

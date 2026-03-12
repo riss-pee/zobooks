@@ -1,3 +1,6 @@
+import 'author_model.dart';
+import 'chapter_model.dart';
+
 class BookModel {
   final String id;
   final String title;
@@ -8,6 +11,8 @@ class BookModel {
   final String? fileUrl;
   final String fileType; // pdf, epub
   final String language;
+  final List<AuthorModel> authors; // Nested authors from detail API
+  final List<ChapterModel> chapters; // Nested chapters from detail API
   final List<String> genres;
   final List<String> tags;
   final double? price;
@@ -32,6 +37,8 @@ class BookModel {
     this.fileUrl,
     required this.fileType,
     required this.language,
+    this.authors = const [],
+    this.chapters = const [],
     this.genres = const [],
     this.tags = const [],
     this.price,
@@ -53,11 +60,20 @@ class BookModel {
       title: json['title'] ?? '',
       description: json['description'],
       authorId: json['author_id'] ?? '',
-      authorName: json['author_name'],
-      coverImage: json['cover_image'],
+      authorName: json['author_name'] ?? 
+          (json['authors'] != null && (json['authors'] as List).isNotEmpty
+              ? json['authors'][0]['name']
+              : null),
+      coverImage: json['cover_image'] ?? json['cover_url'],
       fileUrl: json['file_url'],
-      fileType: json['file_type'] ?? 'pdf',
-      language: json['language'] ?? 'english',
+      fileType: json['file_type'] ?? 'epub',
+      language: json['language'] ?? 'en',
+      authors: json['authors'] != null
+          ? (json['authors'] as List).map((i) => AuthorModel.fromJson(i)).toList()
+          : [],
+      chapters: json['chapters'] != null
+          ? (json['chapters'] as List).map((i) => ChapterModel.fromJson(i)).toList()
+          : [],
       genres: json['genres'] != null
           ? List<String>.from(json['genres'])
           : [],
@@ -67,7 +83,7 @@ class BookModel {
       price: json['price']?.toDouble(),
       rentalPrice: json['rental_price']?.toDouble(),
       rentalDays: json['rental_days'],
-      type: json['type'] ?? 'purchase',
+      type: json['type'] ?? (json['is_free'] == true ? 'free' : 'purchase'),
       isPublished: json['is_published'] ?? false,
       rating: json['rating']?.toDouble(),
       reviewCount: json['review_count'],
@@ -95,6 +111,8 @@ class BookModel {
       'file_url': fileUrl,
       'file_type': fileType,
       'language': language,
+      'authors': authors.map((a) => a.toJson()).toList(),
+      'chapters': chapters.map((c) => c.toJson()).toList(),
       'genres': genres,
       'tags': tags,
       'price': price,

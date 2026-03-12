@@ -19,7 +19,6 @@ class LibraryView extends StatelessWidget {
         title: const Text('My Library'),
       ),
       body: Obx(() {
-        final purchased = paymentController.purchasedBooks;
         // For now, we only have book IDs. We need to find the book objects from BookController.
         // In a real app, we might fetch purchased books specifically.
         // Here we filter the loaded books.

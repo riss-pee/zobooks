@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import '../../core/utils/storage_helper.dart';
 
 class ThemeController extends GetxController {
-  final _themeMode = ThemeMode.system.obs;
+  final _themeMode = ThemeMode.light.obs;
 
   ThemeMode get themeMode => _themeMode.value;
   bool get isDarkMode {
@@ -20,7 +20,7 @@ class ThemeController extends GetxController {
   }
 
   void _loadTheme() {
-    final storedMode = StorageHelper.getString('theme_mode') ?? 'system';
+    final storedMode = StorageHelper.getString('theme_mode') ?? 'light';
     _themeMode.value = _getModeFromString(storedMode);
     Get.changeThemeMode(_themeMode.value);
   }

@@ -5,7 +5,9 @@ import '../exceptions/api_exception.dart';
 
 class ApiClient {
   late Dio _dio;
-  final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  final FlutterSecureStorage _storage = const FlutterSecureStorage(
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+  );
 
   ApiClient() {
     _dio = Dio(
@@ -35,9 +37,51 @@ class ApiClient {
           return handler.next(options);
         },
         onError: (error, handler) async {
-          if (error.response?.statusCode == 401) {
-            // Handle token refresh logic here
-            // For now, just pass the error
+          if (error.response?.statusCode == 401 &&
+              !error.requestOptions.path.contains('/users/auth/login') &&
+              !error.requestOptions.path.contains('/users/auth/refresh')) {
+            try {
+              final refreshToken = await _storage.read(key: AppConfig.refreshTokenKey);
+              if (refreshToken != null && refreshToken.isNotEmpty) {
+                // Use a separate Dio instance for refresh to avoid interceptor loops
+                final refreshDio = Dio(BaseOptions(
+                  baseUrl: AppConfig.baseUrl + AppConfig.apiVersion,
+                  headers: {'Content-Type': 'application/json'},
+                ));
+                
+                final refreshRes = await refreshDio.post(
+                  '/users/auth/refresh',
+                  data: {'refresh_token': refreshToken},
+                );
+
+                if (refreshRes.statusCode == 200) {
+                  final newAccess = refreshRes.data['access_token'];
+                  final newRefresh = refreshRes.data['refresh_token'];
+                  
+                  if (newAccess != null) {
+                    await _storage.write(key: AppConfig.accessTokenKey, value: newAccess);
+                    error.requestOptions.headers['Authorization'] = 'Bearer $newAccess';
+                  }
+                  if (newRefresh != null) {
+                    await _storage.write(key: AppConfig.refreshTokenKey, value: newRefresh);
+                  }
+
+                  // Retry the original request
+                  final cloneReq = await refreshDio.request(
+                    error.requestOptions.path,
+                    options: Options(
+                      method: error.requestOptions.method,
+                      headers: error.requestOptions.headers,
+                    ),
+                    data: error.requestOptions.data,
+                    queryParameters: error.requestOptions.queryParameters,
+                  );
+                  return handler.resolve(cloneReq);
+                }
+              }
+            } catch (e) {
+              // Refresh failed, fall through to the normal error
+            }
           }
           return handler.next(error);
         },

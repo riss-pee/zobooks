@@ -3,6 +3,8 @@ import '../controllers/auth_controller.dart';
 import '../controllers/book_controller.dart';
 import '../controllers/payment_controller.dart';
 import '../../data/repositories/auth_repository.dart';
+import '../../data/repositories/payment_repository.dart';
+import '../../data/repositories/reader_repository.dart';
 import '../../data/datasources/remote/auth_remote_datasource.dart';
 import '../../core/network/api_client.dart';
 import '../../data/repositories/home_repository.dart';
@@ -32,20 +34,33 @@ class HomeBinding extends Bindings {
       Get.put(AuthController(authRepository));
     }
     
-    // Initialize BookController if not already initialized
-    if (!Get.isRegistered<BookController>()) {
-      Get.put(BookController());
-    }
-
-    // Initialize PaymentController if not already initialized
-    if (!Get.isRegistered<PaymentController>()) {
-      Get.put(PaymentController());
-    }
-
-    // Initialize Home Data fetcher
+    // Initialize Home Data fetcher first so BookController can use it
     if (!Get.isRegistered<HomeRepository>()) {
       final apiClient = Get.find<ApiClient>();
       Get.put(HomeRepository(apiClient));
+    }
+
+    // Initialize BookController if not already initialized
+    if (!Get.isRegistered<BookController>()) {
+      final homeRepo = Get.find<HomeRepository>();
+      Get.put(BookController(homeRepo));
+    }
+
+    // Initialize PaymentRepository and PaymentController
+    if (!Get.isRegistered<PaymentRepository>()) {
+      final apiClient = Get.find<ApiClient>();
+      Get.put(PaymentRepository(apiClient));
+    }
+
+    if (!Get.isRegistered<PaymentController>()) {
+      final paymentRepo = Get.find<PaymentRepository>();
+      Get.put(PaymentController(paymentRepo));
+    }
+
+    // Initialize ReaderRepository
+    if (!Get.isRegistered<ReaderRepository>()) {
+      final apiClient = Get.find<ApiClient>();
+      Get.put(ReaderRepository(apiClient));
     }
 
     if (!Get.isRegistered<HomeController>()) {

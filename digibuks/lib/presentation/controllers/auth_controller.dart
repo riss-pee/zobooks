@@ -33,7 +33,16 @@ class AuthController extends GetxController {
     try {
       final isLoggedIn = await _authRepository.isLoggedIn();
       if (isLoggedIn) {
-        await getCurrentUser();
+        // Restore user from local storage — no API call needed
+        final user = await _authRepository.restoreUser();
+        if (user != null) {
+          _currentUser.value = user;
+          _isAuthenticated.value = true;
+          AppLogger.i('Session restored for: ${user.email}');
+        } else {
+          // Token exists but no user data — clear invalid state
+          _isAuthenticated.value = false;
+        }
       }
     } catch (e) {
       AppLogger.e('Check auth status error', e);

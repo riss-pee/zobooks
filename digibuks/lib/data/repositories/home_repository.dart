@@ -1,6 +1,7 @@
 import '../../core/network/api_client.dart';
 import '../models/grouped_books_model.dart';
 import '../models/trending_book_model.dart';
+import '../models/book_model.dart';
 import '../../core/exceptions/api_exception.dart';
 
 class HomeRepository {
@@ -37,6 +38,21 @@ class HomeRepository {
     } catch (e) {
       if (e is ApiException) rethrow;
       throw ApiException(message: 'An unexpected error occurred getting trending: ${e.toString()}');
+    }
+  }
+
+  Future<BookModel> getBookDetails(String id) async {
+    try {
+      final response = await _apiClient.get('/reader/published-books/$id');
+      
+      if (response.statusCode == 200 && response.data != null) {
+        return BookModel.fromJson(response.data);
+      } else {
+        throw ApiException(message: 'Failed to load book details: ${response.statusCode}');
+      }
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException(message: 'An unexpected error occurred fetching book details: ${e.toString()}');
     }
   }
 }
