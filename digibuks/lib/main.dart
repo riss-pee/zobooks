@@ -8,27 +8,29 @@ import 'presentation/controllers/theme_controller.dart';
 import 'core/network/api_client.dart';
 import 'data/datasources/remote/auth_remote_datasource.dart';
 import 'data/repositories/auth_repository.dart';
+import 'data/repositories/home_repository.dart';
 import 'presentation/controllers/auth_controller.dart';
 import 'presentation/controllers/book_controller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Initialize storage
   await StorageHelper.init();
-  
+
   // Initialize Global System Controllers
   Get.put(ThemeController());
-  
+
   // Initialize App Dependencies
   final apiClient = Get.put(ApiClient());
   final authRemoteDataSource = Get.put(
     AuthRemoteDataSource(apiClient),
   );
   final authRepository = Get.put(AuthRepository(authRemoteDataSource));
+  final homeRepository = Get.put(HomeRepository(apiClient));
   Get.put(AuthController(authRepository));
-  Get.put(BookController());
-  
+  Get.put(BookController(homeRepository));
+
   runApp(const DigiBuksApp());
 }
 
@@ -38,7 +40,7 @@ class DigiBuksApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeController = Get.find<ThemeController>();
-    
+
     return Obx(
       () => GetMaterialApp(
         title: 'DigiBuks',

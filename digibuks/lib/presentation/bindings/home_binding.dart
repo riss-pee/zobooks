@@ -15,26 +15,21 @@ class HomeBinding extends Bindings {
     if (!Get.isRegistered<ApiClient>()) {
       Get.put(ApiClient());
     }
-    
+
     // Initialize Auth dependencies if not already initialized
     if (!Get.isRegistered<AuthRemoteDataSource>()) {
       final apiClient = Get.find<ApiClient>();
       Get.put(AuthRemoteDataSource(apiClient));
     }
-    
+
     if (!Get.isRegistered<AuthRepository>()) {
       final authRemoteDataSource = Get.find<AuthRemoteDataSource>();
       Get.put(AuthRepository(authRemoteDataSource));
     }
-    
+
     if (!Get.isRegistered<AuthController>()) {
       final authRepository = Get.find<AuthRepository>();
       Get.put(AuthController(authRepository));
-    }
-    
-    // Initialize BookController if not already initialized
-    if (!Get.isRegistered<BookController>()) {
-      Get.put(BookController());
     }
 
     // Initialize PaymentController if not already initialized
@@ -51,6 +46,12 @@ class HomeBinding extends Bindings {
     if (!Get.isRegistered<HomeController>()) {
       final homeRepository = Get.find<HomeRepository>();
       Get.put(HomeController(homeRepository));
+    }
+
+    // Initialize BookController if not already initialized
+    if (!Get.isRegistered<BookController>()) {
+      final homeRepository = Get.find<HomeRepository>();
+      Get.put(BookController(homeRepository));
     }
   }
 }
