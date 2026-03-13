@@ -14,8 +14,7 @@ class AuthRemoteDataSource {
   Future<Map<String, dynamic>> login(String username, String password) async {
     try {
       AppLogger.i('Attempting login for: $username');
-      
-      // Real API call
+
       final response = await _apiClient.post(
         '/users/auth/login',
         data: {
@@ -49,8 +48,7 @@ class AuthRemoteDataSource {
   }) async {
     try {
       AppLogger.i('Attempting registration for: $username');
-      
-      // Real API call for registration
+
       await _apiClient.post(
         '/users/auth/register',
         data: {
@@ -63,8 +61,9 @@ class AuthRemoteDataSource {
         },
       );
 
-      // Registration endpoint doesn't return tokens, so we auto-login
+      // Registration endpoint does not return tokens → auto login
       AppLogger.i('Registration successful, auto-logging in...');
+
       final loginResponse = await _apiClient.post(
         '/users/auth/login',
         data: {
@@ -72,7 +71,7 @@ class AuthRemoteDataSource {
           'password': password,
         },
       );
-      
+
       return loginResponse.data as Map<String, dynamic>;
     } catch (e) {
       AppLogger.e('Registration error', e);
@@ -83,12 +82,10 @@ class AuthRemoteDataSource {
   Future<UserModel> getCurrentUser() async {
     try {
       AppLogger.i('Fetching current user');
-      
-      // Mock get current user for demo
+
       if (_useMockData) {
         await Future.delayed(const Duration(milliseconds: 500));
-        
-        // Return a demo user (in real app, this would come from storage or API)
+
         return UserModel(
           id: 'demo_user_123',
           email: 'demo@digibuks.com',
@@ -100,12 +97,13 @@ class AuthRemoteDataSource {
           updatedAt: DateTime.now(),
         );
       }
-      
-      // Real API call
-      final response = await _apiClient.get('/auth/me');
+
+      final response = await _apiClient.get('/users/auth/me');
 
       if (response.statusCode == 200) {
-        return UserModel.fromJson(response.data['user'] as Map<String, dynamic>);
+        return UserModel.fromJson(
+          response.data['user'] as Map<String, dynamic>,
+        );
       } else {
         throw ApiException(
           message: 'Failed to fetch user',
@@ -121,33 +119,34 @@ class AuthRemoteDataSource {
   Future<void> logout() async {
     try {
       AppLogger.i('Logging out');
-      
+
       if (_useMockData) {
         await Future.delayed(const Duration(milliseconds: 300));
         return;
       }
-      
-      await _apiClient.post('/auth/logout');
+
+      await _apiClient.post('/users/auth/logout');
     } catch (e) {
       AppLogger.e('Logout error', e);
-      // Even if API call fails, we should clear local storage
     }
   }
 
   Future<Map<String, dynamic>> refreshToken(String refreshToken) async {
     try {
       AppLogger.i('Refreshing token');
-      
+
       if (_useMockData) {
         await Future.delayed(const Duration(milliseconds: 500));
         return {
-          'access_token': 'demo_access_token_${DateTime.now().millisecondsSinceEpoch}',
-          'refresh_token': 'demo_refresh_token_${DateTime.now().millisecondsSinceEpoch}',
+          'access_token':
+              'demo_access_token_${DateTime.now().millisecondsSinceEpoch}',
+          'refresh_token':
+              'demo_refresh_token_${DateTime.now().millisecondsSinceEpoch}',
         };
       }
-      
+
       final response = await _apiClient.post(
-        '/auth/refresh',
+        '/users/auth/refresh',
         data: {'refresh_token': refreshToken},
       );
 

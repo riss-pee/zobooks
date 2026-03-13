@@ -1,16 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import 'core/theme/app_theme.dart';
 import 'core/utils/storage_helper.dart';
 import 'presentation/routes/app_routes.dart';
 import 'core/constants/app_constants.dart';
+
 import 'presentation/controllers/theme_controller.dart';
-import 'core/network/api_client.dart';
-import 'data/datasources/remote/auth_remote_datasource.dart';
-import 'data/repositories/auth_repository.dart';
-import 'data/repositories/home_repository.dart';
 import 'presentation/controllers/auth_controller.dart';
 import 'presentation/controllers/book_controller.dart';
+import 'presentation/controllers/payment_controller.dart';
+
+import 'core/network/api_client.dart';
+
+import 'data/datasources/remote/auth_remote_datasource.dart';
+
+import 'data/repositories/auth_repository.dart';
+import 'data/repositories/home_repository.dart';
+import 'data/repositories/payment_repository.dart';
+import 'data/repositories/reader_repository.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,18 +26,27 @@ void main() async {
   // Initialize storage
   await StorageHelper.init();
 
-  // Initialize Global System Controllers
+  // Global controllers
   Get.put(ThemeController());
 
-  // Initialize App Dependencies
+  // Core API client
   final apiClient = Get.put(ApiClient());
-  final authRemoteDataSource = Get.put(
-    AuthRemoteDataSource(apiClient),
-  );
+
+  // Auth setup
+  final authRemoteDataSource = Get.put(AuthRemoteDataSource(apiClient));
   final authRepository = Get.put(AuthRepository(authRemoteDataSource));
-  final homeRepository = Get.put(HomeRepository(apiClient));
   Get.put(AuthController(authRepository));
+
+  // Home / Books
+  final homeRepository = Get.put(HomeRepository(apiClient));
   Get.put(BookController(homeRepository));
+
+  // Payment
+  final paymentRepository = Get.put(PaymentRepository(apiClient));
+  Get.put(PaymentController(paymentRepository));
+
+  // Reader
+  Get.put(ReaderRepository(apiClient));
 
   runApp(const DigiBuksApp());
 }

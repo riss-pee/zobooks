@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+
 import '../../core/utils/snackbar_helper.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../data/models/user_model.dart';
@@ -32,8 +33,19 @@ class AuthController extends GetxController {
   Future<void> checkAuthStatus() async {
     try {
       final isLoggedIn = await _authRepository.isLoggedIn();
+
       if (isLoggedIn) {
-        await getCurrentUser();
+        // Restore user from local storage instead of API call
+        final user = await _authRepository.restoreUser();
+
+        if (user != null) {
+          _currentUser.value = user;
+          _isAuthenticated.value = true;
+          AppLogger.i('Session restored for: ${user.email}');
+        } else {
+          // Token exists but no user stored → invalid state
+          _isAuthenticated.value = false;
+        }
       }
     } catch (e) {
       AppLogger.e('Check auth status error', e);
@@ -46,16 +58,18 @@ class AuthController extends GetxController {
       _errorMessage.value = '';
 
       final user = await _authRepository.login(username, password);
+
       _currentUser.value = user;
       _isAuthenticated.value = true;
 
-      AppLogger.i('Login successful: ${user.email}'); // email holds username
-      
-      // Navigate to Home regardless of role for the Reader app
+      AppLogger.i('Login successful: ${user.email}');
+
       Get.offAllNamed(AppConstants.homeRoute);
     } on ApiException catch (e) {
       _errorMessage.value = e.message;
+
       AppLogger.e('Login failed: ${e.message}');
+
       showSnackSafe(
         'Login Failed',
         e.message,
@@ -63,7 +77,9 @@ class AuthController extends GetxController {
       );
     } catch (e) {
       _errorMessage.value = 'An unexpected error occurred';
+
       AppLogger.e('Login error', e);
+
       showSnackSafe(
         'Error',
         'An unexpected error occurred. Please try again.',
@@ -94,16 +110,18 @@ class AuthController extends GetxController {
         phone: phone,
         role: role,
       );
+
       _currentUser.value = user;
       _isAuthenticated.value = true;
 
       AppLogger.i('Registration successful: ${user.email}');
-      
-      // Navigate to Home
+
       Get.offAllNamed(AppConstants.homeRoute);
     } on ApiException catch (e) {
       _errorMessage.value = e.message;
+
       AppLogger.e('Registration failed: ${e.message}');
+
       showSnackSafe(
         'Registration Failed',
         e.message,
@@ -111,7 +129,9 @@ class AuthController extends GetxController {
       );
     } catch (e) {
       _errorMessage.value = 'An unexpected error occurred';
+
       AppLogger.e('Registration error', e);
+
       showSnackSafe(
         'Error',
         'An unexpected error occurred. Please try again.',
@@ -125,10 +145,12 @@ class AuthController extends GetxController {
   Future<void> getCurrentUser() async {
     try {
       final user = await _authRepository.getCurrentUser();
+
       _currentUser.value = user;
       _isAuthenticated.value = true;
     } catch (e) {
       AppLogger.e('Get current user error', e);
+
       _isAuthenticated.value = false;
       _currentUser.value = null;
     }
@@ -137,16 +159,20 @@ class AuthController extends GetxController {
   Future<void> logout() async {
     try {
       _isLoading.value = true;
+
       await _authRepository.logout();
+
       _currentUser.value = null;
       _isAuthenticated.value = false;
-      
+
       Get.offAllNamed(AppConstants.homeRoute);
     } catch (e) {
       AppLogger.e('Logout error', e);
-      // Clear local state even if API call fails
+
+      // Clear state even if API fails
       _currentUser.value = null;
       _isAuthenticated.value = false;
+
       Get.offAllNamed(AppConstants.homeRoute);
     } finally {
       _isLoading.value = false;
@@ -162,12 +188,13 @@ class AuthController extends GetxController {
       case AppConstants.roleAdmin:
         Get.offAllNamed(AppConstants.adminDashboardRoute);
         break;
+
       case AppConstants.roleAuthor:
         Get.offAllNamed(AppConstants.authorDashboardRoute);
         break;
+
       default:
         Get.offAllNamed(AppConstants.homeRoute);
     }
   }
 }
-

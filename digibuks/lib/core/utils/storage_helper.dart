@@ -3,8 +3,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../config/app_config.dart';
 
 class StorageHelper {
-  static final FlutterSecureStorage _secureStorage =
-      const FlutterSecureStorage();
+  static final FlutterSecureStorage _secureStorage = const FlutterSecureStorage(
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+  );
+
   static SharedPreferences? _prefs;
 
   static Future<void> init() async {
@@ -72,4 +74,3 @@ class StorageHelper {
     return _prefs?.getDouble(key);
   }
 }
-

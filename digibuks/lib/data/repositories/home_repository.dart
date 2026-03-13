@@ -1,43 +1,13 @@
 import '../../core/network/api_client.dart';
-import '../models/book_model.dart';
 import '../models/grouped_books_model.dart';
 import '../models/trending_book_model.dart';
+import '../models/book_model.dart';
 import '../../core/exceptions/api_exception.dart';
 
 class HomeRepository {
   final ApiClient _apiClient;
 
   HomeRepository(this._apiClient);
-
-  Future<List<BookModel>> getPublishedBooks({String? category}) async {
-    try {
-      final trimmedCategory = category?.trim();
-      final response = await _apiClient.get(
-        '/reader/published-books',
-        queryParameters: trimmedCategory != null && trimmedCategory.isNotEmpty
-            ? {'category': trimmedCategory}
-            : null,
-      );
-
-      if (response.statusCode == 200 && response.data != null) {
-        final List<dynamic> data = response.data as List<dynamic>;
-        return data
-            .map((json) =>
-                BookModel.fromPublishedBookJson(json as Map<String, dynamic>))
-            .toList();
-      } else {
-        throw ApiException(
-          message: 'Failed to load published books: ${response.statusCode}',
-        );
-      }
-    } catch (e) {
-      if (e is ApiException) rethrow;
-      throw ApiException(
-        message:
-            'An unexpected error occurred loading published books: ${e.toString()}',
-      );
-    }
-  }
 
   Future<List<GroupedBooksModel>> getGroupedBooks() async {
     try {
@@ -48,12 +18,15 @@ class HomeRepository {
         return data.map((json) => GroupedBooksModel.fromJson(json)).toList();
       } else {
         throw ApiException(
-            message: 'Failed to load books: ${response.statusCode}');
+          message: 'Failed to load books: ${response.statusCode}',
+        );
       }
     } catch (e) {
       if (e is ApiException) rethrow;
+
       throw ApiException(
-          message: 'An unexpected error occurred: ${e.toString()}');
+        message: 'An unexpected error occurred: ${e.toString()}',
+      );
     }
   }
 
@@ -66,13 +39,38 @@ class HomeRepository {
         return data.map((json) => TrendingBookModel.fromJson(json)).toList();
       } else {
         throw ApiException(
-            message: 'Failed to load trending books: ${response.statusCode}');
+          message: 'Failed to load trending books: ${response.statusCode}',
+        );
       }
     } catch (e) {
       if (e is ApiException) rethrow;
+
       throw ApiException(
-          message:
-              'An unexpected error occurred getting trending: ${e.toString()}');
+        message:
+            'An unexpected error occurred getting trending: ${e.toString()}',
+      );
+    }
+  }
+
+  /// Fetch detailed information for a specific book
+  Future<BookModel> getBookDetails(String id) async {
+    try {
+      final response = await _apiClient.get('/reader/published-books/$id');
+
+      if (response.statusCode == 200 && response.data != null) {
+        return BookModel.fromJson(response.data);
+      } else {
+        throw ApiException(
+          message: 'Failed to load book details: ${response.statusCode}',
+        );
+      }
+    } catch (e) {
+      if (e is ApiException) rethrow;
+
+      throw ApiException(
+        message:
+            'An unexpected error occurred fetching book details: ${e.toString()}',
+      );
     }
   }
 }

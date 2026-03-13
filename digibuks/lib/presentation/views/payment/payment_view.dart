@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import '../../../core/utils/snackbar_helper.dart';
 import '../../controllers/payment_controller.dart';
+
 import '../../../data/models/book_model.dart';
 import '../../../core/theme/app_theme.dart';
 
@@ -19,9 +21,7 @@ class PaymentView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // `book` is required and non-nullable; no null check needed.
-
-    final paymentController = Get.put(PaymentController());
+    final paymentController = Get.find<PaymentController>();
 
     return Scaffold(
       appBar: AppBar(
@@ -33,7 +33,7 @@ class PaymentView extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Book Info
+              /// BOOK INFO
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
@@ -43,7 +43,10 @@ class PaymentView extends StatelessWidget {
                         width: 80,
                         height: 120,
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primary.withAlpha(26),
+                          color: Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withAlpha(26),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Icon(
@@ -58,8 +61,11 @@ class PaymentView extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                                book.title,
-                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              book.title,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleLarge
+                                  ?.copyWith(
                                     fontWeight: FontWeight.bold,
                                   ),
                               maxLines: 2,
@@ -68,8 +74,14 @@ class PaymentView extends StatelessWidget {
                             const SizedBox(height: 4),
                             Text(
                               'By ${book.authorName ?? "Unknown"}',
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: Theme.of(context).colorScheme.onSurface.withAlpha(0xB3),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
+                                  ?.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withAlpha(180),
                                   ),
                             ),
                           ],
@@ -79,15 +91,19 @@ class PaymentView extends StatelessWidget {
                   ),
                 ),
               ),
+
               const SizedBox(height: 24),
-              // Payment Details
+
+              /// PAYMENT DETAILS
               Text(
                 'Payment Details',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
               ),
+
               const SizedBox(height: 16),
+
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
@@ -110,14 +126,14 @@ class PaymentView extends StatelessWidget {
                       _buildPaymentRow(
                         context,
                         'Amount',
-                        '₹${paymentType == 'purchase' ? (book.price ?? 0).toStringAsFixed(0) : (book.rentalPrice ?? 0).toStringAsFixed(0)}',
+                        '₹${_getPrice().toStringAsFixed(0)}',
                         isAmount: true,
                       ),
                       const Divider(),
                       _buildPaymentRow(
                         context,
                         'Total',
-                        '₹${paymentType == 'purchase' ? (book.price ?? 0).toStringAsFixed(0) : (book.rentalPrice ?? 0).toStringAsFixed(0)}',
+                        '₹${_getPrice().toStringAsFixed(0)}',
                         isAmount: true,
                         isTotal: true,
                       ),
@@ -125,15 +141,17 @@ class PaymentView extends StatelessWidget {
                   ),
                 ),
               ),
+
               const Spacer(),
-              // Payment Button
+
+              /// PAY BUTTON
               Obx(
                 () => SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: paymentController.isProcessing
                         ? null
-                        : () => _processPayment(context, paymentController),
+                        : () => _processPayment(context),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
@@ -146,11 +164,12 @@ class PaymentView extends StatelessWidget {
                             width: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.onPrimary),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                  Theme.of(context).colorScheme.onPrimary),
                             ),
                           )
                         : Text(
-                            'Pay ₹${paymentType == 'purchase' ? (book.price ?? 0).toStringAsFixed(0) : (book.rentalPrice ?? 0).toStringAsFixed(0)}',
+                            'Pay ₹${_getPrice().toStringAsFixed(0)}',
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -164,6 +183,13 @@ class PaymentView extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  double _getPrice() {
+    if (paymentType == 'purchase') {
+      return book.price ?? 0;
+    }
+    return book.rentalPrice ?? 0;
   }
 
   Widget _buildPaymentRow(
@@ -181,14 +207,18 @@ class PaymentView extends StatelessWidget {
           Text(
             label,
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: isTotal ? null : Theme.of(context).colorScheme.onSurface.withAlpha(0xB3),
+                  color: isTotal
+                      ? null
+                      : Theme.of(context).colorScheme.onSurface.withAlpha(180),
                   fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
                 ),
           ),
           Text(
             value,
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: isAmount || isTotal ? Theme.of(context).colorScheme.primary : null,
+                  color: isAmount || isTotal
+                      ? Theme.of(context).colorScheme.primary
+                      : null,
                   fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
                   fontSize: isTotal ? 18 : null,
                 ),
@@ -198,53 +228,14 @@ class PaymentView extends StatelessWidget {
     );
   }
 
-  Future<void> _processPayment(
-    BuildContext context,
-    PaymentController controller,
-  ) async {
-    // `book` is non-nullable
-    // Capture navigator state before async gaps to avoid using BuildContext
-    // synchronously after awaits (use_build_context_synchronously).
-    final navigator = Navigator.of(context);
-    
-    bool success = false;
-    
+  void _processPayment(BuildContext context) {
+    final controller = Get.find<PaymentController>();
+
     if (paymentType == 'purchase') {
-      success = await controller.purchaseBook(book);
-    } else if (paymentType == 'rental' && rentalDays != null) {
-      success = await controller.rentBook(book, rentalDays!);
+      controller.purchaseBook(book);
     }
 
-    if (success) {
-      // Use captured navigator to pop routes. This avoids calling Get.back()
-      // (which triggers Get's snackbar cleanup) and avoids using the
-      // BuildContext after async gaps.
-      try {
-        navigator.pop(); // Close payment screen
-      } catch (_) {}
-      try {
-        navigator.pop(); // Close book detail screen
-      } catch (_) {}
-
-      showSnackSafe(
-        'Success',
-        paymentType == 'purchase'
-            ? 'Book purchased successfully!'
-            : 'Book rented successfully!',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: AppTheme.successColor,
-        colorText: Colors.white,
-        duration: const Duration(seconds: 3),
-      );
-    } else {
-      showSnackSafe(
-        'Payment Failed',
-        'Please try again',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: AppTheme.errorColor,
-        colorText: Colors.white,
-      );
-    }
+    /// Razorpay opens on top of this screen
+    Navigator.of(context).pop();
   }
 }
-

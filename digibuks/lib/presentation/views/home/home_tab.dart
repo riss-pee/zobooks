@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import '../../controllers/book_controller.dart';
 import '../../controllers/auth_controller.dart';
+
 import '../../../data/models/grouped_books_model.dart';
+import '../../../data/models/book_model.dart';
+
 import 'home_controller.dart';
+
 import '../../widgets/book_card.dart';
 import '../../widgets/loading_shimmer.dart';
-import '../../widgets/search_bar.dart';
+
 import '../../../core/constants/app_constants.dart';
 import '../../../core/utils/snackbar_helper.dart';
 
@@ -19,7 +24,7 @@ class HomeTab extends StatefulWidget {
 
 class _HomeTabState extends State<HomeTab> {
   late final PageController _featuredController;
-  final _searchController = TextEditingController();
+
   int _featuredIndex = 0;
 
   @override
@@ -31,16 +36,15 @@ class _HomeTabState extends State<HomeTab> {
   @override
   void dispose() {
     _featuredController.dispose();
-    _searchController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    // Controllers
     final bookController = Get.find<BookController>();
     final authController = Get.find<AuthController>();
     final homeController = Get.find<HomeController>();
+
     final userName = authController.currentUser?.name ?? 'Reader';
 
     return Scaffold(
@@ -57,156 +61,94 @@ class _HomeTabState extends State<HomeTab> {
                 ? _buildLoadingView()
                 : CustomScrollView(
                     slivers: [
-                      // 1. Header & Search
+                      /// HEADER
                       SliverToBoxAdapter(
                         child: Padding(
                           padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              // Glassy Greeting Header
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        _getGreeting(),
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium
-                                            ?.copyWith(
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .onSurface
-                                                  .withAlpha(150),
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        userName,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .displayMedium
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.bold,
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .primary,
-                                              fontSize: 28,
-                                            ),
-                                      ),
-                                    ],
+                                  Text(
+                                    _getGreeting(),
+                                    style:
+                                        Theme.of(context).textTheme.bodyMedium,
                                   ),
-                                  Container(
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                          color: Colors.white, width: 2),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withAlpha(20),
-                                          blurRadius: 10,
-                                          offset: const Offset(0, 4),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    userName,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .displayMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 28,
                                         ),
-                                      ],
-                                    ),
-                                    child: CircleAvatar(
-                                      radius: 28,
-                                      backgroundColor: Theme.of(context)
-                                          .colorScheme
-                                          .primary
-                                          .withAlpha(30),
-                                      child: Text(
-                                        (userName.isNotEmpty
-                                                ? userName[0]
-                                                : 'U')
-                                            .toUpperCase(),
-                                        style: TextStyle(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .primary,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 20),
-                                      ),
-                                    ),
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 32),
-                              
-                              // Removed Search Bar and Categories per user request
+                              CircleAvatar(
+                                radius: 28,
+                                child: Text(
+                                  userName.isNotEmpty
+                                      ? userName[0].toUpperCase()
+                                      : 'U',
+                                ),
+                              ),
                             ],
                           ),
                         ),
                       ),
-                      
+
                       const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
-                      // 2. Trending Books Section (New)
+                      /// TRENDING BOOKS
                       Obx(() {
                         if (homeController.trendingBooks.isEmpty) {
-                          return const SliverToBoxAdapter(child: SizedBox.shrink());
+                          return const SliverToBoxAdapter(
+                              child: SizedBox.shrink());
                         }
-                        
+
                         return SliverMainAxisGroup(
                           slivers: [
                             SliverToBoxAdapter(
-                              child: _buildSectionHeader(context, 'Trending Now', () {}),
+                              child:
+                                  _buildSectionHeader(context, 'Trending Now'),
                             ),
                             SliverToBoxAdapter(
                               child: SizedBox(
                                 height: 260,
                                 child: ListView.separated(
-                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 20),
                                   scrollDirection: Axis.horizontal,
-                                  itemCount: homeController.trendingBooks.length,
-                                  separatorBuilder: (_, __) => const SizedBox(width: 16),
+                                  itemCount:
+                                      homeController.trendingBooks.length,
+                                  separatorBuilder: (_, __) =>
+                                      const SizedBox(width: 16),
                                   itemBuilder: (context, index) {
-                                    final book = homeController.trendingBooks[index];
-                                    
-                                    final summaryBook = BookSummaryModel(
-                                      id: book.id,
-                                      title: book.title,
-                                      coverUrl: book.coverUrl,
-                                      authors: book.authors,
-                                      price: book.price,
-                                      isFree: book.isFree,
-                                    );
-                                    
+                                    final book =
+                                        homeController.trendingBooks[index];
+
                                     return SizedBox(
                                       width: 120,
-                                      child: _buildBookSummaryCard(context, summaryBook),
+                                      child:
+                                          _buildBookSummaryCard(context, book),
                                     );
                                   },
                                 ),
                               ),
                             ),
-                            const SliverToBoxAdapter(child: SizedBox(height: 12)),
                           ],
                         );
                       }),
 
-                      // 3. Featured Section
+                      /// FEATURED BOOKS
                       if (bookController.featuredBooks.isNotEmpty) ...[
                         SliverToBoxAdapter(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 8),
-                            child: Text(
-                              'Trending Now',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleLarge
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                            ),
-                          ),
+                          child: _buildSectionHeader(context, 'Featured Books'),
                         ),
                         SliverToBoxAdapter(
                           child: SizedBox(
@@ -219,74 +161,53 @@ class _HomeTabState extends State<HomeTab> {
                               itemBuilder: (context, index) {
                                 final book =
                                     bookController.featuredBooks[index];
-                                final active = index == _featuredIndex;
-                                return AnimatedContainer(
-                                  duration: const Duration(milliseconds: 300),
-                                  curve: Curves.easeOut,
-                                  margin: EdgeInsets.symmetric(
-                                      horizontal: 8, vertical: active ? 0 : 16),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(20),
-                                    boxShadow: active
-                                        ? [
-                                            BoxShadow(
-                                                color:
-                                                    Colors.black.withAlpha(50),
-                                                blurRadius: 15,
-                                                offset: const Offset(0, 10))
-                                          ]
-                                        : [],
-                                  ),
-                                  child: _buildFeaturedCard(context, book),
-                                );
+
+                                return _buildFeaturedCard(context, book);
                               },
                             ),
                           ),
                         ),
-                        const SliverToBoxAdapter(child: SizedBox(height: 16)),
                       ],
 
-                      // 4. Dynamic Categories from API
+                      /// CATEGORY GROUPS
                       ...homeController.groupedBooks.map((group) {
-                        if (group.books.isEmpty)
+                        if (group.books.isEmpty) {
                           return const SliverToBoxAdapter(
                               child: SizedBox.shrink());
+                        }
 
                         return SliverMainAxisGroup(
                           slivers: [
                             SliverToBoxAdapter(
-                              child: _buildSectionHeader(
-                                  context, group.category, () {}),
+                              child:
+                                  _buildSectionHeader(context, group.category),
                             ),
                             SliverToBoxAdapter(
                               child: SizedBox(
                                 height: 260,
                                 child: ListView.separated(
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 20, vertical: 8),
+                                      horizontal: 20),
                                   scrollDirection: Axis.horizontal,
                                   itemCount: group.books.length,
                                   separatorBuilder: (_, __) =>
                                       const SizedBox(width: 16),
                                   itemBuilder: (context, index) {
-                                     final book = group.books[index];
-                                     // Create an interim BookModel to reuse BookCard formatting, 
-                                     // or properly update BookCard.
-                                     // For simplicity, converting BookSummaryModel to dynamic to pass to Get arguments or UI correctly
-                                     return SizedBox(
-                                       width: 120,
-                                       child: _buildBookSummaryCard(context, book),
-                                     );
+                                    final book = group.books[index];
+
+                                    return SizedBox(
+                                      width: 120,
+                                      child:
+                                          _buildBookSummaryCard(context, book),
+                                    );
                                   },
                                 ),
                               ),
                             ),
-                            const SliverToBoxAdapter(child: SizedBox(height: 12)),
                           ],
                         );
                       }).toList(),
 
-                      // Bottom padding for safer scrolling above navbar
                       const SliverToBoxAdapter(child: SizedBox(height: 120)),
                     ],
                   ),
@@ -298,110 +219,38 @@ class _HomeTabState extends State<HomeTab> {
 
   String _getGreeting() {
     final hour = DateTime.now().hour;
+
     if (hour < 12) return 'Good Morning,';
     if (hour < 17) return 'Good Afternoon,';
+
     return 'Good Evening,';
   }
 
   Widget _buildFeaturedCard(BuildContext context, dynamic book) {
     return GestureDetector(
-      onTap: () => Get.toNamed(AppConstants.bookDetailRoute, arguments: book),
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          // Image
-          ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: book.coverImage != null
-                ? Image.network(
-                    book.coverImage!,
-                    fit: BoxFit.cover,
-                  )
-                : Container(
-                    color: Theme.of(context).colorScheme.primaryContainer,
-                    child: Center(
-                      child: Icon(Icons.menu_book,
-                          size: 50,
-                          color:
-                              Theme.of(context).colorScheme.onPrimaryContainer),
-                    ),
-                  ),
-          ),
+      onTap: () {
+        final mockBook = BookModel(
+          id: book.id,
+          title: book.title,
+          coverImage: book.coverUrl,
+          authorName: book.authors.isNotEmpty ? book.authors.first : 'Unknown',
+          authorId: 'unknown',
+          price: book.price,
+          fileType: 'pdf',
+          language: book.language ?? 'english',
+          type: book.isFree
+              ? AppConstants.bookTypeFree
+              : AppConstants.bookTypePurchase,
+        );
 
-          // Gradient Overlay
-          Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.transparent,
-                  Colors.black.withAlpha(20),
-                  Colors.black.withAlpha(200),
-                ],
-                stops: const [0.4, 0.7, 1.0],
-              ),
-            ),
-          ),
-
-          // Text Content
-          Positioned(
-            left: 20,
-            right: 20,
-            bottom: 20,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Tag
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    'Featured',
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.5,
-                        ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  book.title,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    shadows: [
-                      const Shadow(
-                        offset: Offset(0, 1),
-                        blurRadius: 3,
-                        color: Colors.black45,
-                      ),
-                    ],
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  book.authorName ?? 'Unknown',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.white.withAlpha(200),
-                        fontWeight: FontWeight.w500,
-                      ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-        ],
+        Get.toNamed(AppConstants.bookDetailRoute, arguments: mockBook);
+      },
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: Image.network(
+          book.coverUrl ?? '',
+          fit: BoxFit.cover,
+        ),
       ),
     );
   }
@@ -409,132 +258,61 @@ class _HomeTabState extends State<HomeTab> {
   Widget _buildBookSummaryCard(BuildContext context, dynamic book) {
     return GestureDetector(
       onTap: () {
-        // Create mock full book argument from API until BookDetail handles ID or SummaryModel
-        final mockBookArg = {
-          'id': book.id,
-          'title': book.title,
-          'coverImage': book.coverUrl,
-          'authorName':
-              book.authors.isNotEmpty ? book.authors.first : 'Unknown',
-          'price': book.price,
-          'isFree': book.isFree,
-        };
-        Get.toNamed(AppConstants.bookDetailRoute, arguments: mockBookArg);
+        final mockBook = BookModel(
+          id: book.id,
+          title: book.title,
+          coverImage: book.coverUrl,
+          authorName: book.authors.isNotEmpty ? book.authors.first : 'Unknown',
+          authorId: 'unknown',
+          price: book.price,
+          fileType: 'pdf',
+          language: book.language ?? 'english',
+          type: book.isFree
+              ? AppConstants.bookTypeFree
+              : AppConstants.bookTypePurchase,
+        );
+
+        Get.toNamed(AppConstants.bookDetailRoute, arguments: mockBook);
       },
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Cover Image
           Expanded(
-            child: Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                boxShadow: [
-                  BoxShadow(
-                    color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: book.coverUrl.isNotEmpty
-                    ? Image.network(
-                        book.coverUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) =>
-                            const Center(child: Icon(Icons.broken_image)),
-                      )
-                    : Center(
-                        child: Icon(
-                          Icons.menu_book,
-                          size: 40,
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurfaceVariant
-                              .withAlpha(100),
-                        ),
-                      ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Image.network(
+                book.coverUrl ?? '',
+                fit: BoxFit.cover,
               ),
             ),
           ),
-          const SizedBox(height: 12),
-
-          // Original layout with Title & Author
+          const SizedBox(height: 8),
           Text(
             book.title,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  height: 1.2,
-                ),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 4),
           Text(
             book.authors.isNotEmpty ? book.authors.first : 'Unknown',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-          ),
-
-          const SizedBox(height: 8),
-
-          // Price Info
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: book.isFree
-                      ? Colors.green.withAlpha(20)
-                      : Theme.of(context).colorScheme.primary.withAlpha(20),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  book.isFree ? 'Free' : '₹${book.price}',
-                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: book.isFree
-                            ? Colors.green
-                            : Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-              ),
-            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSectionHeader(
-      BuildContext context, String title, VoidCallback onSeeAll) {
+  Widget _buildSectionHeader(BuildContext context, String title) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            title,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-          ),
-          TextButton(
-            onPressed: () =>
-                showSnackSafe('Coming Soon', 'See all coming soon'),
-            style: TextButton.styleFrom(
-              visualDensity: VisualDensity.compact,
-            ),
-            child: const Text('See All'),
-          ),
-        ],
+      child: Text(
+        title,
+        style: Theme.of(context)
+            .textTheme
+            .titleLarge
+            ?.copyWith(fontWeight: FontWeight.bold),
       ),
     );
   }
@@ -545,128 +323,8 @@ class _HomeTabState extends State<HomeTab> {
       children: [
         LoadingShimmer(width: double.infinity, height: 60),
         const SizedBox(height: 24),
-        LoadingShimmer(width: double.infinity, height: 30),
-        const SizedBox(height: 24),
         LoadingShimmer(width: double.infinity, height: 250),
-        const SizedBox(height: 24),
-        GridView.count(
-          shrinkWrap: true,
-          crossAxisCount: 2,
-          childAspectRatio: 0.6,
-          mainAxisSpacing: 16,
-          crossAxisSpacing: 16,
-          physics: const NeverScrollableScrollPhysics(),
-          children: List.generate(4, (index) => const BookCardShimmer()),
-        )
       ],
-    );
-  }
-
-  void _showFilterDialog(BuildContext context, BookController controller) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) => Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).dividerColor,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'Filter Books',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-            const SizedBox(height: 24),
-            Text('Language',
-                style: Theme.of(context)
-                    .textTheme
-                    .titleMedium
-                    ?.copyWith(fontWeight: FontWeight.w600)),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 12,
-              children: [
-                _buildFilterChip(
-                    context, 'All', controller.selectedLanguage.isEmpty, () {
-                  controller.filterByLanguage('');
-                  Navigator.pop(context);
-                }),
-                _buildFilterChip(context, 'English',
-                    controller.selectedLanguage == AppConstants.languageEnglish,
-                    () {
-                  controller.filterByLanguage(AppConstants.languageEnglish);
-                  Navigator.pop(context);
-                }),
-                _buildFilterChip(context, 'Mizo',
-                    controller.selectedLanguage == AppConstants.languageMizo,
-                    () {
-                  controller.filterByLanguage(AppConstants.languageMizo);
-                  Navigator.pop(context);
-                }),
-              ],
-            ),
-            const SizedBox(height: 32),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  controller.filterByGenre('');
-                  controller.filterByLanguage('');
-                  Navigator.pop(context);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor:
-                      Theme.of(context).colorScheme.surfaceContainerHighest,
-                  foregroundColor: Theme.of(context).colorScheme.onSurface,
-                  elevation: 0,
-                ),
-                child: const Text('Clear All Filters'),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFilterChip(
-      BuildContext context, String label, bool isSelected, VoidCallback onTap) {
-    return FilterChip(
-      label: Text(label),
-      selected: isSelected,
-      onSelected: (_) => onTap(),
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      selectedColor: Theme.of(context).colorScheme.primaryContainer,
-      checkmarkColor: Theme.of(context).colorScheme.primary,
-      labelStyle: TextStyle(
-        color: isSelected
-            ? Theme.of(context).colorScheme.primary
-            : Theme.of(context).colorScheme.onSurface,
-        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-      ),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: BorderSide(
-          color:
-              isSelected ? Colors.transparent : Theme.of(context).dividerColor,
-        ),
-      ),
     );
   }
 }

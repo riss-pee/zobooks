@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../../data/models/book_model.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_theme.dart';
-
 import '../widgets/glass_container.dart';
 
 class BookCard extends StatelessWidget {
@@ -38,6 +37,23 @@ class BookCard extends StatelessWidget {
                 child: Container(
                   width: double.infinity,
                   color: Theme.of(context).colorScheme.primary.withAlpha(20),
+
+                  // Book spine effect
+                  foregroundDecoration: BoxDecoration(
+                    borderRadius:
+                        const BorderRadius.vertical(top: Radius.circular(20)),
+                    border: Border(
+                      left: BorderSide(
+                        color: Colors.white.withOpacity(0.5),
+                        width: 3.5,
+                      ),
+                      right: BorderSide(
+                        color: Colors.black.withOpacity(0.1),
+                        width: 1.0,
+                      ),
+                    ),
+                  ),
+
                   child: book.coverImage != null
                       ? Image.network(
                           book.coverImage!,
@@ -49,6 +65,7 @@ class BookCard extends StatelessWidget {
                 ),
               ),
             ),
+
             // Book Info
             Padding(
               padding: const EdgeInsets.fromLTRB(12, 12, 12, 16),
@@ -67,7 +84,9 @@ class BookCard extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
+
                   const SizedBox(height: 4),
+
                   // Author
                   Text(
                     book.authorName ?? 'Unknown Author',
@@ -81,7 +100,9 @@ class BookCard extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
+
                   const SizedBox(height: 8),
+
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -108,6 +129,7 @@ class BookCard extends StatelessWidget {
                             ),
                           ],
                         ),
+
                       // Price
                       _buildPrice(context),
                     ],
@@ -124,7 +146,6 @@ class BookCard extends StatelessWidget {
   Widget _buildPlaceholder() {
     return Container(
       decoration: BoxDecoration(
-        // Use a single neutral surface color following Material 3 (no gradients)
         color: AppTheme.primaryColor.withAlpha(51),
         borderRadius: BorderRadius.circular(12),
       ),
@@ -179,6 +200,7 @@ class BookCard extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
       );
     }
+
     return const SizedBox.shrink();
   }
 }

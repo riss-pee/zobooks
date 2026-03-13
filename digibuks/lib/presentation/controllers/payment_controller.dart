@@ -1,172 +1,205 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
+
 import '../../data/models/book_model.dart';
-import '../../data/models/payment_model.dart';
+import '../../data/repositories/payment_repository.dart';
+
 import '../../core/utils/logger.dart';
-import '../../core/utils/storage_helper.dart';
+import '../../core/utils/snackbar_helper.dart';
+import '../../core/constants/app_constants.dart';
+import '../../core/theme/app_theme.dart';
 
 class PaymentController extends GetxController {
+  final PaymentRepository _paymentRepository;
+
+  PaymentController(this._paymentRepository);
+
   // Observable state
   final _isProcessing = false.obs;
-  final _paymentHistory = <PaymentModel>[].obs;
-  final _purchasedBooks = <String>[].obs; // Book IDs
-  final _rentedBooks = <String, DateTime>{}.obs; // Book ID -> Expiry Date
+  final _ownedBooks = <String, String>{}.obs; // bookId -> access_type
 
-  // Getters
   bool get isProcessing => _isProcessing.value;
-  List<PaymentModel> get paymentHistory => _paymentHistory;
-  List<String> get purchasedBooks => _purchasedBooks;
-  Map<String, DateTime> get rentedBooks => _rentedBooks;
+
+  // Current purchase context
+  String? _currentBookId;
+
+  late Razorpay _razorpay;
 
   @override
   void onInit() {
     super.onInit();
-    loadPaymentHistory();
-    loadPurchasedBooks();
-    loadRentedBooks();
+
+    _razorpay = Razorpay();
+
+    _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
+    _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
+    _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
   }
 
-  Future<void> loadPaymentHistory() async {
-    try {
-      // Load from storage in real app
-      _paymentHistory.value = [];
-    } catch (e) {
-      AppLogger.e('Error loading payment history', e);
-    }
+  @override
+  void onClose() {
+    _razorpay.clear();
+    super.onClose();
   }
 
-  Future<void> loadPurchasedBooks() async {
+  /// Check ownership of a book
+  Future<void> checkOwnership(String bookId) async {
     try {
-      final purchasedKey = 'purchased_books';
-      final purchasedJson = StorageHelper.getString(purchasedKey);
-      if (purchasedJson != null) {
-        // Parse JSON in real app
-        _purchasedBooks.value = [];
+      final result = await _paymentRepository.checkOwnership(bookId);
+
+      if (result['owned'] == true) {
+        _ownedBooks[bookId] = result['access_type'] ?? 'purchase';
       }
     } catch (e) {
-      AppLogger.e('Error loading purchased books', e);
+      AppLogger.e('Ownership check failed', e);
     }
   }
 
-  Future<void> loadRentedBooks() async {
-    try {
-      final rentedKey = 'rented_books';
-      final rentedJson = StorageHelper.getString(rentedKey);
-      if (rentedJson != null) {
-        // Parse JSON in real app
-        _rentedBooks.value = {};
-      }
-    } catch (e) {
-      AppLogger.e('Error loading rented books', e);
-    }
-  }
-
-  Future<bool> purchaseBook(BookModel book) async {
-    try {
-      _isProcessing.value = true;
-      
-      // Simulate payment processing
-      await Future.delayed(const Duration(seconds: 2));
-      
-      // Mock successful payment
-      final payment = PaymentModel(
-        id: 'payment_${DateTime.now().millisecondsSinceEpoch}',
-        userId: 'current_user',
-        bookId: book.id,
-        type: 'purchase',
-        amount: book.price ?? 0.0,
-        status: 'completed',
-        paymentId: 'rzp_${DateTime.now().millisecondsSinceEpoch}',
-        orderId: 'order_${DateTime.now().millisecondsSinceEpoch}',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
-      
-      _paymentHistory.add(payment);
-      _purchasedBooks.add(book.id);
-      
-      // Save to storage
-      await _savePurchasedBooks();
-      await _savePaymentHistory();
-      
-      AppLogger.i('Book purchased: ${book.title}');
-      return true;
-    } catch (e) {
-      AppLogger.e('Error purchasing book', e);
-      return false;
-    } finally {
-      _isProcessing.value = false;
-    }
-  }
-
-  Future<bool> rentBook(BookModel book, int days) async {
-    try {
-      _isProcessing.value = true;
-      
-      // Simulate payment processing
-      await Future.delayed(const Duration(seconds: 2));
-      
-      final expiryDate = DateTime.now().add(Duration(days: days));
-      
-      // Mock successful payment
-      final payment = PaymentModel(
-        id: 'payment_${DateTime.now().millisecondsSinceEpoch}',
-        userId: 'current_user',
-        bookId: book.id,
-        type: 'rental',
-        amount: book.rentalPrice ?? 0.0,
-        status: 'completed',
-        paymentId: 'rzp_${DateTime.now().millisecondsSinceEpoch}',
-        orderId: 'order_${DateTime.now().millisecondsSinceEpoch}',
-        rentalExpiryDate: expiryDate,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
-      
-      _paymentHistory.add(payment);
-      _rentedBooks[book.id] = expiryDate;
-      
-      // Save to storage
-      await _saveRentedBooks();
-      await _savePaymentHistory();
-      
-      AppLogger.i('Book rented: ${book.title} until $expiryDate');
-      return true;
-    } catch (e) {
-      AppLogger.e('Error renting book', e);
-      return false;
-    } finally {
-      _isProcessing.value = false;
-    }
-  }
-
-  bool hasPurchased(String bookId) {
-    return _purchasedBooks.contains(bookId);
-  }
-
-  bool hasRented(String bookId) {
-    if (!_rentedBooks.containsKey(bookId)) return false;
-    final expiryDate = _rentedBooks[bookId]!;
-    return DateTime.now().isBefore(expiryDate);
-  }
-
+  /// Can user access a book
   bool canAccessBook(String bookId) {
-    return hasPurchased(bookId) || hasRented(bookId);
+    return _ownedBooks.containsKey(bookId);
   }
 
-  DateTime? getRentalExpiry(String bookId) {
-    return _rentedBooks[bookId];
+  /// Purchase a paid book
+  Future<void> purchaseBook(BookModel book) async {
+    try {
+      _isProcessing.value = true;
+      _currentBookId = book.id;
+
+      // Create order from backend
+      final orderData = await _paymentRepository.createOrder(book.id);
+
+      final options = {
+        'key': orderData['key_id'],
+        'amount': orderData['amount'],
+        'currency': orderData['currency'],
+        'order_id': orderData['order_id'],
+        'name': 'DigiBuks',
+        'description': 'Purchase: ${orderData['book_title'] ?? book.title}',
+        'prefill': {
+          'contact': '',
+          'email': '',
+        },
+        'theme': {
+          'color': '#2E4032',
+        },
+      };
+
+      _razorpay.open(options);
+    } catch (e) {
+      _isProcessing.value = false;
+
+      AppLogger.e('Error starting purchase', e);
+
+      showSnackSafe(
+        'Error',
+        e.toString().replaceAll('ApiException:', '').trim(),
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: AppTheme.errorColor,
+        colorText: Colors.white,
+      );
+    }
   }
 
-  Future<void> _savePurchasedBooks() async {
-    // Save to storage in real app
+  /// Claim a free book
+  Future<void> claimFreeBook(BookModel book) async {
+    try {
+      _isProcessing.value = true;
+
+      await _paymentRepository.claimFreeBook(book.id);
+
+      _ownedBooks[book.id] = 'free';
+
+      showSnackSafe(
+        'Success',
+        'Book added to your library!',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: AppTheme.successColor,
+        colorText: Colors.white,
+        duration: const Duration(seconds: 3),
+      );
+
+      Get.toNamed(
+        AppConstants.readerRoute,
+        arguments: book,
+      );
+    } catch (e) {
+      AppLogger.e('Error claiming free book', e);
+
+      showSnackSafe(
+        'Error',
+        e.toString().replaceAll('ApiException:', '').trim(),
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: AppTheme.errorColor,
+        colorText: Colors.white,
+      );
+    } finally {
+      _isProcessing.value = false;
+    }
   }
 
-  Future<void> _saveRentedBooks() async {
-    // Save to storage in real app
+  // ───────── Razorpay Callbacks ─────────
+
+  void _handlePaymentSuccess(PaymentSuccessResponse response) async {
+    AppLogger.i('Payment success: ${response.paymentId}');
+
+    try {
+      final result = await _paymentRepository.verifyPayment(
+        razorpayOrderId: response.orderId ?? '',
+        razorpayPaymentId: response.paymentId ?? '',
+        razorpaySignature: response.signature ?? '',
+        bookId: _currentBookId ?? '',
+      );
+
+      if (result['success'] == true) {
+        _ownedBooks[_currentBookId ?? ''] = 'purchase';
+
+        showSnackSafe(
+          'Purchase Complete!',
+          result['message'] ?? 'Book added to your library',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: AppTheme.successColor,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 3),
+        );
+      }
+    } catch (e) {
+      AppLogger.e('Payment verification failed', e);
+
+      showSnackSafe(
+        'Verification Failed',
+        'Payment was received but verification failed. Please contact support.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: AppTheme.errorColor,
+        colorText: Colors.white,
+      );
+    } finally {
+      _isProcessing.value = false;
+    }
   }
 
-  Future<void> _savePaymentHistory() async {
-    // Save to storage in real app
+  void _handlePaymentError(PaymentFailureResponse response) {
+    _isProcessing.value = false;
+
+    AppLogger.e('Payment failed: ${response.message}');
+
+    showSnackSafe(
+      'Payment Failed',
+      response.message ?? 'Something went wrong. Please try again.',
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: AppTheme.errorColor,
+      colorText: Colors.white,
+    );
+  }
+
+  void _handleExternalWallet(ExternalWalletResponse response) {
+    AppLogger.i('External wallet selected: ${response.walletName}');
+
+    showSnackSafe(
+      'External Wallet',
+      'You selected: ${response.walletName}',
+      snackPosition: SnackPosition.BOTTOM,
+    );
   }
 }
-

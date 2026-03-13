@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import '../datasources/remote/auth_remote_datasource.dart';
 import '../../core/utils/storage_helper.dart';
 import '../../core/utils/logger.dart';
@@ -11,22 +13,30 @@ class AuthRepository {
   Future<UserModel> login(String username, String password) async {
     try {
       final response = await _remoteDataSource.login(username, password);
-      
+
       // Save tokens
       if (response['access_token'] != null) {
         await StorageHelper.saveAccessToken(response['access_token'] as String);
       }
+
       if (response['refresh_token'] != null) {
-        await StorageHelper.saveRefreshToken(response['refresh_token'] as String);
+        await StorageHelper.saveRefreshToken(
+            response['refresh_token'] as String);
       }
-      
+
       // Save user data
       if (response['user'] != null) {
-        final user = UserModel.fromJson(response['user'] as Map<String, dynamic>);
-        await StorageHelper.saveString('user_data', user.toJson().toString());
+        final user =
+            UserModel.fromJson(response['user'] as Map<String, dynamic>);
+
+        await StorageHelper.saveString(
+          'user_data',
+          jsonEncode(user.toJson()),
+        );
+
         return user;
       }
-      
+
       throw Exception('Invalid response format');
     } catch (e) {
       AppLogger.e('Login repository error', e);
@@ -51,27 +61,51 @@ class AuthRepository {
         phone: phone,
         role: role,
       );
-      
+
       // Save tokens
       if (response['access_token'] != null) {
         await StorageHelper.saveAccessToken(response['access_token'] as String);
       }
+
       if (response['refresh_token'] != null) {
-        await StorageHelper.saveRefreshToken(response['refresh_token'] as String);
+        await StorageHelper.saveRefreshToken(
+            response['refresh_token'] as String);
       }
-      
+
       // Save user data
       if (response['user'] != null) {
-        final user = UserModel.fromJson(response['user'] as Map<String, dynamic>);
-        await StorageHelper.saveString('user_data', user.toJson().toString());
+        final user =
+            UserModel.fromJson(response['user'] as Map<String, dynamic>);
+
+        await StorageHelper.saveString(
+          'user_data',
+          jsonEncode(user.toJson()),
+        );
+
         return user;
       }
-      
+
       throw Exception('Invalid response format');
     } catch (e) {
       AppLogger.e('Register repository error', e);
       rethrow;
     }
+  }
+
+  /// Restore user from local storage (no API call)
+  Future<UserModel?> restoreUser() async {
+    try {
+      final userData = await StorageHelper.getString('user_data');
+
+      if (userData != null && userData.isNotEmpty) {
+        final json = jsonDecode(userData) as Map<String, dynamic>;
+        return UserModel.fromJson(json);
+      }
+    } catch (e) {
+      AppLogger.e('Error restoring user from storage', e);
+    }
+
+    return null;
   }
 
   Future<UserModel> getCurrentUser() async {
@@ -89,7 +123,8 @@ class AuthRepository {
       await StorageHelper.clearAll();
     } catch (e) {
       AppLogger.e('Logout repository error', e);
-      // Clear storage even if API call fails
+
+      // Clear storage even if API fails
       await StorageHelper.clearAll();
     }
   }
@@ -103,4 +138,3 @@ class AuthRepository {
     return await StorageHelper.getAccessToken();
   }
 }
-
