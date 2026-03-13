@@ -1,57 +1,79 @@
 import 'package:get/get.dart';
+
 import '../controllers/auth_controller.dart';
 import '../controllers/book_controller.dart';
 import '../controllers/payment_controller.dart';
+
 import '../../data/repositories/auth_repository.dart';
+import '../../data/repositories/home_repository.dart';
+import '../../data/repositories/payment_repository.dart';
+import '../../data/repositories/reader_repository.dart';
+
 import '../../data/datasources/remote/auth_remote_datasource.dart';
 import '../../core/network/api_client.dart';
-import '../../data/repositories/home_repository.dart';
+
 import '../views/home/home_controller.dart';
 
 class HomeBinding extends Bindings {
   @override
   void dependencies() {
-    // Initialize ApiClient if not already initialized
+    // ApiClient
     if (!Get.isRegistered<ApiClient>()) {
       Get.put(ApiClient());
     }
 
-    // Initialize Auth dependencies if not already initialized
+    // Auth Remote Source
     if (!Get.isRegistered<AuthRemoteDataSource>()) {
       final apiClient = Get.find<ApiClient>();
       Get.put(AuthRemoteDataSource(apiClient));
     }
 
+    // Auth Repository
     if (!Get.isRegistered<AuthRepository>()) {
       final authRemoteDataSource = Get.find<AuthRemoteDataSource>();
       Get.put(AuthRepository(authRemoteDataSource));
     }
 
+    // Auth Controller
     if (!Get.isRegistered<AuthController>()) {
       final authRepository = Get.find<AuthRepository>();
       Get.put(AuthController(authRepository));
     }
 
-    // Initialize PaymentController if not already initialized
-    if (!Get.isRegistered<PaymentController>()) {
-      Get.put(PaymentController());
-    }
-
-    // Initialize Home Data fetcher
+    // Home Repository (needed for books)
     if (!Get.isRegistered<HomeRepository>()) {
       final apiClient = Get.find<ApiClient>();
       Get.put(HomeRepository(apiClient));
     }
 
+    // Book Controller
+    if (!Get.isRegistered<BookController>()) {
+      final homeRepo = Get.find<HomeRepository>();
+      Get.put(BookController(homeRepo));
+    }
+
+    // Payment Repository
+    if (!Get.isRegistered<PaymentRepository>()) {
+      final apiClient = Get.find<ApiClient>();
+      Get.put(PaymentRepository(apiClient));
+    }
+
+    // Payment Controller
+    if (!Get.isRegistered<PaymentController>()) {
+      final paymentRepo = Get.find<PaymentRepository>();
+      Get.put(PaymentController(paymentRepo));
+    }
+
+    // Reader Repository
+    if (!Get.isRegistered<ReaderRepository>()) {
+      final apiClient = Get.find<ApiClient>();
+      Get.put(ReaderRepository(apiClient));
+    }
+
+    // Home Controller
     if (!Get.isRegistered<HomeController>()) {
       final homeRepository = Get.find<HomeRepository>();
       Get.put(HomeController(homeRepository));
-    }
-
-    // Initialize BookController if not already initialized
-    if (!Get.isRegistered<BookController>()) {
-      final homeRepository = Get.find<HomeRepository>();
-      Get.put(BookController(homeRepository));
     }
   }
 }
