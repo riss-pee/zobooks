@@ -2,18 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../controllers/book_controller.dart';
-import '../../controllers/payment_controller.dart';
-
 import '../../widgets/book_card.dart';
-
 import '../../../core/constants/app_constants.dart';
 
-class LibraryView extends StatelessWidget {
+class LibraryView extends StatefulWidget {
   const LibraryView({super.key});
 
   @override
+  State<LibraryView> createState() => _LibraryViewState();
+}
+
+class _LibraryViewState extends State<LibraryView> {
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Get.find<BookController>().fetchMyLibrary();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final paymentController = Get.find<PaymentController>();
     final bookController = Get.find<BookController>();
 
     return Scaffold(
@@ -21,12 +31,14 @@ class LibraryView extends StatelessWidget {
         title: const Text('My Library'),
       ),
       body: Obx(() {
-        /// Filter books the user owns
-        final libraryBooks = bookController.books.where((book) {
-          return paymentController.canAccessBook(book.id);
-        }).toList();
+        if (bookController.isLoadingLibrary) {
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
+        }
 
-        /// Empty Library UI
+        final libraryBooks = bookController.myLibraryBooks;
+
         if (libraryBooks.isEmpty) {
           return Center(
             child: Column(
@@ -45,16 +57,15 @@ class LibraryView extends StatelessWidget {
                 const SizedBox(height: 8),
                 TextButton(
                   onPressed: () {
-                    /// In future this could switch to Home tab
+                    // Could switch to Home tab
                   },
                   child: const Text('Go explore books'),
-                ),
+                )
               ],
             ),
           );
         }
 
-        /// Library Books Grid
         return GridView.builder(
           padding: const EdgeInsets.all(16),
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -70,10 +81,12 @@ class LibraryView extends StatelessWidget {
             return BookCard(
               book: book,
               showWishlistButton: false,
-              onTap: () => Get.toNamed(
-                AppConstants.bookDetailRoute,
-                arguments: book,
-              ),
+              onTap: () {
+                Get.toNamed(
+                  AppConstants.readerRoute,
+                  arguments: book,
+                );
+              },
             );
           },
         );

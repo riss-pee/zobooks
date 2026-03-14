@@ -1,17 +1,13 @@
 import 'package:get/get.dart';
-
 import '../controllers/auth_controller.dart';
 import '../controllers/book_controller.dart';
 import '../controllers/payment_controller.dart';
-
 import '../../data/repositories/auth_repository.dart';
-import '../../data/repositories/home_repository.dart';
 import '../../data/repositories/payment_repository.dart';
 import '../../data/repositories/reader_repository.dart';
-
 import '../../data/datasources/remote/auth_remote_datasource.dart';
 import '../../core/network/api_client.dart';
-
+import '../../data/repositories/home_repository.dart';
 import '../views/home/home_controller.dart';
 
 class HomeBinding extends Bindings {
@@ -22,25 +18,23 @@ class HomeBinding extends Bindings {
       Get.put(ApiClient());
     }
 
-    // Auth Remote Source
+    // Auth Dependencies
     if (!Get.isRegistered<AuthRemoteDataSource>()) {
       final apiClient = Get.find<ApiClient>();
       Get.put(AuthRemoteDataSource(apiClient));
     }
 
-    // Auth Repository
     if (!Get.isRegistered<AuthRepository>()) {
       final authRemoteDataSource = Get.find<AuthRemoteDataSource>();
       Get.put(AuthRepository(authRemoteDataSource));
     }
 
-    // Auth Controller
     if (!Get.isRegistered<AuthController>()) {
       final authRepository = Get.find<AuthRepository>();
       Get.put(AuthController(authRepository));
     }
 
-    // Home Repository (needed for books)
+    // Home Repository
     if (!Get.isRegistered<HomeRepository>()) {
       final apiClient = Get.find<ApiClient>();
       Get.put(HomeRepository(apiClient));

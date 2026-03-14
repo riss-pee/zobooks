@@ -10,52 +10,124 @@ class SplashView extends StatefulWidget {
   State<SplashView> createState() => _SplashViewState();
 }
 
-class _SplashViewState extends State<SplashView> {
+class _SplashViewState extends State<SplashView>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _logoScale;
+  late Animation<double> _logoFade;
+  late Animation<double> _textFade;
+
   @override
   void initState() {
     super.initState();
+
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    );
+
+    _logoScale = Tween<double>(
+      begin: 0.8,
+      end: 1.0,
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeOut,
+      ),
+    );
+
+    _logoFade = Tween<double>(
+      begin: 0,
+      end: 1,
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.6),
+      ),
+    );
+
+    _textFade = Tween<double>(
+      begin: 0,
+      end: 1,
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.6, 1.0),
+      ),
+    );
+
+    _controller.forward();
+
     _initializeApp();
   }
 
   Future<void> _initializeApp() async {
-    // Initialize storage
+    // Ensure storage is ready
     await StorageHelper.init();
 
-    // Wait a bit for splash screen
-    await Future.delayed(const Duration(seconds: 3));
+    // Splash duration
+    await Future.delayed(const Duration(seconds: 4));
 
     if (mounted) {
-      // Always navigate to home, allowing guest browsing
+      // Navigate using GetX routing
       Get.offAllNamed(AppConstants.homeRoute);
     }
   }
 
   @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        color: Theme.of(context).scaffoldBackgroundColor,
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(vertical: 40),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // ZoReads Logo
-                Image.asset(
-                  'assets/images/ZoReads_logo.png',
-                  width: 264,
-                  height: 264,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            FadeTransition(
+              opacity: _logoFade,
+              child: ScaleTransition(
+                scale: _logoScale,
+                child: Image.asset(
+                  "assets/images/ZoReads_logo.png",
+                  width: 220,
                   fit: BoxFit.contain,
                   color: Theme.of(context).colorScheme.primary,
                 ),
-                const SizedBox(height: 80),
-                const CircularProgressIndicator(strokeWidth: 2),
-              ],
+              ),
             ),
-          ),
+            const SizedBox(height: 20),
+            FadeTransition(
+              opacity: _textFade,
+              child: const Text(
+                "ZoReads",
+                style: TextStyle(
+                  fontSize: 30,
+                  letterSpacing: 1.5,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            FadeTransition(
+              opacity: _textFade,
+              child: const Text(
+                "Mizo e-Book Platform",
+                style: TextStyle(
+                  fontSize: 16,
+                  letterSpacing: 1.2,
+                ),
+              ),
+            ),
+            const SizedBox(height: 40),
+            FadeTransition(
+              opacity: _textFade,
+              child: const CircularProgressIndicator(strokeWidth: 2),
+            ),
+          ],
         ),
       ),
     );

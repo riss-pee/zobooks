@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+
 import '../../widgets/custom_bottom_nav.dart';
 import 'home_tab.dart';
 import 'search_page.dart';
 import '../library/library_view.dart';
-import '../wishlist/wishlist_view.dart';
 import '../profile/profile_view.dart';
+
+import '../../controllers/auth_controller.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -16,30 +19,44 @@ class HomeView extends StatefulWidget {
 class _HomeViewState extends State<HomeView> {
   int _currentIndex = 0;
 
-  final List<Widget> _pages = [
-    const HomeTab(),
-    const SearchPage(),
-    const LibraryView(),
-    const WishlistView(),
-    const ProfileView(),
-  ];
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      extendBody: true,
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _pages,
-      ),
-      bottomNavigationBar: CustomBottomNav(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-      ),
-    );
+    final authController = Get.find<AuthController>();
+
+    return Obx(() {
+      final isAuthenticated = authController.isAuthenticated;
+
+      /// Pages list changes depending on authentication
+      final List<Widget> pages = [
+        const HomeTab(),
+        const SearchPage(),
+        if (isAuthenticated) const LibraryView(),
+        // Wishlist view removed as not existing
+        const ProfileView(),
+      ];
+
+      /// Prevent index overflow when login/logout changes tabs
+      int activeIndex = _currentIndex;
+      if (activeIndex >= pages.length) {
+        activeIndex = pages.length - 1;
+      }
+
+      return Scaffold(
+        extendBody: true,
+        body: IndexedStack(
+          index: activeIndex,
+          children: pages,
+        ),
+        bottomNavigationBar: CustomBottomNav(
+          currentIndex: activeIndex,
+          isAuthenticated: isAuthenticated,
+          onTap: (index) {
+            setState(() {
+              _currentIndex = index;
+            });
+          },
+        ),
+      );
+    });
   }
 }

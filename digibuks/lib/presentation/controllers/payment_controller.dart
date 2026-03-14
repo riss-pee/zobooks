@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
-
 import '../../data/models/book_model.dart';
 import '../../data/repositories/payment_repository.dart';
-
 import '../../core/utils/logger.dart';
 import '../../core/utils/snackbar_helper.dart';
 import '../../core/constants/app_constants.dart';
@@ -15,21 +13,17 @@ class PaymentController extends GetxController {
 
   PaymentController(this._paymentRepository);
 
-  // Observable state
   final _isProcessing = false.obs;
-  final _ownedBooks = <String, String>{}.obs; // bookId -> access_type
+  final _ownedBooks = <String, String>{}.obs;
 
   bool get isProcessing => _isProcessing.value;
 
-  // Current purchase context
   String? _currentBookId;
-
   late Razorpay _razorpay;
 
   @override
   void onInit() {
     super.onInit();
-
     _razorpay = Razorpay();
 
     _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
@@ -43,7 +37,6 @@ class PaymentController extends GetxController {
     super.onClose();
   }
 
-  /// Check ownership of a book
   Future<void> checkOwnership(String bookId) async {
     try {
       final result = await _paymentRepository.checkOwnership(bookId);
@@ -56,18 +49,15 @@ class PaymentController extends GetxController {
     }
   }
 
-  /// Can user access a book
   bool canAccessBook(String bookId) {
     return _ownedBooks.containsKey(bookId);
   }
 
-  /// Purchase a paid book
   Future<void> purchaseBook(BookModel book) async {
     try {
       _isProcessing.value = true;
       _currentBookId = book.id;
 
-      // Create order from backend
       final orderData = await _paymentRepository.createOrder(book.id);
 
       final options = {
@@ -102,7 +92,6 @@ class PaymentController extends GetxController {
     }
   }
 
-  /// Claim a free book
   Future<void> claimFreeBook(BookModel book) async {
     try {
       _isProcessing.value = true;
@@ -120,10 +109,7 @@ class PaymentController extends GetxController {
         duration: const Duration(seconds: 3),
       );
 
-      Get.toNamed(
-        AppConstants.readerRoute,
-        arguments: book,
-      );
+      Get.toNamed(AppConstants.readerRoute, arguments: book);
     } catch (e) {
       AppLogger.e('Error claiming free book', e);
 
@@ -138,8 +124,6 @@ class PaymentController extends GetxController {
       _isProcessing.value = false;
     }
   }
-
-  // ───────── Razorpay Callbacks ─────────
 
   void _handlePaymentSuccess(PaymentSuccessResponse response) async {
     AppLogger.i('Payment success: ${response.paymentId}');

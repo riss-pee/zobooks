@@ -7,6 +7,7 @@ class AppConstants {
   static const String bookDetailRoute = '/book-detail';
   static const String readerRoute = '/reader';
   static const String profileRoute = '/profile';
+  static const String editProfileRoute = '/edit-profile';
   static const String libraryRoute = '/library';
   static const String wishlistRoute = '/wishlist';
   static const String authorDashboardRoute = '/author-dashboard';
