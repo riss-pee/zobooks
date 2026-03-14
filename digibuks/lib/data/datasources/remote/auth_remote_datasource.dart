@@ -3,6 +3,7 @@ import '../../../core/exceptions/api_exception.dart';
 import '../../../core/utils/logger.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../models/user_model.dart';
+import '../../models/user_profile_model.dart';
 
 class AuthRemoteDataSource {
   final ApiClient _apiClient;
@@ -114,6 +115,44 @@ class AuthRemoteDataSource {
       }
     } catch (e) {
       AppLogger.e('Get current user error', e);
+      rethrow;
+    }
+  }
+
+  Future<UserProfileModel> getUserProfile() async {
+    try {
+      AppLogger.i('Fetching full user profile');
+      final response = await _apiClient.get('/users/profile');
+      
+      if (response.statusCode == 200) {
+        return UserProfileModel.fromJson(response.data as Map<String, dynamic>);
+      } else {
+        throw ApiException(
+          message: 'Failed to fetch user profile',
+          statusCode: response.statusCode,
+        );
+      }
+    } catch (e) {
+      AppLogger.e('Get user profile error', e);
+      rethrow;
+    }
+  }
+
+  Future<UserProfileModel> updateUserProfile(Map<String, dynamic> data) async {
+    try {
+      AppLogger.i('Updating user profile');
+      final response = await _apiClient.patch('/users/profile', data: data);
+      
+      if (response.statusCode == 200) {
+        return UserProfileModel.fromJson(response.data as Map<String, dynamic>);
+      } else {
+        throw ApiException(
+          message: 'Failed to update user profile',
+          statusCode: response.statusCode,
+        );
+      }
+    } catch (e) {
+      AppLogger.e('Update user profile error', e);
       rethrow;
     }
   }

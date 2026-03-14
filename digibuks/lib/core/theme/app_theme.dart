@@ -10,11 +10,11 @@ class AppTheme {
   static const Color accentColorDark = Color(0xFFD4D4D4);
 
   static const Color bgLight = Color(0xFFF7F8F6); // Very subtle green-tinted off-white
-  static const Color bgDark = Color(0xFF000000); // OLED Friendly Black
-  static const Color surfaceDark = Color(0xFF2B2B2B); // Deep charcoal
+  static const Color bgDark = Color(0xFF0A0F0B); // Deep Forest Black
+  static const Color surfaceDark = Color(0xFF161D18); // Dark Forest Charcoal
   
   static const Color textDark = Color(0xFF1A241D); // Dark green-black text
-  static const Color textLight = Color(0xFFFFFFFF); // White for dark mode text
+  static const Color textLight = Color(0xFFE2E8E4); // Minted White for dark mode text
   static const Color textMutedDark = Color(0xFF6C757D); // Softer muted text
   static const Color textMutedLight = Color(0xFFD4D4D4); 
 

@@ -62,14 +62,17 @@ class BookModel {
       authorId: json['author_id'] ?? '',
       authorName: json['author_name'] ?? 
           (json['authors'] != null && (json['authors'] as List).isNotEmpty
-              ? json['authors'][0]['name']
+              ? (json['authors'][0] is String ? json['authors'][0] : json['authors'][0]['name'])
               : null),
       coverImage: json['cover_image'] ?? json['cover_url'],
       fileUrl: json['file_url'],
       fileType: json['file_type'] ?? 'epub',
       language: json['language'] ?? 'en',
       authors: json['authors'] != null
-          ? (json['authors'] as List).map((i) => AuthorModel.fromJson(i)).toList()
+          ? (json['authors'] as List).map<AuthorModel>((i) {
+              if (i is String) return AuthorModel(id: '', name: i);
+              return AuthorModel.fromJson(i);
+            }).toList()
           : [],
       chapters: json['chapters'] != null
           ? (json['chapters'] as List).map((i) => ChapterModel.fromJson(i)).toList()

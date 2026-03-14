@@ -181,10 +181,14 @@ class ReaderController extends GetxController {
       _chapterCache[index] = content;
       _currentChapterContent.value = content;
 
-      // Scroll to top
+      // Scroll to top more reliably
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (scrollController.hasClients) {
-          scrollController.jumpTo(0.0);
+          scrollController.animateTo(
+            0.0,
+            duration: const Duration(milliseconds: 100),
+            curve: Curves.easeOut,
+          );
         }
       });
 
@@ -264,13 +268,63 @@ class ReaderController extends GetxController {
   /// Remove duplicate chapter title from the start of parsed content
   String _removeDuplicateTitle(String content, String title) {
     if (title.isEmpty || content.isEmpty) return content;
-    final trimmedTitle = title.trim();
-    final trimmedContent = content.trimLeft();
-    // Check if content starts with the title (case-insensitive)
-    if (trimmedContent.toLowerCase().startsWith(trimmedTitle.toLowerCase())) {
-      return trimmedContent.substring(trimmedTitle.length).trimLeft();
+    
+    String currentContent = content.trimLeft();
+    final simpleTitle = title.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '').toLowerCase();
+    
+    if (simpleTitle.isEmpty) return currentContent;
+
+    // We will look at the first 4 lines/paragraphs max to see if they are part of the title
+    // (EPUBs frequently split 'Chapter 1' and 'The Title' into distinct paragraph blocks)
+    for (int i = 0; i < 4; i++) {
+      if (currentContent.isEmpty) break;
+      
+      int nextNewline = currentContent.indexOf('\n');
+      String line = '';
+      if (nextNewline == -1) {
+        line = currentContent;
+      } else {
+        line = currentContent.substring(0, nextNewline).trim();
+      }
+      
+      if (line.isEmpty) {
+        if (nextNewline != -1) {
+          currentContent = currentContent.substring(nextNewline + 1).trimLeft();
+          // Don't count empty lines against the 4-line limit
+          i--;
+          continue;
+        } else {
+          break;
+        }
+      }
+      
+      // If the line is relatively short (typical for headings) and overlaps with the title
+      final simpleLine = line.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '').toLowerCase();
+      if (simpleLine.isNotEmpty && line.length < 100) {
+        // Is this line a substring of the title, or is the title a substring of this line?
+        // Also catch cases where the text just says '1' and the title is 'Chapter 1'
+        bool isMatch = simpleTitle.contains(simpleLine) || simpleLine.contains(simpleTitle);
+        // Also catch common chapter prefixes
+        if (!isMatch && simpleLine.startsWith('chapter')) {
+           isMatch = true;
+        }
+
+        if (isMatch) {
+           // Strip this line
+           if (nextNewline == -1) {
+             currentContent = '';
+           } else {
+             currentContent = currentContent.substring(nextNewline + 1).trimLeft();
+           }
+           continue; // Check the next line too
+        }
+      }
+      
+      // If we reach a line that has actual content and is not part of the title, we stop stripping
+      break;
     }
-    return content;
+
+    return currentContent.isEmpty ? content.trimLeft() : currentContent;
   }
 
   // ── Navigation ───────────────────────────────────────────────

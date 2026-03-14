@@ -21,17 +21,13 @@ class ProfileView extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Profile'),
         backgroundColor: Colors.transparent,
-          elevation: 0,
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.settings_rounded),
-              onPressed: () => _showSettingsWindow(context),
-            ),
-          ],
-        ),
-        body: Obx(
+        elevation: 0,
+      ),
+      body: Obx(
           () {
             final user = authController.currentUser;
+            final profile = authController.userProfile;
+            
             if (user == null) {
               return Center(
                 child: Padding(
@@ -40,6 +36,7 @@ class ProfileView extends StatelessWidget {
                     padding: const EdgeInsets.all(32),
                     blur: 20,
                     opacity: 0.1,
+                    showShadow: false,
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -51,7 +48,7 @@ class ProfileView extends StatelessWidget {
                         ),
                         const SizedBox(height: 24),
                         Text(
-                          'Welcome to DigiBuks',
+                          'Welcome to Zo Reads',
                           style: Theme.of(context)
                               .textTheme
                               .headlineMedium
@@ -65,7 +62,7 @@ class ProfileView extends StatelessWidget {
                           'Login or create an account to view your profile, manage your books, and more.',
                           textAlign: TextAlign.center,
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: Theme.of(context).colorScheme.onSurface.withAlpha(200),
+                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.87),
                               ),
                         ),
                         const SizedBox(height: 32),
@@ -80,15 +77,28 @@ class ProfileView extends StatelessWidget {
               );
             }
 
+            final displayName = profile?.username.isNotEmpty == true 
+                 ? profile!.username 
+                 : (user.name ?? 'User');
+            final displayEmail = profile?.email.isNotEmpty == true 
+                 ? profile!.email 
+                 : user.email;
+            final displayPhone = profile?.phone?.isNotEmpty == true
+                 ? profile!.phone!
+                 : (user.phone ?? 'Not set');
+            final profileImage = profile?.profileImage ?? user.profileImage;
+
             return SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
               child: Column(
                 children: [
                   // Profile Header Glass
                   GlassContainer(
-                    padding: const EdgeInsets.all(24),
-                    blur: 15,
-                    opacity: 0.1,
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                    blur: 25,
+                    opacity: 0.12,
+                    borderRadius: 32,
+                    showShadow: false,
                     child: Column(
                       children: [
                         // Profile Picture
@@ -96,64 +106,90 @@ class ProfileView extends StatelessWidget {
                           padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            border: Border.all(color: Colors.grey, width: 2),
+                            border: Border.all(
+                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1), 
+                              width: 3,
+                            ),
                           ),
                           child: CircleAvatar(
-                            radius: 50,
-                            backgroundColor: Colors.transparent,
-                            backgroundImage: user.profileImage != null
-                                ? NetworkImage(user.profileImage!)
+                            radius: 56,
+                            backgroundColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
+                            backgroundImage: profileImage != null
+                                ? NetworkImage(profileImage)
                                 : null,
-                            child: user.profileImage == null
+                            child: profileImage == null
                                 ? Text(
-                                    user.name?.substring(0, 1).toUpperCase() ??
-                                        'U',
+                                    displayName.isNotEmpty == true
+                                        ? displayName.substring(0, 1).toUpperCase()
+                                        : 'U',
                                     style: TextStyle(
-                                      fontSize: 32,
-                                      fontWeight: FontWeight.bold,
-                                      color:
-                                          Theme.of(context).colorScheme.primary,
+                                      fontSize: 36,
+                                      fontWeight: FontWeight.w800,
+                                      color: Theme.of(context).colorScheme.onSurface,
                                     ),
                                   )
                                 : null,
                           ),
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 24),
                         Text(
-                          user.name ?? 'User',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          displayName,
+                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: Theme.of(context).colorScheme.onSurface,
+                                letterSpacing: 0.5,
                               ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 6),
                         Text(
-                          user.email,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: Theme.of(context).colorScheme.onSurface.withAlpha(200),
+                          displayEmail,
+                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                               ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 6),
+                        Text(
+                          displayPhone,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
+                                fontWeight: FontWeight.w500,
+                              ),
+                        ),
+                        const SizedBox(height: 20),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 8),
+                              horizontal: 20, vertical: 8),
                           decoration: BoxDecoration(
                             color: Theme.of(context)
                                 .colorScheme
-                                .primary
-                                .withAlpha(20),
-                            borderRadius: BorderRadius.circular(20),
+                                .onSurface
+                                .withOpacity(0.05),
+                            borderRadius: BorderRadius.circular(30),
+                            border: Border.all(
+                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
+                            ),
                           ),
-                          child: Text(
-                            user.role.toUpperCase(),
-                            style: Theme.of(context)
-                                .textTheme
-                                .labelSmall
-                                ?.copyWith(
-                                  color: Theme.of(context).colorScheme.primary,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 1,
-                                ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.verified_rounded,
+                                size: 16,
+                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                user.role.toUpperCase(),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .labelSmall
+                                    ?.copyWith(
+                                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 1.2,
+                                    ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
@@ -170,15 +206,13 @@ class ProfileView extends StatelessWidget {
                         context,
                         Icons.person_rounded,
                         'Edit Profile',
-                        () => showSnackSafe(
-                            'Coming Soon', 'Edit profile feature coming soon'),
+                        () => Get.toNamed(AppConstants.editProfileRoute),
                       ),
                       _buildMenuItem(
                         context,
-                        Icons.phone_rounded,
-                        'Phone: ${user.phone ?? "Not set"}',
-                        () => showSnackSafe(
-                            'Coming Soon', 'Edit phone feature coming soon'),
+                        Icons.settings_rounded,
+                        'Settings',
+                        () => _showSettingsWindow(context),
                       ),
                     ],
                   ),
@@ -194,20 +228,6 @@ class ProfileView extends StatelessWidget {
                         'My Books',
                         () => showSnackSafe(
                             'Coming Soon', 'My books feature coming soon'),
-                      ),
-                      _buildMenuItem(
-                        context,
-                        Icons.favorite_rounded,
-                        'Wishlist',
-                        () => showSnackSafe(
-                            'Coming Soon', 'Wishlist feature coming soon'),
-                      ),
-                      _buildMenuItem(
-                        context,
-                        Icons.history_rounded,
-                        'Reading History',
-                        () => showSnackSafe('Coming Soon',
-                            'Reading history feature coming soon'),
                       ),
                       _buildMenuItem(
                         context,
@@ -243,22 +263,6 @@ class ProfileView extends StatelessWidget {
                     const SizedBox(height: 16),
                   ],
 
-                  if (user.role == AppConstants.roleAdmin) ...[
-                    _buildGlassMenuSection(
-                      context,
-                      'Admin',
-                      [
-                        _buildMenuItem(
-                          context,
-                          Icons.admin_panel_settings_rounded,
-                          'Admin Dashboard',
-                          () => Get.toNamed(AppConstants.adminDashboardRoute),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-
                   const SizedBox(height: 32),
 
                   // Logout Button
@@ -268,19 +272,24 @@ class ProfileView extends StatelessWidget {
                       onPressed: () =>
                           _showLogoutDialog(context, authController),
                       icon: const Icon(Icons.logout_rounded),
-                      label: const Text('Logout'),
+                      label: const Text(
+                        'Logout',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppTheme.errorColor,
-                        padding: const EdgeInsets.symmetric(vertical: 18),
+                        padding: const EdgeInsets.symmetric(vertical: 20),
                         side: BorderSide(
-                            color: AppTheme.errorColor.withAlpha(100)),
+                            color: AppTheme.errorColor.withOpacity(0.3),
+                            width: 1.5),
+                        backgroundColor: AppTheme.errorColor.withOpacity(0.05),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(20),
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 100), // Larger bottom padding for floating navbar
+                  const SizedBox(height: 100),
                 ],
               ),
             );
@@ -295,19 +304,22 @@ class ProfileView extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(left: 12, bottom: 8),
+          padding: const EdgeInsets.only(left: 16, bottom: 12),
           child: Text(
-            title,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.54),
+            title.toUpperCase(),
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
                   fontWeight: FontWeight.bold,
-                  letterSpacing: 1,
+                  letterSpacing: 1.5,
                 ),
           ),
         ),
         GlassContainer(
-          blur: 10,
-          opacity: 0.1,
+          blur: 20,
+          opacity: 0.12,
+          borderRadius: 24,
+          showShadow: false,
+          padding: const EdgeInsets.symmetric(vertical: 8),
           child: Column(children: items),
         ),
       ],
@@ -316,14 +328,45 @@ class ProfileView extends StatelessWidget {
 
   Widget _buildMenuItem(
       BuildContext context, IconData icon, String title, VoidCallback onTap) {
-    return ListTile(
-      leading: Icon(icon, color: Theme.of(context).colorScheme.primary),
-      title: Text(
-        title,
-        style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w500),
+    return Theme(
+      data: Theme.of(context).copyWith(
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+        hoverColor: Colors.transparent,
       ),
-      trailing: Icon(Icons.chevron_right, color: Theme.of(context).colorScheme.onSurface.withAlpha(150)),
-      onTap: onTap,
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+        leading: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7), size: 22),
+        ),
+        title: Text(
+          title,
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurface, 
+            fontWeight: FontWeight.w600,
+            fontSize: 16,
+          ),
+        ),
+        trailing: Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            Icons.arrow_forward_ios_rounded, 
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4), 
+            size: 14,
+          ),
+        ),
+        onTap: onTap,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
     );
   }
 
@@ -342,6 +385,7 @@ class ProfileView extends StatelessWidget {
               opacity:
                   Theme.of(context).brightness == Brightness.dark ? 0.3 : 0.25,
               borderRadius: 32,
+              showShadow: false,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -367,7 +411,7 @@ class ProfileView extends StatelessWidget {
                       onPressed: () => Navigator.pop(context),
                       child: Text('Close',
                           style: TextStyle(
-                              color: Theme.of(context).colorScheme.primary)),
+                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))),
                     ),
                   ),
                 ],
@@ -420,22 +464,28 @@ class ProfileView extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
             color: isSelected
-                ? Theme.of(context).colorScheme.primary
-                : Theme.of(context).colorScheme.onSurface.withAlpha(15),
+                ? Theme.of(context).colorScheme.onSurface.withOpacity(0.2)
+                : Colors.white10,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-                color: isSelected ? Colors.transparent : Theme.of(context).colorScheme.onSurface.withAlpha(20)),
+                color: isSelected 
+                    ? Theme.of(context).colorScheme.onSurface.withOpacity(0.2) 
+                    : Colors.white10),
           ),
           child: Column(
             children: [
               Icon(icon,
                   size: 20,
-                  color: isSelected ? Theme.of(context).colorScheme.onPrimary : Theme.of(context).colorScheme.onSurface.withAlpha(150)),
+                  color: isSelected 
+                      ? Theme.of(context).colorScheme.onSurface 
+                      : Theme.of(context).colorScheme.onSurface.withOpacity(0.4)),
               const SizedBox(height: 4),
               Text(label,
                   style: TextStyle(
                       fontSize: 10,
-                      color: isSelected ? Theme.of(context).colorScheme.onPrimary : Theme.of(context).colorScheme.onSurface.withAlpha(150))),
+                      color: isSelected 
+                          ? Theme.of(context).colorScheme.onSurface 
+                          : Theme.of(context).colorScheme.onSurface.withOpacity(0.4))),
             ],
           ),
         ),
@@ -450,7 +500,7 @@ class ProfileView extends StatelessWidget {
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.onSurface.withAlpha(15),
+          color: Colors.white.withAlpha(30),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Icon(icon, size: 20),

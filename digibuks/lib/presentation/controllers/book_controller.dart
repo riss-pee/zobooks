@@ -1,9 +1,10 @@
 import 'package:get/get.dart';
 import '../../core/utils/snackbar_helper.dart';
 import '../../data/models/book_model.dart';
-import '../../data/models/sample_books.dart';
+import '../../data/models/category_model.dart';
 import '../../core/utils/logger.dart';
 import '../../data/repositories/home_repository.dart';
+import '../../data/repositories/reader_repository.dart';
 
 class BookController extends GetxController {
   final HomeRepository _repository;
@@ -22,6 +23,16 @@ class BookController extends GetxController {
   final Rx<BookModel?> currentBook = Rx<BookModel?>(null);
   final RxBool isLoadingDetails = false.obs;
 
+  final _currentPage = 1.obs;
+  final _hasMoreBooks = true.obs;
+  final _isLoadingMore = false.obs;
+
+  final _categories = <CategoryModel>[].obs;
+  final _isCategoriesLoading = false.obs;
+
+  final _myLibraryBooks = <BookModel>[].obs;
+  final _isLoadingLibrary = false.obs;
+
   // Getters
   List<BookModel> get books => _books;
   List<BookModel> get featuredBooks => _featuredBooks;
@@ -31,24 +42,16 @@ class BookController extends GetxController {
   bool get isLoading => _isLoading.value;
   List<String> get wishlist => _wishlist;
 
-  List<BookModel> get filteredBooks {
-    return _books.where((book) {
-      final matchesSearch =
-          book.title.toLowerCase().contains(_searchQuery.value.toLowerCase()) ||
-              (book.authorName
-                      ?.toLowerCase()
-                      .contains(_searchQuery.value.toLowerCase()) ??
-                  false);
-      final matchesGenre = _selectedGenre.value.isEmpty ||
-          _selectedGenre.value == 'All' ||
-          book.genres.any(
-              (g) => g.toLowerCase() == _selectedGenre.value.toLowerCase());
-      final matchesLanguage = _selectedLanguage.value.isEmpty ||
-          _selectedLanguage.value == 'All' ||
-          book.language.toLowerCase() == _selectedLanguage.value.toLowerCase();
-      return matchesSearch && matchesGenre && matchesLanguage;
-    }).toList();
-  }
+  List<CategoryModel> get categories => _categories;
+  bool get isCategoriesLoading => _isCategoriesLoading.value;
+
+  bool get isLoadingMore => _isLoadingMore.value;
+  bool get hasMoreBooks => _hasMoreBooks.value;
+
+  List<BookModel> get myLibraryBooks => _myLibraryBooks;
+  bool get isLoadingLibrary => _isLoadingLibrary.value;
+
+  List<BookModel> get filteredBooks => _books;
 
   @override
   void onInit() {
@@ -56,15 +59,24 @@ class BookController extends GetxController {
     loadBooks();
     loadFeaturedBooks();
     loadWishlist();
+    loadCategories();
+  }
+
+  Future<void> loadCategories() async {
+    try {
+      _isCategoriesLoading.value = true;
+      _categories.value = await _repository.getCategories();
+    } catch (e) {
+      AppLogger.e('Error loading categories', e);
+    } finally {
+      _isCategoriesLoading.value = false;
+    }
   }
 
   Future<void> loadBooks() async {
     try {
       _isLoading.value = true;
-      await Future.delayed(const Duration(seconds: 1)); // Simulate API call
-
-      // Load sample books with realistic data
-      _books.value = SampleBooks.getBooks();
+      await searchBooksByApi('');
       AppLogger.i('Books loaded: ${_books.length}');
     } catch (e) {
       AppLogger.e('Error loading books', e);
@@ -76,7 +88,7 @@ class BookController extends GetxController {
 
   Future<void> loadFeaturedBooks() async {
     try {
-      await Future.delayed(const Duration(milliseconds: 500));
+      // Just take top 5 from existing books for now
       _featuredBooks.value = _books.take(5).toList();
     } catch (e) {
       AppLogger.e('Error loading featured books', e);
@@ -85,17 +97,63 @@ class BookController extends GetxController {
 
   void searchBooks(String query) {
     _searchQuery.value = query;
-    // In real app, this would filter or search via API
+    searchBooksByApi(query, category: _selectedGenre.value);
   }
 
   void filterByGenre(String genre) {
     _selectedGenre.value = genre;
-    // In real app, this would filter via API
+    searchBooksByApi(_searchQuery.value, category: genre);
   }
 
   void filterByLanguage(String language) {
     _selectedLanguage.value = language;
-    // In real app, this would filter via API
+  }
+
+  Future<void> searchBooksByApi(String query, {String? category, bool refresh = true}) async {
+    if (refresh) {
+      _isLoading.value = true;
+      _currentPage.value = 1;
+      _hasMoreBooks.value = true;
+    } else {
+      if (_isLoadingMore.value || !_hasMoreBooks.value) return;
+      _isLoadingMore.value = true;
+    }
+
+    try {
+      final result = await _repository.searchBooks(
+        query, 
+        category: category,
+        page: _currentPage.value,
+        limit: 20
+      );
+      
+      final newBooks = result['books'] as List<BookModel>;
+      final total = result['total'] as int;
+
+      if (refresh) {
+        _books.value = newBooks;
+      } else {
+        _books.addAll(newBooks);
+      }
+
+      if (_books.length >= total || newBooks.isEmpty) {
+        _hasMoreBooks.value = false;
+      } else {
+        _currentPage.value++;
+      }
+    } catch (e) {
+      AppLogger.e('Error searching books by API', e);
+    } finally {
+      if (refresh) {
+        _isLoading.value = false;
+      } else {
+        _isLoadingMore.value = false;
+      }
+    }
+  }
+
+  Future<void> loadMoreBooks() async {
+    await searchBooksByApi(_searchQuery.value, category: _selectedGenre.value, refresh: false);
   }
 
   void toggleWishlist(String bookId) {
@@ -139,6 +197,29 @@ class BookController extends GetxController {
       showSnackSafe('Error', 'Failed to load book details');
     } finally {
       isLoadingDetails.value = false;
+    }
+  }
+
+  Future<void> fetchMyLibrary() async {
+    try {
+      _isLoadingLibrary.value = true;
+      final readerRepo = Get.find<ReaderRepository>();
+      final libraryData = await readerRepo.getMyLibrary();
+      
+      // Some endpoints might return a nested structure like { "book": {...} } inside the list
+      // We will parse it dynamically. Often the book data is at the root.
+      _myLibraryBooks.value = libraryData.map((data) {
+        // If it comes as { "book": { ... } } or just the book object
+        final bookMap = data.containsKey('book') ? data['book'] as Map<String, dynamic> : data;
+        return BookModel.fromJson(bookMap);
+      }).toList();
+      AppLogger.i('My Library loaded: ${_myLibraryBooks.length}');
+    } catch (e) {
+      AppLogger.e('Error loading my library', e);
+      // Silent error or show snackbar
+      // showSnackSafe('Error', 'Failed to load library');
+    } finally {
+      _isLoadingLibrary.value = false;
     }
   }
 }

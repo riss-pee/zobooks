@@ -103,38 +103,10 @@ class _HomeTabState extends State<HomeTab> {
                                       ),
                                     ],
                                   ),
-                                  Container(
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                          color: Colors.white, width: 2),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withAlpha(20),
-                                          blurRadius: 10,
-                                          offset: const Offset(0, 4),
-                                        ),
-                                      ],
-                                    ),
-                                    child: CircleAvatar(
-                                      radius: 28,
-                                      backgroundColor: Theme.of(context)
-                                          .colorScheme
-                                          .primary
-                                          .withAlpha(30),
-                                      child: Text(
-                                        (userName.isNotEmpty
-                                                ? userName[0]
-                                                : 'U')
-                                            .toUpperCase(),
-                                        style: TextStyle(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .primary,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 20),
-                                      ),
-                                    ),
+                                  Image.asset(
+                                    'assets/logo.png',
+                                    height: 50,
+                                    fit: BoxFit.contain,
                                   ),
                                 ],
                               ),

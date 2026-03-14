@@ -3,6 +3,7 @@ import '../datasources/remote/auth_remote_datasource.dart';
 import '../../core/utils/storage_helper.dart';
 import '../../core/utils/logger.dart';
 import '../models/user_model.dart';
+import '../models/user_profile_model.dart';
 
 class AuthRepository {
   final AuthRemoteDataSource _remoteDataSource;
@@ -94,6 +95,24 @@ class AuthRepository {
       return await _remoteDataSource.getCurrentUser();
     } catch (e) {
       AppLogger.e('Get current user repository error', e);
+      rethrow;
+    }
+  }
+
+  Future<UserProfileModel> getUserProfile() async {
+    try {
+      return await _remoteDataSource.getUserProfile();
+    } catch (e) {
+      AppLogger.e('Get user profile repository error', e);
+      rethrow;
+    }
+  }
+
+  Future<UserProfileModel> updateUserProfile(Map<String, dynamic> data) async {
+    try {
+      return await _remoteDataSource.updateUserProfile(data);
+    } catch (e) {
+      AppLogger.e('Update user profile repository error', e);
       rethrow;
     }
   }

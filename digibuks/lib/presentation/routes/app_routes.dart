@@ -7,6 +7,7 @@ import '../views/home/home_view.dart';
 import '../views/books/book_detail_view.dart';
 import '../views/reader/reader_view.dart';
 import '../views/profile/profile_view.dart';
+import '../views/profile/edit_profile_view.dart';
 import '../views/author/author_dashboard_view.dart';
 import '../views/admin/admin_dashboard_view.dart';
 import '../views/admin/user_management_view.dart';
@@ -53,6 +54,10 @@ class AppRoutes {
     GetPage(
       name: AppConstants.profileRoute,
       page: () => const ProfileView(),
+    ),
+    GetPage(
+      name: AppConstants.editProfileRoute,
+      page: () => const EditProfileView(),
     ),
     GetPage(
       name: AppConstants.authorDashboardRoute,

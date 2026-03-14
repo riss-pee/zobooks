@@ -124,6 +124,23 @@ class ReaderRepository {
 
   // ── Bookmarks ───────────────────────────────────────────────
 
+  /// GET /reader/my-library
+  Future<List<Map<String, dynamic>>> getMyLibrary() async {
+    try {
+      final response = await _apiClient.get('/reader/my-library');
+      if (response.statusCode == 200 && response.data != null) {
+        final booksList = response.data['books'] as List? ?? [];
+        return List<Map<String, dynamic>>.from(
+          booksList.map((e) => Map<String, dynamic>.from(e)),
+        );
+      }
+      throw ApiException(message: 'Failed to load library');
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException(message: 'Error loading library: $e');
+    }
+  }
+
   /// GET /reader/bookmarks?book_id=
   Future<Map<String, dynamic>> getBookmarks(String bookId) async {
     try {

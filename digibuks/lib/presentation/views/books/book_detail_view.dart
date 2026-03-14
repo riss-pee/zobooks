@@ -277,36 +277,9 @@ class _BookDetailViewState extends State<BookDetailView> {
 
     return Obx(() {
       final hasAccess = paymentController.canAccessBook(book.id);
-      final isInWishlist = bookController.isInWishlist(book.id);
 
       return Column(
         children: [
-          // Wishlist Button - Glassy
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: () => bookController.toggleWishlist(book.id),
-              icon: Icon(
-                isInWishlist
-                    ? Icons.favorite_rounded
-                    : Icons.favorite_border_rounded,
-                color: AppTheme.primaryColor,
-              ),
-              label: Text(
-                isInWishlist ? 'In Wishlist' : 'Add to Wishlist',
-                style: const TextStyle(
-fontWeight: FontWeight.bold),
-              ),
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 18),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20)),
-                side: BorderSide(color: AppTheme.primaryColor.withOpacity(0.5)),
-                backgroundColor: AppTheme.primaryColor.withOpacity(0.05),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
           // Main Purchase/Read Button
           SizedBox(
             width: double.infinity,

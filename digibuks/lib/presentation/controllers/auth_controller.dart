@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import '../../core/utils/snackbar_helper.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../data/models/user_model.dart';
+import '../../data/models/user_profile_model.dart';
 import '../../core/utils/logger.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/exceptions/api_exception.dart';
@@ -15,12 +16,14 @@ class AuthController extends GetxController {
   final _isLoading = false.obs;
   final _isAuthenticated = false.obs;
   final _currentUser = Rxn<UserModel>();
+  final _userProfile = Rxn<UserProfileModel>();
   final _errorMessage = ''.obs;
 
   // Getters
   bool get isLoading => _isLoading.value;
   bool get isAuthenticated => _isAuthenticated.value;
   UserModel? get currentUser => _currentUser.value;
+  UserProfileModel? get userProfile => _userProfile.value;
   String get errorMessage => _errorMessage.value;
 
   @override
@@ -33,12 +36,13 @@ class AuthController extends GetxController {
     try {
       final isLoggedIn = await _authRepository.isLoggedIn();
       if (isLoggedIn) {
-        // Restore user from local storage — no API call needed
         final user = await _authRepository.restoreUser();
         if (user != null) {
           _currentUser.value = user;
           _isAuthenticated.value = true;
           AppLogger.i('Session restored for: ${user.email}');
+          // Fetch full profile in background
+          fetchUserProfile();
         } else {
           // Token exists but no user data — clear invalid state
           _isAuthenticated.value = false;
@@ -57,6 +61,9 @@ class AuthController extends GetxController {
       final user = await _authRepository.login(username, password);
       _currentUser.value = user;
       _isAuthenticated.value = true;
+
+      // Fetch full profile in background
+      fetchUserProfile();
 
       AppLogger.i('Login successful: ${user.email}'); // email holds username
       
@@ -105,6 +112,9 @@ class AuthController extends GetxController {
       );
       _currentUser.value = user;
       _isAuthenticated.value = true;
+      
+      // Fetch full profile in background
+      fetchUserProfile();
 
       AppLogger.i('Registration successful: ${user.email}');
       
@@ -143,11 +153,32 @@ class AuthController extends GetxController {
     }
   }
 
+  Future<void> fetchUserProfile() async {
+    try {
+      final profile = await _authRepository.getUserProfile();
+      _userProfile.value = profile;
+    } catch (e) {
+      AppLogger.e('Fetch user profile error', e);
+    }
+  }
+
+  Future<void> updateUserProfile(Map<String, dynamic> data) async {
+    try {
+      final updatedProfile = await _authRepository.updateUserProfile(data);
+      _userProfile.value = updatedProfile;
+      AppLogger.i('User profile updated successfully');
+    } catch (e) {
+      AppLogger.e('Update user profile error', e);
+      rethrow;
+    }
+  }
+
   Future<void> logout() async {
     try {
       _isLoading.value = true;
       await _authRepository.logout();
       _currentUser.value = null;
+      _userProfile.value = null;
       _isAuthenticated.value = false;
       
       Get.offAllNamed(AppConstants.homeRoute);

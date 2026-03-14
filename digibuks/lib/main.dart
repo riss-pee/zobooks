@@ -14,6 +14,7 @@ import 'presentation/controllers/auth_controller.dart';
 import 'presentation/controllers/book_controller.dart';
 import 'presentation/controllers/payment_controller.dart';
 import 'data/repositories/home_repository.dart';
+import 'presentation/views/home/home_controller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,6 +34,7 @@ void main() async {
   Get.put(AuthController(authRepository));
   final homeRepository = Get.put(HomeRepository(apiClient));
   Get.put(BookController(homeRepository));
+  Get.put(HomeController(homeRepository));
   final paymentRepository = Get.put(PaymentRepository(apiClient));
   Get.put(PaymentController(paymentRepository));
   Get.put(ReaderRepository(apiClient));
