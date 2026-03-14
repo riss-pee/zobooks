@@ -24,6 +24,13 @@ class BookController extends GetxController {
   final Rx<BookModel?> currentBook = Rx<BookModel?>(null);
   final RxBool isLoadingDetails = false.obs;
 
+  // Added missing state variables
+  final _categories = <String>[].obs;
+  final _isCategoriesLoading = false.obs;
+  final _isLoadingMore = false.obs;
+  final _isLoadingLibrary = false.obs;
+  final _myLibraryBooks = <BookModel>[].obs;
+
   // Getters
   List<BookModel> get books => _books;
   List<BookModel> get featuredBooks => _featuredBooks;
@@ -33,6 +40,13 @@ class BookController extends GetxController {
   bool get isLoading => _isLoading.value;
   List<String> get wishlist => _wishlist;
   String get sortBy => _sortBy.value;
+
+  // Added missing getters
+  List<String> get categories => _categories;
+  bool get isCategoriesLoading => _isCategoriesLoading.value;
+  bool get isLoadingMore => _isLoadingMore.value;
+  bool get isLoadingLibrary => _isLoadingLibrary.value;
+  List<BookModel> get myLibraryBooks => _myLibraryBooks;
 
   List<String> get availableCategories {
     final genres = <String>{'All'};
@@ -113,6 +127,55 @@ class BookController extends GetxController {
       showSnackSafe('Error', 'Failed to load books');
     } finally {
       _isLoading.value = false;
+    }
+  }
+
+  Future<void> loadCategories() async {
+    try {
+      _isCategoriesLoading.value = true;
+      final cats = await _repository.getCategories();
+      _categories.value = cats;
+    } catch (e) {
+      AppLogger.e('Error loading categories', e);
+      _categories.value = ['Fiction', 'Non-Fiction', 'Science', 'History']; // Fallback
+    } finally {
+      _isCategoriesLoading.value = false;
+    }
+  }
+
+  Future<void> searchBooksByApi(String query) async {
+    _searchQuery.value = query;
+    _isLoading.value = true;
+    try {
+      final result = await _repository.searchBooks(query);
+      if (result['books'] != null) {
+        _books.value = List<BookModel>.from(result['books']);
+      }
+    } catch (e) {
+      AppLogger.e('Error searching API', e);
+    } finally {
+      _isLoading.value = false;
+    }
+  }
+
+  Future<void> loadMoreBooks() async {
+    if (_isLoadingMore.value) return;
+    _isLoadingMore.value = true;
+    // Simulate loading more
+    await Future.delayed(const Duration(seconds: 1));
+    _isLoadingMore.value = false;
+  }
+
+  Future<void> fetchMyLibrary() async {
+    try {
+      _isLoadingLibrary.value = true;
+      // Simulate fetching
+      await Future.delayed(const Duration(seconds: 1));
+      _myLibraryBooks.value = _books.take(3).toList();
+    } catch (e) {
+      AppLogger.e('Error fetching library', e);
+    } finally {
+      _isLoadingLibrary.value = false;
     }
   }
 

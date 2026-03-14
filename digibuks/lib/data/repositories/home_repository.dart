@@ -18,15 +18,74 @@ class HomeRepository {
         return data.map((json) => GroupedBooksModel.fromJson(json)).toList();
       } else {
         throw ApiException(
-          message: 'Failed to load books: ${response.statusCode}',
-        );
+            message: 'Failed to load books: ${response.statusCode}');
       }
     } catch (e) {
       if (e is ApiException) rethrow;
-
       throw ApiException(
-        message: 'An unexpected error occurred: ${e.toString()}',
+          message: 'An unexpected error occurred: ${e.toString()}');
+    }
+  }
+
+  Future<List<String>> getCategories() async {
+    try {
+      final response = await _apiClient.get('/books/categories');
+
+      if (response.statusCode == 200 && response.data != null) {
+        final List<dynamic> data = response.data;
+        return data.map((json) => json['name']?.toString() ?? json.toString()).toList();
+      } else {
+        throw ApiException(
+            message: 'Failed to load categories: ${response.statusCode}');
+      }
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException(message: 'Error fetching categories: ${e.toString()}');
+    }
+  }
+
+  Future<Map<String, dynamic>> searchBooks(
+    String query, {
+    String? category,
+    int page = 1,
+    int limit = 20,
+  }) async {
+    try {
+      final queryParams = <String, dynamic>{
+        'page': page,
+        'limit': limit,
+      };
+
+      if (query.isNotEmpty) queryParams['search'] = query;
+
+      if (category != null && category.isNotEmpty && category != 'All') {
+        queryParams['category'] = category;
+      }
+
+      final response = await _apiClient.get(
+        '/reader/published-books',
+        queryParameters: queryParams,
       );
+
+      if (response.statusCode == 200 && response.data != null) {
+        final data = response.data;
+        final booksData = data['books'] ?? [];
+
+        final booksList = (booksData as List<dynamic>)
+            .map((json) => BookModel.fromJson(json))
+            .toList();
+
+        return {
+          'books': booksList,
+          'total': data['total'] ?? 0,
+        };
+      } else {
+        throw ApiException(
+            message: 'Failed to search books: ${response.statusCode}');
+      }
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException(message: 'Error searching books: ${e.toString()}');
     }
   }
 
@@ -39,20 +98,16 @@ class HomeRepository {
         return data.map((json) => TrendingBookModel.fromJson(json)).toList();
       } else {
         throw ApiException(
-          message: 'Failed to load trending books: ${response.statusCode}',
-        );
+            message: 'Failed to load trending books: ${response.statusCode}');
       }
     } catch (e) {
       if (e is ApiException) rethrow;
-
       throw ApiException(
-        message:
-            'An unexpected error occurred getting trending: ${e.toString()}',
-      );
+          message:
+              'An unexpected error occurred getting trending: ${e.toString()}');
     }
   }
 
-  /// Fetch detailed information for a specific book
   Future<BookModel> getBookDetails(String id) async {
     try {
       final response = await _apiClient.get('/reader/published-books/$id');
@@ -61,12 +116,10 @@ class HomeRepository {
         return BookModel.fromJson(response.data);
       } else {
         throw ApiException(
-          message: 'Failed to load book details: ${response.statusCode}',
-        );
+            message: 'Failed to load book details: ${response.statusCode}');
       }
     } catch (e) {
       if (e is ApiException) rethrow;
-
       throw ApiException(
         message:
             'An unexpected error occurred fetching book details: ${e.toString()}',

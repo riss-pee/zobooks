@@ -3,8 +3,7 @@ import 'package:get/get.dart';
 import '../../core/utils/storage_helper.dart';
 
 class ThemeController extends GetxController {
-  // Default to system theme but allow override
-  final _themeMode = ThemeMode.system.obs;
+  final _themeMode = ThemeMode.light.obs;
 
   ThemeMode get themeMode => _themeMode.value;
 
@@ -22,21 +21,14 @@ class ThemeController extends GetxController {
   }
 
   void _loadTheme() {
-    final storedMode = StorageHelper.getString('theme_mode') ?? 'system';
+    final storedMode = StorageHelper.getString('theme_mode') ?? 'light';
     _themeMode.value = _getModeFromString(storedMode);
-
-    // Apply theme
     Get.changeThemeMode(_themeMode.value);
   }
 
   void setThemeMode(ThemeMode mode) {
     _themeMode.value = mode;
-
-    StorageHelper.saveString(
-      'theme_mode',
-      mode.name,
-    );
-
+    StorageHelper.saveString('theme_mode', mode.name);
     Get.changeThemeMode(mode);
   }
 

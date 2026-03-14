@@ -1,9 +1,9 @@
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 
-/// Safely show a snackbar using GetX.
-/// If the overlay/context is not available yet (e.g., during early initialization),
-/// schedule the snackbar to be shown after the current frame instead of throwing.
+/// Safely show a snackbar using GetX. If the overlay/context is not
+/// available yet (e.g., during early initialization), schedule the
+/// snackbar to be shown after the current frame instead of throwing.
 void showSnackSafe(
   String title,
   String message, {
@@ -22,18 +22,14 @@ void showSnackSafe(
         return;
       }
 
-      // Ensure overlay exists before showing snackbar
+      // Try to access the overlay — if it throws, retry later
       try {
-        if (Overlay.of(ctx) == null) {
-          WidgetsBinding.instance.addPostFrameCallback((_) => showAttempt());
-          return;
-        }
+        Overlay.of(ctx);
       } catch (_) {
         WidgetsBinding.instance.addPostFrameCallback((_) => showAttempt());
         return;
       }
 
-      // Safe to show snackbar
       Get.snackbar(
         title,
         message,
@@ -43,7 +39,7 @@ void showSnackSafe(
         duration: duration,
       );
     } catch (_) {
-      // Silently fail if something still goes wrong
+      // Silently fail if we still can't show — avoid crashing the app
     }
   }
 

@@ -1,16 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
 import '../../controllers/book_controller.dart';
 import '../../controllers/auth_controller.dart';
 import '../../controllers/payment_controller.dart';
 import '../../controllers/theme_controller.dart';
-
 import '../../../data/models/book_model.dart';
-
 import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
-
 import '../../widgets/glass_container.dart';
 
 class BookDetailView extends StatefulWidget {
@@ -60,119 +56,138 @@ class _BookDetailViewState extends State<BookDetailView> {
       final book = bookController.currentBook.value ?? initialBook;
 
       return Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_rounded),
+            onPressed: () => Get.back(),
+          ),
           title: Text(
             book.title,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
+          centerTitle: true,
         ),
         body: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              /// Cover
+              /// COVER IMAGE
               Center(
-                child: SizedBox(
+                child: Container(
                   height: 220,
                   width: 150,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withOpacity(0.15),
+                        blurRadius: 16,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(12),
-                    child: book.coverImage != null
-                        ? Image.network(
-                            book.coverImage!,
-                            fit: BoxFit.cover,
-                          )
-                        : _buildPlaceholder(context),
+                    child:
+                        book.coverImage != null && book.coverImage!.isNotEmpty
+                            ? Image.network(
+                                book.coverImage!,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) =>
+                                    _buildPlaceholder(context),
+                              )
+                            : _buildPlaceholder(context),
                   ),
                 ),
               ),
 
               const SizedBox(height: 16),
 
-              /// Title
+              /// TITLE
               Center(
                 child: Text(
                   book.title,
+                  textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
-                  textAlign: TextAlign.center,
                 ),
               ),
 
-              const SizedBox(height: 6),
+              const SizedBox(height: 4),
 
-              /// Author
+              /// AUTHORS
               Center(
                 child: Text(
                   _getAuthorsDisplay(book),
-                  style: Theme.of(context).textTheme.bodyMedium,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withOpacity(0.6),
+                      ),
                 ),
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
 
-              /// Meta Row
+              /// META INFO
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
+                  _buildMetaItem(context, Icons.language_rounded, 'Language',
+                      _getLanguageDisplay(book.language)),
                   _buildMetaItem(
-                    context,
-                    Icons.language,
-                    'Language',
-                    _getLanguageDisplay(book.language),
-                  ),
-                  _buildMetaItem(
-                    context,
-                    Icons.monetization_on,
-                    'Price',
-                    book.price != null && book.price! > 0
-                        ? '₹${book.price!.toStringAsFixed(0)}'
-                        : 'Free',
-                  ),
+                      context,
+                      Icons.monetization_on_rounded,
+                      'Price',
+                      book.price != null && book.price! > 0
+                          ? '₹${book.price!.toStringAsFixed(0)}'
+                          : 'Free'),
                   if (book.chapters.isNotEmpty)
                     GestureDetector(
                       onTap: () => _showChaptersModal(context, book),
-                      child: Column(
-                        children: [
-                          Icon(Icons.list),
-                          const SizedBox(height: 6),
-                          const Text('Chapters'),
-                          Text('${book.chapters.length}')
-                        ],
-                      ),
+                      child: _buildMetaItem(context, Icons.list_alt_rounded,
+                          'Chapters', '${book.chapters.length}'),
                     ),
                 ],
               ),
 
               const SizedBox(height: 20),
 
-              if (bookController.isLoadingDetails.value)
-                const Center(child: CircularProgressIndicator()),
-
-              if (book.description != null && book.description!.isNotEmpty)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'About this book',
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleMedium
-                          ?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      book.description!,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                  ],
+              /// DESCRIPTION
+              if (book.description != null && book.description!.isNotEmpty) ...[
+                Text(
+                  'About this book',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
+                const SizedBox(height: 8),
+                Text(
+                  book.description!,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        height: 1.5,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withOpacity(0.75),
+                      ),
+                ),
+              ],
 
-              const SizedBox(height: 28),
+              const SizedBox(height: 24),
 
+              /// ACTION BUTTONS
               _buildActionButtons(context, book),
 
               const SizedBox(height: 32),
@@ -186,7 +201,13 @@ class _BookDetailViewState extends State<BookDetailView> {
   Widget _buildPlaceholder(BuildContext context) {
     return Container(
       color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-      child: const Icon(Icons.menu_book, size: 80),
+      child: Center(
+        child: Icon(
+          Icons.menu_book_rounded,
+          size: 100,
+          color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+        ),
+      ),
     );
   }
 
@@ -207,20 +228,27 @@ class _BookDetailViewState extends State<BookDetailView> {
   }
 
   Widget _buildMetaItem(
-    BuildContext context,
-    IconData icon,
-    String label,
-    String value,
-  ) {
+      BuildContext context, IconData icon, String label, String value) {
     return Column(
       children: [
-        Icon(icon),
-        const SizedBox(height: 6),
-        Text(label),
+        Icon(icon,
+            size: 24,
+            color: Theme.of(context).colorScheme.primary.withOpacity(0.7)),
+        const SizedBox(height: 8),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+              ),
+        ),
+        const SizedBox(height: 4),
         Text(
           value,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        )
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+          ),
+        ),
       ],
     );
   }
@@ -228,81 +256,58 @@ class _BookDetailViewState extends State<BookDetailView> {
   Widget _buildActionButtons(BuildContext context, BookModel book) {
     return Obx(() {
       final hasAccess = paymentController.canAccessBook(book.id);
+      final isInWishlist = bookController.isInWishlist(book.id);
 
       return Column(
         children: [
-          /// Wishlist
+          /// WISHLIST
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
               onPressed: () => bookController.toggleWishlist(book.id),
-              icon: const Icon(Icons.favorite_border),
-              label: const Text("Add to Wishlist"),
+              icon: Icon(
+                isInWishlist ? Icons.favorite : Icons.favorite_border,
+                color: AppTheme.primaryColor,
+              ),
+              label: Text(isInWishlist ? "In Wishlist" : "Add to Wishlist"),
             ),
           ),
 
           const SizedBox(height: 16),
 
-          /// Main Button
+          /// MAIN BUTTON
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: () {
-                if (hasAccess) {
-                  Get.toNamed(AppConstants.readerRoute, arguments: book);
-                } else if (book.price == null || book.price! <= 0) {
-                  if (!authController.isAuthenticated) {
-                    _showLoginRequiredModal(context);
-                  } else {
-                    paymentController.claimFreeBook(book);
-                  }
-                } else {
-                  if (!authController.isAuthenticated) {
-                    _showLoginRequiredModal(context);
-                  } else {
-                    paymentController.purchaseBook(book);
-                  }
-                }
-              },
-              child: Text(
-                hasAccess
-                    ? 'Read Now'
-                    : book.price == null || book.price! <= 0
-                        ? 'Get Free'
-                        : 'Buy for ₹${book.price!.toStringAsFixed(0)}',
-              ),
+              onPressed: paymentController.isProcessing
+                  ? null
+                  : () {
+                      if (hasAccess) {
+                        Get.toNamed(AppConstants.readerRoute, arguments: book);
+                      } else if (!authController.isAuthenticated) {
+                        Get.toNamed(AppConstants.loginRoute);
+                      } else if (book.price == null || book.price == 0) {
+                        paymentController.claimFreeBook(book);
+                      } else {
+                        paymentController.purchaseBook(book);
+                      }
+                    },
+              child: paymentController.isProcessing
+                  ? const CircularProgressIndicator(color: Colors.white)
+                  : Text(
+                      hasAccess
+                          ? "Read Now"
+                          : (book.price == null || book.price == 0)
+                              ? "Get Free"
+                              : "Buy for ₹${book.price!.toStringAsFixed(0)}",
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
             ),
           ),
         ],
       );
     });
-  }
-
-  void _showLoginRequiredModal(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      builder: (_) {
-        return Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.lock_outline, size: 40),
-              const SizedBox(height: 12),
-              const Text('Login Required'),
-              const SizedBox(height: 12),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  Get.toNamed(AppConstants.loginRoute);
-                },
-                child: const Text("Log In"),
-              ),
-            ],
-          ),
-        );
-      },
-    );
   }
 
   void _showChaptersModal(BuildContext context, BookModel book) {
@@ -311,12 +316,12 @@ class _BookDetailViewState extends State<BookDetailView> {
       builder: (_) {
         return ListView.builder(
           itemCount: book.chapters.length,
-          itemBuilder: (_, i) {
-            final c = book.chapters[i];
+          itemBuilder: (_, index) {
+            final chapter = book.chapters[index];
 
             return ListTile(
-              title: Text(c.title),
-              subtitle: Text('${c.wordCount} words'),
+              title: Text(chapter.title),
+              leading: Text("${chapter.index}"),
             );
           },
         );
