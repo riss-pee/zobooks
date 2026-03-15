@@ -35,7 +35,8 @@ class ReaderRepository {
   /// GET /reader/reader/books/{bookId}/chapters
   Future<List<Map<String, dynamic>>> listChapters(String bookId) async {
     try {
-      final response = await _apiClient.get('/reader/reader/books/$bookId/chapters');
+      final response =
+          await _apiClient.get('/reader/reader/books/$bookId/chapters');
       if (response.statusCode == 200 && response.data != null) {
         return List<Map<String, dynamic>>.from(
           (response.data as List).map((e) => Map<String, dynamic>.from(e)),
@@ -148,6 +149,20 @@ class ReaderRepository {
         '/reader/bookmarks',
         queryParameters: {'book_id': bookId},
       );
+      if (response.statusCode == 200 && response.data != null) {
+        return Map<String, dynamic>.from(response.data);
+      }
+      throw ApiException(message: 'Failed to load bookmarks');
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException(message: 'Error loading bookmarks: $e');
+    }
+  }
+
+  /// GET /reader/bookmarks (all user bookmarks across all books)
+  Future<Map<String, dynamic>> getAllUserBookmarks() async {
+    try {
+      final response = await _apiClient.get('/reader/bookmarks');
       if (response.statusCode == 200 && response.data != null) {
         return Map<String, dynamic>.from(response.data);
       }
