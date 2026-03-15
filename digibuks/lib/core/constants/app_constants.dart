@@ -12,6 +12,7 @@ class AppConstants {
   static const String profileRoute = '/profile';
   static const String editProfileRoute = '/edit-profile';
   static const String libraryRoute = '/library';
+  static const String bookmarksRoute = '/bookmarks';
   static const String wishlistRoute = '/wishlist';
   static const String authorDashboardRoute = '/author-dashboard';
   static const String adminDashboardRoute = '/admin-dashboard';
@@ -20,23 +21,22 @@ class AppConstants {
   static const String userManagementRoute = '/user-management';
   static const String contentModerationRoute = '/content-moderation';
   static const String paymentRoute = '/payment';
-  
+
   // User Roles
   static const String roleReader = 'reader';
   static const String roleAuthor = 'author';
   static const String roleAdmin = 'admin';
-  
+
   // Book Types
   static const String bookTypePurchase = 'purchase';
   static const String bookTypeRental = 'rental';
   static const String bookTypeFree = 'free';
-  
+
   // Supported Languages
   static const String languageMizo = 'mizo';
   static const String languageEnglish = 'english';
-  
+
   // File Types
   static const String fileTypePDF = 'pdf';
   static const String fileTypeEPUB = 'epub';
 }
-

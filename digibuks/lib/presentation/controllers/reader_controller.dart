@@ -12,7 +12,9 @@ class ReaderController extends GetxController {
 
   ReaderController(this._readerRepository);
 
-  final BookModel? book = Get.arguments as BookModel?;
+  // Handle both direct BookModel and Map with book + chapterIndex
+  late final BookModel? book;
+  late final int _targetChapterIndex;
 
   // ── Core state ───────────────────────────────────────────────
   final _isLoading = true.obs;
@@ -22,8 +24,10 @@ class ReaderController extends GetxController {
   final _currentChapterContent = ''.obs;
   final _currentChapterTitle = ''.obs;
   final _isFullScreen = false.obs;
-  bool _isNavigatingChapter = false; // Guard against concurrent chapter transitions
-  DateTime _lastChapterNavTime = DateTime(2000); // Cooldown for chapter transitions
+  bool _isNavigatingChapter =
+      false; // Guard against concurrent chapter transitions
+  DateTime _lastChapterNavTime =
+      DateTime(2000); // Cooldown for chapter transitions
 
   // Page-level pagination
   final _pages = <String>[].obs;
@@ -57,7 +61,6 @@ class ReaderController extends GetxController {
   Timer? _syncDebounce;
   final ScrollController scrollController = ScrollController();
 
-
   // ── Getters ──────────────────────────────────────────────────
   bool get isLoading => _isLoading.value;
   bool get isChapterLoading => _isChapterLoading.value;
@@ -90,6 +93,20 @@ class ReaderController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+
+    // Parse arguments - either BookModel directly or Map with book and chapterIndex
+    final args = Get.arguments;
+    if (args is BookModel) {
+      book = args;
+      _targetChapterIndex = 0;
+    } else if (args is Map<String, dynamic>) {
+      book = args['book'] as BookModel?;
+      _targetChapterIndex = args['chapterIndex'] as int? ?? 0;
+    } else {
+      book = null;
+      _targetChapterIndex = 0;
+    }
+
     if (book != null) {
       _loadSettings();
       _initializeReader();
@@ -135,19 +152,31 @@ class ReaderController extends GetxController {
         return;
       }
 
-      // 3. Load saved progress to resume
+      // 3. Determine which chapter to load
+      // Priority: _targetChapterIndex (passed from bookmarks) > saved progress > 0
       int startChapter = 0;
-      try {
-        final progress = await _readerRepository.getProgress(book!.id);
-        final lastPosition = progress['last_position'] as Map<String, dynamic>?;
-        if (lastPosition != null && lastPosition['chapter_index'] != null) {
-          startChapter = lastPosition['chapter_index'] as int;
-          // Clamp to valid range
-          if (startChapter >= _chapters.length) startChapter = 0;
+
+      if (_targetChapterIndex > 0) {
+        // If navigating from bookmarks, use the target chapter
+        startChapter = _targetChapterIndex;
+        if (startChapter >= _chapters.length) startChapter = 0;
+        AppLogger.i('Jumping to bookmarked chapter: $startChapter');
+      } else {
+        // Otherwise, try to load saved progress to resume
+        try {
+          final progress = await _readerRepository.getProgress(book!.id);
+          final lastPosition =
+              progress['last_position'] as Map<String, dynamic>?;
+          if (lastPosition != null && lastPosition['chapter_index'] != null) {
+            startChapter = lastPosition['chapter_index'] as int;
+            // Clamp to valid range
+            if (startChapter >= _chapters.length) startChapter = 0;
+          }
+          _readingProgress.value =
+              (progress['progress_percent'] as num?)?.toDouble() ?? 0.0;
+        } catch (e) {
+          AppLogger.e('Could not load progress (starting from beginning)', e);
         }
-        _readingProgress.value = (progress['progress_percent'] as num?)?.toDouble() ?? 0.0;
-      } catch (e) {
-        AppLogger.e('Could not load progress (starting from beginning)', e);
       }
 
       // 4. Load first chapter content
@@ -172,7 +201,8 @@ class ReaderController extends GetxController {
     if (index < 0 || index >= _chapters.length) return;
 
     _currentChapterIndex.value = index;
-    _currentChapterTitle.value = _chapters[index]['title'] ?? 'Chapter ${index + 1}';
+    _currentChapterTitle.value =
+        _chapters[index]['title'] ?? 'Chapter ${index + 1}';
 
     // Check cache first
     if (_chapterCache.containsKey(index)) {
@@ -199,7 +229,8 @@ class ReaderController extends GetxController {
 
       final rawContent = _parseContent(chapterData['content'] as String? ?? '');
       // Strip duplicate chapter title from start of content
-      final content = _removeDuplicateTitle(rawContent, _currentChapterTitle.value);
+      final content =
+          _removeDuplicateTitle(rawContent, _currentChapterTitle.value);
       _chapterCache[index] = content;
       _currentChapterContent.value = content;
 
@@ -217,7 +248,8 @@ class ReaderController extends GetxController {
       _prefetchNextChapter(index);
     } catch (e) {
       AppLogger.e('Error loading chapter $index', e);
-      _currentChapterContent.value = 'Failed to load chapter. Please try again.';
+      _currentChapterContent.value =
+          'Failed to load chapter. Please try again.';
     } finally {
       _isChapterLoading.value = false;
     }
@@ -230,10 +262,10 @@ class ReaderController extends GetxController {
       // Fire and forget
       _readerRepository
           .getChapterContent(
-            bookId: book!.id,
-            chapterIndex: _chapters[nextIndex]['index'] as int,
-            drmSessionId: _drmSessionId,
-          )
+        bookId: book!.id,
+        chapterIndex: _chapters[nextIndex]['index'] as int,
+        drmSessionId: _drmSessionId,
+      )
           .then((data) {
         final rawContent = _parseContent(data['content'] as String? ?? '');
         final nextTitle = _chapters[nextIndex]['title'] ?? '';
@@ -251,9 +283,11 @@ class ReaderController extends GetxController {
 
     String text = xhtml;
     // 1. Remove <style>...</style> blocks entirely (CSS rules showing as text)
-    text = text.replaceAll(RegExp(r'<style[^>]*>[\s\S]*?</style>', caseSensitive: false), '');
+    text = text.replaceAll(
+        RegExp(r'<style[^>]*>[\s\S]*?</style>', caseSensitive: false), '');
     // 2. Remove <script>...</script> blocks
-    text = text.replaceAll(RegExp(r'<script[^>]*>[\s\S]*?</script>', caseSensitive: false), '');
+    text = text.replaceAll(
+        RegExp(r'<script[^>]*>[\s\S]*?</script>', caseSensitive: false), '');
     // 3. Remove <!-- comments -->
     text = text.replaceAll(RegExp(r'<!--[\s\S]*?-->'), '');
     // 4. Replace common XHTML paragraph/break tags with newlines
@@ -289,17 +323,18 @@ class ReaderController extends GetxController {
   /// Remove duplicate chapter title from the start of parsed content
   String _removeDuplicateTitle(String content, String title) {
     if (title.isEmpty || content.isEmpty) return content;
-    
+
     String currentContent = content.trimLeft();
-    final simpleTitle = title.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '').toLowerCase();
-    
+    final simpleTitle =
+        title.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '').toLowerCase();
+
     if (simpleTitle.isEmpty) return currentContent;
 
     // We will look at the first 4 lines/paragraphs max to see if they are part of the title
     // (EPUBs frequently split 'Chapter 1' and 'The Title' into distinct paragraph blocks)
     for (int i = 0; i < 4; i++) {
       if (currentContent.isEmpty) break;
-      
+
       int nextNewline = currentContent.indexOf('\n');
       String line = '';
       if (nextNewline == -1) {
@@ -307,7 +342,7 @@ class ReaderController extends GetxController {
       } else {
         line = currentContent.substring(0, nextNewline).trim();
       }
-      
+
       if (line.isEmpty) {
         if (nextNewline != -1) {
           currentContent = currentContent.substring(nextNewline + 1).trimLeft();
@@ -318,29 +353,32 @@ class ReaderController extends GetxController {
           break;
         }
       }
-      
+
       // If the line is relatively short (typical for headings) and overlaps with the title
-      final simpleLine = line.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '').toLowerCase();
+      final simpleLine =
+          line.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '').toLowerCase();
       if (simpleLine.isNotEmpty && line.length < 100) {
         // Is this line a substring of the title, or is the title a substring of this line?
         // Also catch cases where the text just says '1' and the title is 'Chapter 1'
-        bool isMatch = simpleTitle.contains(simpleLine) || simpleLine.contains(simpleTitle);
+        bool isMatch = simpleTitle.contains(simpleLine) ||
+            simpleLine.contains(simpleTitle);
         // Also catch common chapter prefixes
         if (!isMatch && simpleLine.startsWith('chapter')) {
-           isMatch = true;
+          isMatch = true;
         }
 
         if (isMatch) {
-           // Strip this line
-           if (nextNewline == -1) {
-             currentContent = '';
-           } else {
-             currentContent = currentContent.substring(nextNewline + 1).trimLeft();
-           }
-           continue; // Check the next line too
+          // Strip this line
+          if (nextNewline == -1) {
+            currentContent = '';
+          } else {
+            currentContent =
+                currentContent.substring(nextNewline + 1).trimLeft();
+          }
+          continue; // Check the next line too
         }
       }
-      
+
       // If we reach a line that has actual content and is not part of the title, we stop stripping
       break;
     }
@@ -442,7 +480,8 @@ class ReaderController extends GetxController {
 
   Future<void> previousChapter({bool jumpToLastPage = false}) async {
     if (_currentChapterIndex.value > 0) {
-      await goToChapter(_currentChapterIndex.value - 1, jumpToLastPage: jumpToLastPage);
+      await goToChapter(_currentChapterIndex.value - 1,
+          jumpToLastPage: jumpToLastPage);
     }
   }
 
@@ -500,7 +539,8 @@ class ReaderController extends GetxController {
           'chapter_id': currentChapter['id'],
         },
       );
-      AppLogger.i('Progress synced: ${_readingProgress.value.toStringAsFixed(1)}%');
+      AppLogger.i(
+          'Progress synced: ${_readingProgress.value.toStringAsFixed(1)}%');
     } catch (e) {
       AppLogger.e('Progress sync failed', e);
     }
@@ -619,7 +659,8 @@ class ReaderController extends GetxController {
     }
   }
 
-  Future<void> addHighlight(String text, {String color = 'yellow', String? note}) async {
+  Future<void> addHighlight(String text,
+      {String color = 'yellow', String? note}) async {
     if (book == null || _chapters.isEmpty) return;
     final currentChapter = _chapters[_currentChapterIndex.value];
     try {
@@ -713,8 +754,10 @@ class ReaderController extends GetxController {
   void _loadSettings() {
     try {
       _fontSize.value = StorageHelper.getDouble('reader_font_size') ?? 16.0;
-      _themeType.value = StorageHelper.getString('reader_theme_type') ?? 'light';
-      _fontFamily.value = StorageHelper.getString('reader_font_family') ?? 'Georgia';
+      _themeType.value =
+          StorageHelper.getString('reader_theme_type') ?? 'light';
+      _fontFamily.value =
+          StorageHelper.getString('reader_font_family') ?? 'Georgia';
       _textAlign.value = StorageHelper.getString('reader_text_align') ?? 'left';
       _isDarkMode.value = (_themeType.value == 'dark');
       _brightness.value = StorageHelper.getDouble('reader_brightness') ?? 1.0;

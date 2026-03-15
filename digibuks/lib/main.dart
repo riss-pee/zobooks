@@ -5,6 +5,7 @@ import 'core/utils/storage_helper.dart';
 import 'presentation/routes/app_routes.dart';
 import 'core/constants/app_constants.dart';
 import 'presentation/controllers/theme_controller.dart';
+import 'presentation/controllers/bookmarks_controller.dart';
 import 'core/network/api_client.dart';
 import 'data/datasources/remote/auth_remote_datasource.dart';
 import 'data/repositories/auth_repository.dart';
@@ -18,13 +19,13 @@ import 'presentation/views/home/home_controller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Initialize storage
   await StorageHelper.init();
-  
+
   // Initialize Global System Controllers
   Get.put(ThemeController());
-  
+
   // Initialize App Dependencies
   final apiClient = Get.put(ApiClient());
   final authRemoteDataSource = Get.put(
@@ -38,7 +39,8 @@ void main() async {
   final paymentRepository = Get.put(PaymentRepository(apiClient));
   Get.put(PaymentController(paymentRepository));
   Get.put(ReaderRepository(apiClient));
-  
+  Get.put(BookmarksController());
+
   runApp(const DigiBuksApp());
 }
 
@@ -48,7 +50,7 @@ class DigiBuksApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeController = Get.find<ThemeController>();
-    
+
     return GetMaterialApp(
       title: 'DigiBuks',
       debugShowCheckedModeBanner: false,
