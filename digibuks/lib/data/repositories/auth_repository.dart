@@ -36,7 +36,7 @@ class AuthRepository {
     }
   }
 
-  Future<UserModel> register({
+  Future<Map<String, dynamic>> register({
     required String username,
     required String email,
     required String password,
@@ -45,7 +45,7 @@ class AuthRepository {
     String role = 'reader',
   }) async {
     try {
-      final response = await _remoteDataSource.register(
+      return await _remoteDataSource.register(
         username: username,
         email: email,
         password: password,
@@ -53,25 +53,68 @@ class AuthRepository {
         phone: phone,
         role: role,
       );
-      
-      // Save tokens
-      if (response['access_token'] != null) {
-        await StorageHelper.saveAccessToken(response['access_token'] as String);
-      }
-      if (response['refresh_token'] != null) {
-        await StorageHelper.saveRefreshToken(response['refresh_token'] as String);
-      }
-      
-      // Save user data
-      if (response['user'] != null) {
-        final user = UserModel.fromJson(response['user'] as Map<String, dynamic>);
-        await StorageHelper.saveString('user_data', jsonEncode(user.toJson()));
-        return user;
-      }
-      
-      throw Exception('Invalid response format');
     } catch (e) {
       AppLogger.e('Register repository error', e);
+      rethrow;
+    }
+  }
+
+  Future<bool> verifyRegistrationOtp({
+    required String email,
+    required String otp,
+    required String username,
+    required String password,
+  }) async {
+    try {
+      await _remoteDataSource.verifyRegistrationOtp(email: email, otp: otp);
+      
+      // Auto-login after successful verification
+      try {
+        await login(username, password);
+        return true;
+      } catch (e) {
+        AppLogger.e('Auto-login after OTP failed', e);
+        return true; // Still completed registration
+      }
+    } catch (e) {
+      AppLogger.e('OTP verification repository error', e);
+      rethrow;
+    }
+  }
+
+  Future<void> resendRegistrationOtp(String email) async {
+    try {
+      await _remoteDataSource.resendRegistrationOtp(email);
+    } catch (e) {
+      AppLogger.e('Resend OTP repository error', e);
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>> forgotPassword(String username) async {
+    try {
+      return await _remoteDataSource.forgotPassword(username);
+    } catch (e) {
+      AppLogger.e('Forgot password repository error', e);
+      rethrow;
+    }
+  }
+
+  Future<void> resetPassword({
+    required String username,
+    required String otp,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    try {
+      await _remoteDataSource.resetPassword(
+        username: username,
+        otp: otp,
+        newPassword: newPassword,
+        confirmPassword: confirmPassword,
+      );
+    } catch (e) {
+      AppLogger.e('Reset password repository error', e);
       rethrow;
     }
   }

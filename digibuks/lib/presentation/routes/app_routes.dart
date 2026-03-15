@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../views/auth/login_view.dart';
 import '../views/auth/register_view.dart';
+import '../views/auth/register_otp_view.dart';
+import '../views/auth/forgot_password_view.dart';
+import '../views/auth/reset_password_view.dart';
 import '../views/auth/splash_view.dart';
 import '../views/home/home_view.dart';
 import '../views/books/book_detail_view.dart';
@@ -35,6 +38,21 @@ class AppRoutes {
     GetPage(
       name: AppConstants.registerRoute,
       page: () => const RegisterView(),
+      binding: AuthBinding(),
+    ),
+    GetPage(
+      name: AppConstants.registerOtpRoute,
+      page: () => const RegisterOtpView(),
+      binding: AuthBinding(),
+    ),
+    GetPage(
+      name: AppConstants.forgotPasswordRoute,
+      page: () => const ForgotPasswordView(),
+      binding: AuthBinding(),
+    ),
+    GetPage(
+      name: AppConstants.resetPasswordRoute,
+      page: () => const ResetPasswordView(),
       binding: AuthBinding(),
     ),
     GetPage(

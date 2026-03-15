@@ -22,6 +22,15 @@ class ReaderController extends GetxController {
   final _currentChapterContent = ''.obs;
   final _currentChapterTitle = ''.obs;
   final _isFullScreen = false.obs;
+  bool _isNavigatingChapter = false; // Guard against concurrent chapter transitions
+  DateTime _lastChapterNavTime = DateTime(2000); // Cooldown for chapter transitions
+
+  // Page-level pagination
+  final _pages = <String>[].obs;
+  final _currentPageIndex = 0.obs;
+  final PageController pageController = PageController();
+  int _lastPaginatedHash = 0; // Guard against redundant pagination
+  static const int _paragraphsPerPage = 7;
 
   // DRM
   String? _drmSessionId;
@@ -48,6 +57,7 @@ class ReaderController extends GetxController {
   Timer? _syncDebounce;
   final ScrollController scrollController = ScrollController();
 
+
   // ── Getters ──────────────────────────────────────────────────
   bool get isLoading => _isLoading.value;
   bool get isChapterLoading => _isChapterLoading.value;
@@ -56,6 +66,9 @@ class ReaderController extends GetxController {
   int get totalChapters => _chapters.length;
   String get currentChapterContent => _currentChapterContent.value;
   String get currentChapterTitle => _currentChapterTitle.value;
+  List<String> get pages => _pages;
+  int get currentPageIndex => _currentPageIndex.value;
+  int get totalPagesInChapter => _pages.length;
   bool get isFullScreen => _isFullScreen.value;
 
   double get fontSize => _fontSize.value;
@@ -89,6 +102,7 @@ class ReaderController extends GetxController {
     // Sync progress one final time on close
     _syncProgressNow();
     scrollController.dispose();
+    pageController.dispose();
     super.onClose();
   }
 
@@ -163,6 +177,14 @@ class ReaderController extends GetxController {
     // Check cache first
     if (_chapterCache.containsKey(index)) {
       _currentChapterContent.value = _chapterCache[index]!;
+      _lastPaginatedHash = 0; // Force re-pagination
+      paginateChapter(); // Paginate immediately so page count is correct before view rebuilds
+      _currentPageIndex.value = 0;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (pageController.hasClients) {
+          pageController.jumpToPage(0);
+        }
+      });
       _prefetchNextChapter(index);
       return;
     }
@@ -181,14 +203,13 @@ class ReaderController extends GetxController {
       _chapterCache[index] = content;
       _currentChapterContent.value = content;
 
-      // Scroll to top more reliably
+      // Reset pagination hash so content re-paginates
+      _lastPaginatedHash = 0;
+      paginateChapter(); // Paginate immediately so page count is correct before view rebuilds
+      _currentPageIndex.value = 0;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (scrollController.hasClients) {
-          scrollController.animateTo(
-            0.0,
-            duration: const Duration(milliseconds: 100),
-            curve: Curves.easeOut,
-          );
+        if (pageController.hasClients) {
+          pageController.jumpToPage(0);
         }
       });
 
@@ -327,14 +348,90 @@ class ReaderController extends GetxController {
     return currentContent.isEmpty ? content.trimLeft() : currentContent;
   }
 
+  // ── Pagination ──────────────────────────────────────────────
+
+  /// Split current chapter content into pages by paragraphs.
+  /// Each page contains up to [_paragraphsPerPage] paragraphs.
+  void paginateChapter() {
+    final content = _currentChapterContent.value;
+
+    // Guard: don't re-paginate if nothing has changed
+    final hash = content.hashCode;
+    if (hash == _lastPaginatedHash && _pages.isNotEmpty) return;
+    _lastPaginatedHash = hash;
+
+    if (content.isEmpty) {
+      _pages.value = [''];
+      _currentPageIndex.value = 0;
+      return;
+    }
+
+    // Split by double-newline (paragraph separator)
+    final paragraphs = content
+        .split(RegExp(r'\n\n+'))
+        .where((p) => p.trim().isNotEmpty)
+        .toList();
+
+    if (paragraphs.isEmpty) {
+      _pages.value = [content];
+      _currentPageIndex.value = 0;
+      return;
+    }
+
+    // Group paragraphs into pages
+    final pages = <String>[];
+    for (int i = 0; i < paragraphs.length; i += _paragraphsPerPage) {
+      final end = (i + _paragraphsPerPage).clamp(0, paragraphs.length);
+      pages.add(paragraphs.sublist(i, end).join('\n\n'));
+    }
+
+    _pages.value = pages;
+    _currentPageIndex.value = 0;
+
+    // Reset PageController
+    if (pageController.hasClients) {
+      pageController.jumpToPage(0);
+    }
+  }
+
+  void _repaginate() {
+    _lastPaginatedHash = 0; // Force re-pagination
+    paginateChapter();
+  }
+
+  void onPageChanged(int index) {
+    _currentPageIndex.value = index;
+    _updateProgress();
+  }
+
   // ── Navigation ───────────────────────────────────────────────
 
-  Future<void> goToChapter(int index) async {
+  Future<void> goToChapter(int index, {bool jumpToLastPage = false}) async {
     if (index < 0 || index >= _chapters.length) return;
     if (index == _currentChapterIndex.value) return;
+    if (_isNavigatingChapter) return; // Prevent concurrent transitions
 
-    await _loadChapter(index);
-    _updateProgress();
+    // Cooldown: ignore rapid successive chapter changes (within 500ms)
+    final now = DateTime.now();
+    if (now.difference(_lastChapterNavTime).inMilliseconds < 500) return;
+
+    _isNavigatingChapter = true;
+    try {
+      await _loadChapter(index);
+      _updateProgress();
+
+      if (jumpToLastPage && _pages.isNotEmpty) {
+        _currentPageIndex.value = _pages.length - 1;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (pageController.hasClients) {
+            pageController.jumpToPage(_pages.length - 1);
+          }
+        });
+      }
+    } finally {
+      _isNavigatingChapter = false;
+      _lastChapterNavTime = DateTime.now();
+    }
   }
 
   Future<void> nextChapter() async {
@@ -343,16 +440,40 @@ class ReaderController extends GetxController {
     }
   }
 
-  Future<void> previousChapter() async {
+  Future<void> previousChapter({bool jumpToLastPage = false}) async {
     if (_currentChapterIndex.value > 0) {
-      await goToChapter(_currentChapterIndex.value - 1);
+      await goToChapter(_currentChapterIndex.value - 1, jumpToLastPage: jumpToLastPage);
+    }
+  }
+
+  void goToNextPage() {
+    if (_currentPageIndex.value < _pages.length - 1) {
+      pageController.nextPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    } else {
+      // Last page of chapter → go to next chapter
+      nextChapter();
+    }
+  }
+
+  void goToPreviousPage() {
+    if (_currentPageIndex.value > 0) {
+      pageController.previousPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    } else {
+      // First page of chapter → go to previous chapter, last page
+      previousChapter(jumpToLastPage: true);
     }
   }
 
   // Keep old methods for compatibility
   void goToPage(int page) => goToChapter(page);
-  void nextPage() => nextChapter();
-  void previousPage() => previousChapter();
+  void nextPage() => goToNextPage();
+  void previousPage() => goToPreviousPage();
 
   // ── Progress ─────────────────────────────────────────────────
 
@@ -388,6 +509,11 @@ class ReaderController extends GetxController {
   String getProgressText() {
     if (_chapters.isEmpty) return '0%';
     return '${_readingProgress.value.toStringAsFixed(0)}%';
+  }
+
+  String getPageProgressText() {
+    if (_pages.isEmpty) return '';
+    return 'Page ${_currentPageIndex.value + 1} of ${_pages.length}';
   }
 
   // ── Bookmarks ────────────────────────────────────────────────
@@ -542,6 +668,7 @@ class ReaderController extends GetxController {
     if (size >= 12 && size <= 32) {
       _fontSize.value = size;
       StorageHelper.saveDouble('reader_font_size', size);
+      _repaginate();
     }
   }
 
@@ -554,6 +681,7 @@ class ReaderController extends GetxController {
   void setFontFamily(String family) {
     _fontFamily.value = family;
     StorageHelper.saveString('reader_font_family', family);
+    _repaginate();
   }
 
   void setTextAlign(String align) {
@@ -578,6 +706,7 @@ class ReaderController extends GetxController {
     if (value >= 1.0 && value <= 2.5) {
       _lineHeight.value = value;
       StorageHelper.saveDouble('reader_line_height', value);
+      _repaginate();
     }
   }
 

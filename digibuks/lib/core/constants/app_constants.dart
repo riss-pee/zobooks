@@ -3,6 +3,9 @@ class AppConstants {
   static const String splashRoute = '/splash';
   static const String loginRoute = '/login';
   static const String registerRoute = '/register';
+  static const String registerOtpRoute = '/register-otp';
+  static const String forgotPasswordRoute = '/forgot-password';
+  static const String resetPasswordRoute = '/reset-password';
   static const String homeRoute = '/home';
   static const String bookDetailRoute = '/book-detail';
   static const String readerRoute = '/reader';

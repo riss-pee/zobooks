@@ -241,12 +241,19 @@ class ReaderView extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Chapter progress text
+          // Page progress text
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Chapter ${controller.currentChapterIndex + 1} of ${controller.totalChapters}',
+                controller.getPageProgressText(),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: controller.isDarkMode ? Colors.white54 : Colors.black45,
+                ),
+              ),
+              Text(
+                'Ch ${controller.currentChapterIndex + 1}/${controller.totalChapters}',
                 style: TextStyle(
                   fontSize: 12,
                   color: controller.isDarkMode ? Colors.white54 : Colors.black45,
@@ -331,119 +338,199 @@ class ReaderView extends StatelessWidget {
         textColor = const Color(0xFF1A1C1E);
     }
 
+    final topPad = MediaQuery.of(context).padding.top + 48;
+    final bottomPad = MediaQuery.of(context).padding.bottom + 56;
+    const horizontalPad = 20.0;
+
     return Positioned.fill(
-      child: GestureDetector(
-        onHorizontalDragEnd: (details) {
-          if (details.primaryVelocity == null) return;
-          // Swipe left → next chapter
-          if (details.primaryVelocity! < -200) {
-            controller.nextChapter();
-          }
-          // Swipe right → previous chapter
-          if (details.primaryVelocity! > 200) {
-            controller.previousChapter();
-          }
-        },
-        child: Stack(
-          children: [
-            // Main content - fill entire screen
-            Positioned.fill(
-              child: Container(
-                color: bgColor,
-                child: controller.isChapterLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : SingleChildScrollView(
-                        controller: controller.scrollController,
-                        padding: EdgeInsets.only(
-                          top: MediaQuery.of(context).padding.top + 72,
-                          bottom: MediaQuery.of(context).padding.bottom + 120,
-                          left: 24,
-                          right: 24,
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Chapter title
-                            Text(
-                              controller.currentChapterTitle,
-                              style: _getTextStyle(controller,
-                                fontSize: controller.fontSize + 8,
-                                fontWeight: FontWeight.bold,
-                                color: textColor,
-                                height: 1.3,
+      child: Container(
+        color: bgColor,
+        child: controller.isChapterLoading
+            ? const Center(child: CircularProgressIndicator())
+            : Builder(
+                builder: (context) {
+                  // Paginate if needed
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    controller.paginateChapter();
+                  });
+
+                  if (controller.pages.isEmpty) {
+                    return const SizedBox.shrink();
+                  }
+
+                  return Stack(
+                    children: [
+                      // For multi-page chapters: PageView handles swiping between pages,
+                      // OverscrollNotification handles chapter transitions at boundaries.
+                      // For single-page chapters: GestureDetector handles chapter swipe
+                      // since PageView can't generate overscroll with one item.
+                      controller.totalPagesInChapter <= 1
+                          ? GestureDetector(
+                              onPanEnd: (details) {
+                                final velocity = details.velocity.pixelsPerSecond;
+                                // Only respond to clearly horizontal swipes
+                                if (velocity.dx.abs() < 200) return;
+                                if (velocity.dx.abs() < velocity.dy.abs()) return;
+                                if (velocity.dx < 0) {
+                                  controller.nextChapter();
+                                } else {
+                                  controller.previousChapter(jumpToLastPage: true);
+                                }
+                              },
+                              child: _buildPageContent(
+                                controller: controller,
+                                pageIndex: 0,
+                                topPad: topPad,
+                                bottomPad: bottomPad,
+                                horizontalPad: horizontalPad,
+                                textColor: textColor,
+                              ),
+                            )
+                          : NotificationListener<OverscrollNotification>(
+                              onNotification: (notification) {
+                                // Only handle horizontal overscroll (PageView),
+                                // ignore vertical (SingleChildScrollView)
+                                if (notification.metrics.axis != Axis.horizontal) {
+                                  return false;
+                                }
+                                if (notification.overscroll > 0) {
+                                  controller.nextChapter();
+                                } else if (notification.overscroll < 0) {
+                                  controller.previousChapter(jumpToLastPage: true);
+                                }
+                                return true;
+                              },
+                              child: PageView.builder(
+                                controller: controller.pageController,
+                                itemCount: controller.totalPagesInChapter,
+                                onPageChanged: controller.onPageChanged,
+                                itemBuilder: (context, pageIndex) {
+                                  return _buildPageContent(
+                                    controller: controller,
+                                    pageIndex: pageIndex,
+                                    topPad: topPad,
+                                    bottomPad: bottomPad,
+                                    horizontalPad: horizontalPad,
+                                    textColor: textColor,
+                                  );
+                                },
                               ),
                             ),
-                            const SizedBox(height: 8),
-                            Container(
-                              width: 40, height: 3,
-                              decoration: BoxDecoration(
-                                color: AppTheme.primaryColor,
-                                borderRadius: BorderRadius.circular(2),
-                              ),
-                            ),
-                            const SizedBox(height: 24),
-                            // Chapter text
-                            Text(
-                              controller.currentChapterContent,
-                              style: _getTextStyle(controller,
-                                fontSize: controller.fontSize,
-                                height: controller.lineHeight,
-                                color: textColor.withOpacity(0.9),
-                              ),
-                              textAlign: controller.textAlign == 'justify'
-                                  ? TextAlign.justify
-                                  : TextAlign.left,
-                            ),
-                            const SizedBox(height: 60),
-                            // End of book indicator
-                            if (controller.currentChapterIndex == controller.totalChapters - 1)
-                              Center(
-                                child: Column(
-                                  children: [
-                                    Icon(Icons.auto_stories_rounded,
-                                        size: 40, color: textColor.withOpacity(0.3)),
-                                    const SizedBox(height: 12),
-                                    Text(
-                                      'End of Book',
-                                      style: TextStyle(
-                                        color: textColor.withOpacity(0.5),
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            const SizedBox(height: 40),
-                          ],
+
+                      // Hidden tap zone — left edge (previous page)
+                      Positioned(
+                        left: 0,
+                        top: topPad,
+                        bottom: bottomPad,
+                        width: 44,
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.translucent,
+                          onTap: () => controller.goToPreviousPage(),
+                          child: const SizedBox.expand(),
                         ),
                       ),
+                      // Hidden tap zone — right edge (next page)
+                      Positioned(
+                        right: 0,
+                        top: topPad,
+                        bottom: bottomPad,
+                        width: 44,
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.translucent,
+                          onTap: () => controller.goToNextPage(),
+                          child: const SizedBox.expand(),
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
-            ),
-            // Hidden tap zone — left edge (previous chapter)
-            if (controller.currentChapterIndex > 0)
-              Positioned(
-                left: 0,
-                top: MediaQuery.of(context).padding.top + 80,
-                bottom: MediaQuery.of(context).padding.bottom + 100,
-                width: 44,
-                child: GestureDetector(
-                  behavior: HitTestBehavior.translucent,
-                  onTap: () => controller.previousChapter(),
-                  child: const SizedBox.expand(),
+      ),
+    );
+  }
+
+  Widget _buildPageContent({
+    required ReaderController controller,
+    required int pageIndex,
+    required double topPad,
+    required double bottomPad,
+    required double horizontalPad,
+    required Color textColor,
+  }) {
+    final pageText = pageIndex < controller.pages.length
+        ? controller.pages[pageIndex]
+        : '';
+
+    return GestureDetector(
+      onTap: () => controller.toggleFullScreen(),
+      child: Padding(
+        padding: EdgeInsets.only(
+          top: topPad,
+          bottom: bottomPad,
+          left: horizontalPad,
+          right: horizontalPad,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Chapter title only on the first page
+            if (pageIndex == 0) ...[
+              Text(
+                controller.currentChapterTitle,
+                style: _getTextStyle(controller,
+                  fontSize: controller.fontSize + 8,
+                  fontWeight: FontWeight.bold,
+                  color: textColor,
+                  height: 1.3,
                 ),
               ),
-            // Hidden tap zone — right edge (next chapter)
-            if (controller.currentChapterIndex < controller.totalChapters - 1)
-              Positioned(
-                right: 0,
-                top: MediaQuery.of(context).padding.top + 80,
-                bottom: MediaQuery.of(context).padding.bottom + 100,
-                width: 44,
-                child: GestureDetector(
-                  behavior: HitTestBehavior.translucent,
-                  onTap: () => controller.nextChapter(),
-                  child: const SizedBox.expand(),
+              const SizedBox(height: 8),
+              Container(
+                width: 40, height: 3,
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryColor,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 24),
+            ],
+            // Scrollable page text
+            Expanded(
+              child: SingleChildScrollView(
+                child: Text(
+                  pageText,
+                  style: _getTextStyle(controller,
+                    fontSize: controller.fontSize,
+                    height: controller.lineHeight,
+                    color: textColor.withOpacity(0.9),
+                  ),
+                  textAlign: controller.textAlign == 'justify'
+                      ? TextAlign.justify
+                      : TextAlign.left,
+                ),
+              ),
+            ),
+            // End of book indicator on last page of last chapter
+            if (controller.currentChapterIndex == controller.totalChapters - 1 &&
+                pageIndex == controller.totalPagesInChapter - 1)
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 16),
+                  child: Column(
+                    children: [
+                      Icon(Icons.auto_stories_rounded,
+                          size: 40, color: textColor.withOpacity(0.3)),
+                      const SizedBox(height: 12),
+                      Text(
+                        'End of Book',
+                        style: TextStyle(
+                          color: textColor.withOpacity(0.5),
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
           ],

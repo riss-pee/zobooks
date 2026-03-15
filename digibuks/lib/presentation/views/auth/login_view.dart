@@ -71,7 +71,7 @@ class _LoginViewState extends State<LoginView> {
                       child: Column(
                         children: [
                           Text(
-                            'DigiBuks',
+                            'Zo Reads',
                             style: Theme.of(context).textTheme.displayLarge?.copyWith(
                                   color: Theme.of(context).colorScheme.primary,
                                   fontWeight: FontWeight.bold,
@@ -158,13 +158,7 @@ class _LoginViewState extends State<LoginView> {
                           Align(
                             alignment: Alignment.centerRight,
                             child: TextButton(
-                              onPressed: () {
-                                showSnackSafe(
-                                  'Coming Soon',
-                                  'Forgot password feature will be available soon',
-                                  snackPosition: SnackPosition.BOTTOM,
-                                );
-                              },
+                              onPressed: () => Get.toNamed(AppConstants.forgotPasswordRoute),
                               child: const Text('Forgot Password?'),
                             ),
                           ),

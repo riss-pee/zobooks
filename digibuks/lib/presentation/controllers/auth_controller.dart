@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../core/utils/snackbar_helper.dart';
 import '../../data/repositories/auth_repository.dart';
@@ -72,22 +73,41 @@ class AuthController extends GetxController {
     } on ApiException catch (e) {
       _errorMessage.value = e.message;
       AppLogger.e('Login failed: ${e.message}');
-      showSnackSafe(
-        'Login Failed',
-        e.message,
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      _showSecureLoginErrorModal();
     } catch (e) {
       _errorMessage.value = 'An unexpected error occurred';
       AppLogger.e('Login error', e);
-      showSnackSafe(
-        'Error',
-        'An unexpected error occurred. Please try again.',
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      _showSecureLoginErrorModal();
     } finally {
       _isLoading.value = false;
     }
+  }
+
+  void _showSecureLoginErrorModal() {
+    Get.dialog(
+      AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.error_outline, color: Colors.red),
+            SizedBox(width: 8),
+            Text('Login Failed'),
+          ],
+        ),
+        content: const Text(
+          'Invalid username or password. Please try again.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('OK'),
+          ),
+        ],
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+      barrierDismissible: true,
+    );
   }
 
   Future<void> register({
@@ -102,7 +122,7 @@ class AuthController extends GetxController {
       _isLoading.value = true;
       _errorMessage.value = '';
 
-      final user = await _authRepository.register(
+      final response = await _authRepository.register(
         username: username,
         email: email,
         password: password,
@@ -110,16 +130,24 @@ class AuthController extends GetxController {
         phone: phone,
         role: role,
       );
-      _currentUser.value = user;
-      _isAuthenticated.value = true;
       
-      // Fetch full profile in background
-      fetchUserProfile();
-
-      AppLogger.i('Registration successful: ${user.email}');
+      AppLogger.i('Registration step 1 successful: ${response['message']}');
       
-      // Navigate to Home
-      Get.offAllNamed(AppConstants.homeRoute);
+      showSnackSafe(
+        'OTP Sent',
+        response['message'] ?? 'Please check your email for the verification code.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      
+      // Navigate to OTP verification screen
+      Get.toNamed(
+        AppConstants.registerOtpRoute,
+        arguments: {
+          'email': email,
+          'username': username,
+          'password': password,
+        },
+      );
     } on ApiException catch (e) {
       _errorMessage.value = e.message;
       AppLogger.e('Registration failed: ${e.message}');
@@ -131,6 +159,168 @@ class AuthController extends GetxController {
     } catch (e) {
       _errorMessage.value = 'An unexpected error occurred';
       AppLogger.e('Registration error', e);
+      showSnackSafe(
+        'Error',
+        'An unexpected error occurred. Please try again.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } finally {
+      _isLoading.value = false;
+    }
+  }
+
+  Future<void> verifyRegistrationOtp({
+    required String email,
+    required String otp,
+    required String username,
+    required String password,
+  }) async {
+    try {
+      _isLoading.value = true;
+      _errorMessage.value = '';
+
+      final success = await _authRepository.verifyRegistrationOtp(
+        email: email,
+        otp: otp,
+        username: username,
+        password: password,
+      );
+
+      if (success) {
+        showSnackSafe(
+          'Success',
+          'Account verified successfully',
+          snackPosition: SnackPosition.BOTTOM,
+        );
+        
+        // The repository auto-logs the user in, so we update the controller state
+        await checkAuthStatus();
+        
+        // Navigate to Home
+        Get.offAllNamed(AppConstants.homeRoute);
+      }
+    } on ApiException catch (e) {
+      _errorMessage.value = e.message;
+      AppLogger.e('OTP verification failed: ${e.message}');
+      showSnackSafe(
+        'Verification Failed',
+        e.message,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } catch (e) {
+      _errorMessage.value = 'An unexpected error occurred';
+      AppLogger.e('OTP verification error', e);
+      showSnackSafe(
+        'Error',
+        'An unexpected error occurred. Please try again.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } finally {
+      _isLoading.value = false;
+    }
+  }
+
+  Future<void> resendRegistrationOtp(String email) async {
+    try {
+      _isLoading.value = true;
+      
+      await _authRepository.resendRegistrationOtp(email);
+      
+      showSnackSafe(
+        'OTP Sent',
+        'A new verification code has been sent to your email.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } on ApiException catch (e) {
+      AppLogger.e('Resend OTP failed: ${e.message}');
+      showSnackSafe(
+        'Failed to Resend',
+        e.message,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } catch (e) {
+      AppLogger.e('Resend OTP error', e);
+      showSnackSafe(
+        'Error',
+        'An unexpected error occurred. Please try again.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } finally {
+      _isLoading.value = false;
+    }
+  }
+
+  Future<void> requestPasswordReset(String username) async {
+    try {
+      _isLoading.value = true;
+      _errorMessage.value = '';
+
+      final response = await _authRepository.forgotPassword(username);
+      
+      showSnackSafe(
+        'Code Sent',
+        response['message'] ?? 'If an account exists, a reset code has been sent.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      
+      // Navigate to reset password screen
+      Get.toNamed(
+        AppConstants.resetPasswordRoute,
+        arguments: {'username': username},
+      );
+    } on ApiException catch (e) {
+      _errorMessage.value = e.message;
+      showSnackSafe(
+        'Request Failed',
+        e.message,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } catch (e) {
+      _errorMessage.value = 'An unexpected error occurred';
+      showSnackSafe(
+        'Error',
+        'An unexpected error occurred. Please try again.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } finally {
+      _isLoading.value = false;
+    }
+  }
+
+  Future<void> resetPassword({
+    required String username,
+    required String otp,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    try {
+      _isLoading.value = true;
+      _errorMessage.value = '';
+
+      await _authRepository.resetPassword(
+        username: username,
+        otp: otp,
+        newPassword: newPassword,
+        confirmPassword: confirmPassword,
+      );
+      
+      showSnackSafe(
+        'Success',
+        'Password reset successfully. You can now login.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      
+      // Go back to login screen
+      Get.offAllNamed(AppConstants.loginRoute);
+    } on ApiException catch (e) {
+      _errorMessage.value = e.message;
+      showSnackSafe(
+        'Reset Failed',
+        e.message,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } catch (e) {
+      _errorMessage.value = 'An unexpected error occurred';
       showSnackSafe(
         'Error',
         'An unexpected error occurred. Please try again.',

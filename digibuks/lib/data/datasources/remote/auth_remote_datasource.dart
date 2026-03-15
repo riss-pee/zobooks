@@ -52,7 +52,7 @@ class AuthRemoteDataSource {
       AppLogger.i('Attempting registration for: $username');
       
       // Real API call for registration
-      await _apiClient.post(
+      final response = await _apiClient.post(
         '/users/auth/register',
         data: {
           'username': username,
@@ -64,19 +64,81 @@ class AuthRemoteDataSource {
         },
       );
 
-      // Registration endpoint doesn't return tokens, so we auto-login
-      AppLogger.i('Registration successful, auto-logging in...');
-      final loginResponse = await _apiClient.post(
-        '/users/auth/login',
-        data: {
-          'username': username,
-          'password': password,
-        },
-      );
-      
-      return loginResponse.data as Map<String, dynamic>;
+      return response.data as Map<String, dynamic>;
     } catch (e) {
       AppLogger.e('Registration error', e);
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>> verifyRegistrationOtp({
+    required String email,
+    required String otp,
+  }) async {
+    try {
+      AppLogger.i('Verifying OTP for: $email');
+      final response = await _apiClient.post(
+        '/users/auth/verify-otp',
+        data: {
+          'email': email,
+          'otp': otp,
+        },
+      );
+      return response.data as Map<String, dynamic>;
+    } catch (e) {
+      AppLogger.e('OTP verification error', e);
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>> resendRegistrationOtp(String email) async {
+    try {
+      AppLogger.i('Resending OTP for: $email');
+      final response = await _apiClient.post(
+        '/users/auth/resend-otp',
+        data: {'email': email},
+      );
+      return response.data as Map<String, dynamic>;
+    } catch (e) {
+      AppLogger.e('Resend OTP error', e);
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>> forgotPassword(String username) async {
+    try {
+      AppLogger.i('Requesting password reset for: $username');
+      final response = await _apiClient.post(
+        '/users/auth/forgot-password',
+        data: {'username': username},
+      );
+      return response.data as Map<String, dynamic>;
+    } catch (e) {
+      AppLogger.e('Forgot password error', e);
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>> resetPassword({
+    required String username,
+    required String otp,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    try {
+      AppLogger.i('Resetting password for: $username');
+      final response = await _apiClient.post(
+        '/users/auth/reset-password',
+        data: {
+          'username': username,
+          'otp': otp,
+          'new_password': newPassword,
+          'confirm_password': confirmPassword,
+        },
+      );
+      return response.data as Map<String, dynamic>;
+    } catch (e) {
+      AppLogger.e('Reset password error', e);
       rethrow;
     }
   }

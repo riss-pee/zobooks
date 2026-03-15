@@ -63,10 +63,15 @@ class _LibraryViewState extends State<LibraryView> {
           );
         }
 
-        return ListView.separated(
+        return GridView.builder(
           padding: const EdgeInsets.all(16),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3,
+            childAspectRatio: 0.60,
+            crossAxisSpacing: 16,
+            mainAxisSpacing: 20,
+          ),
           itemCount: libraryBooks.length,
-          separatorBuilder: (context, index) => const SizedBox(height: 12),
           itemBuilder: (context, index) {
             final book = libraryBooks[index];
             return InkWell(
@@ -75,91 +80,75 @@ class _LibraryViewState extends State<LibraryView> {
                 Get.toNamed(AppConstants.readerRoute, arguments: book);
               },
               borderRadius: BorderRadius.circular(12),
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    // Book Cover
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Container(
-                        width: 60,
-                        height: 90,
-                        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                        child: book.coverImage != null && book.coverImage!.isNotEmpty
-                             ? CachedNetworkImage(
-                                 imageUrl: book.coverImage!,
-                                 fit: BoxFit.cover,
-                                 placeholder: (context, url) => const Icon(Icons.book, size: 30, color: Colors.grey),
-                                 errorWidget: (context, url, error) => const Icon(Icons.broken_image, size: 30, color: Colors.grey),
-                               )
-                             : const Icon(Icons.book, size: 30, color: Colors.grey),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    // Book Details
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            book.title,
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          if (book.authorName != null && book.authorName!.isNotEmpty) ...[
-                            const SizedBox(height: 4),
-                            Text(
-                              book.authorName!,
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                  ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.menu_book,
-                                size: 16,
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                'Read Now',
-                                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                                      color: Theme.of(context).colorScheme.primary,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                              ),
-                            ],
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Book Cover
+                  Expanded(
+                    child: Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surface,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
                           ),
                         ],
                       ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: book.coverImage != null && book.coverImage!.isNotEmpty
+                            ? CachedNetworkImage(
+                                imageUrl: book.coverImage!,
+                                fit: BoxFit.cover,
+                                placeholder: (context, url) => Container(
+                                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                                  child: const Center(
+                                    child: Icon(Icons.book, size: 40, color: Colors.grey),
+                                  ),
+                                ),
+                                errorWidget: (context, url, error) => Container(
+                                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                                  child: const Center(
+                                    child: Icon(Icons.broken_image, size: 40, color: Colors.grey),
+                                  ),
+                                ),
+                              )
+                            : Container(
+                                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                                child: const Center(
+                                  child: Icon(Icons.book, size: 40, color: Colors.grey),
+                                ),
+                              ),
+                      ),
                     ),
-                    const SizedBox(width: 8),
-                    Icon(
-                      Icons.chevron_right,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(height: 8),
+                  // Book Title
+                  Text(
+                    book.title,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (book.authorName != null && book.authorName!.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      book.authorName!,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            fontSize: 11,
+                          ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
-                ),
+                ],
               ),
             );
           },
