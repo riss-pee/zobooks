@@ -612,38 +612,98 @@ class _ProfileViewState extends State<ProfileView> {
                   ?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white.withAlpha(30),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color:
-                      Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
-                ),
-              ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<String>(
-                  value: languageController.language,
-                  isExpanded: true,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  items: const [
-                    DropdownMenuItem(
-                      value: 'en',
-                      child: Text('English'),
+            Row(
+              children: [
+                Expanded(
+                  child: InkWell(
+                    onTap: () {
+                      languageController.setLanguage('en');
+                    },
+                    borderRadius: BorderRadius.circular(12),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 12, horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: languageController.language == 'en'
+                            ? Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withOpacity(0.2)
+                            : Colors.white.withAlpha(30),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: languageController.language == 'en'
+                              ? Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withOpacity(0.2)
+                              : Colors.white10,
+                        ),
+                      ),
+                      child: Text(
+                        'English',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: languageController.language == 'en'
+                              ? Theme.of(context).colorScheme.onSurface
+                              : Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withOpacity(0.4),
+                        ),
+                      ),
                     ),
-                    DropdownMenuItem(
-                      value: 'mi',
-                      child: Text('Mizo'),
-                    ),
-                  ],
-                  onChanged: (value) {
-                    if (value != null) {
-                      languageController.setLanguage(value);
-                    }
-                  },
+                  ),
                 ),
-              ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: InkWell(
+                    onTap: () {
+                      languageController.setLanguage('mi');
+                    },
+                    borderRadius: BorderRadius.circular(12),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 12, horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: languageController.language == 'mi'
+                            ? Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withOpacity(0.2)
+                            : Colors.white.withAlpha(30),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: languageController.language == 'mi'
+                              ? Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withOpacity(0.2)
+                              : Colors.white10,
+                        ),
+                      ),
+                      child: Text(
+                        'Mizo',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: languageController.language == 'mi'
+                              ? Theme.of(context).colorScheme.onSurface
+                              : Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withOpacity(0.4),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
