@@ -26,11 +26,11 @@ class ChapterBookmarkModel {
 
     if (json['book'] is Map) {
       final bookData = json['book'] as Map<String, dynamic>;
-      title = bookData['title'] ?? 'Unknown';
-      coverImage = bookData['cover_image'];
+      title = bookData['title'] ?? bookData['name'] ?? 'Unknown';
+      coverImage = bookData['cover_image'] ?? bookData['coverImage'];
     } else {
-      title = json['book_title'] ?? 'Unknown';
-      coverImage = json['book_cover_image'];
+      title = json['book_title'] ?? json['name'] ?? 'Unknown';
+      coverImage = json['book_cover_image'] ?? json['coverImage'];
     }
 
     // Handle location object or flat structure

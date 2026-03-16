@@ -2,8 +2,10 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import '../../core/utils/snackbar_helper.dart';
 import '../../data/models/chapter_bookmark_model.dart';
+import '../../data/models/book_model.dart';
 import '../../data/repositories/reader_repository.dart';
 import '../../core/utils/logger.dart';
+import './book_controller.dart';
 
 class BookmarksController extends GetxController {
   final _chapterBookmarks = <ChapterBookmarkModel>[].obs;
@@ -37,7 +39,11 @@ class BookmarksController extends GetxController {
 
       // Try to fetch from API first
       try {
-        final bookmarks = await _fetchAllUserBookmarks();
+        var bookmarks = await _fetchAllUserBookmarks();
+
+        // Enrich bookmarks with book information if title is Unknown
+        bookmarks = await _enrichBookmarks(bookmarks);
+
         _chapterBookmarks.value = bookmarks;
 
         // Cache locally
@@ -152,6 +158,60 @@ class BookmarksController extends GetxController {
     } catch (e) {
       AppLogger.e('Error clearing bookmarks', e);
       showSnackSafe('Error', 'Failed to clear bookmarks');
+    }
+  }
+
+  /// Enrich bookmarks with book information if title is Unknown
+  Future<List<ChapterBookmarkModel>> _enrichBookmarks(
+      List<ChapterBookmarkModel> bookmarks) async {
+    try {
+      // Try to get BookController to fetch book information
+      try {
+        final bookController = Get.find<BookController>();
+
+        final enrichedBookmarks = bookmarks.map((bookmark) {
+          if (bookmark.bookTitle == 'Unknown') {
+            // Try to find the book in the BookController's books
+            try {
+              // Access all books from the controller
+              final allBooks = bookController.books;
+              BookModel? foundBook;
+
+              for (final book in allBooks) {
+                if (book.id == bookmark.bookId) {
+                  foundBook = book;
+                  break;
+                }
+              }
+
+              if (foundBook != null && foundBook.title != null) {
+                // Create a new bookmark with the correct title
+                return ChapterBookmarkModel(
+                  id: bookmark.id,
+                  bookId: bookmark.bookId,
+                  bookTitle: foundBook.title,
+                  bookCoverImage: foundBook.coverImage,
+                  chapterId: bookmark.chapterId,
+                  chapterTitle: bookmark.chapterTitle,
+                  chapterIndex: bookmark.chapterIndex,
+                  createdAt: bookmark.createdAt,
+                );
+              }
+            } catch (e) {
+              AppLogger.w('Could not find book ${bookmark.bookId}', e);
+            }
+          }
+          return bookmark;
+        }).toList();
+
+        return enrichedBookmarks;
+      } catch (e) {
+        AppLogger.w('BookController not available for enrichment', e);
+        return bookmarks;
+      }
+    } catch (e) {
+      AppLogger.e('Error enriching bookmarks', e);
+      return bookmarks;
     }
   }
 }

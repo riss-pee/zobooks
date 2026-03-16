@@ -60,12 +60,14 @@ class _LibraryViewState extends State<LibraryView> {
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 const SizedBox(height: 8),
-                TextButton(
-                  onPressed: () {
-                    // Could implement navigation to home here, but usually tab switching is handled by the parent
-                  },
-                  child: const Text('Go explore books'),
-                ),
+                Obx(() {
+                  return TextButton(
+                    onPressed: () {
+                      // Could implement navigation to home here, but usually tab switching is handled by the parent
+                    },
+                    child: Text(languageController.translate('explore_books')),
+                  );
+                }),
               ],
             ),
           );
