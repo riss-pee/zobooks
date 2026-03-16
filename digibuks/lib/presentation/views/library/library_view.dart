@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../controllers/book_controller.dart';
+import '../../controllers/language_controller.dart';
 import '../../../core/constants/app_constants.dart';
 
 class LibraryView extends StatefulWidget {
@@ -24,10 +25,17 @@ class _LibraryViewState extends State<LibraryView> {
   @override
   Widget build(BuildContext context) {
     final bookController = Get.find<BookController>();
+    final languageController = Get.find<LanguageController>();
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Library'),
+        title: Obx(
+          () {
+            // Access language observable to make GetX listen
+            languageController.language;
+            return Text(languageController.translate('my_library'));
+          },
+        ),
       ),
       body: Obx(() {
         if (bookController.isLoadingLibrary) {
@@ -54,7 +62,7 @@ class _LibraryViewState extends State<LibraryView> {
                 const SizedBox(height: 8),
                 TextButton(
                   onPressed: () {
-                     // Could implement navigation to home here, but usually tab switching is handled by the parent
+                    // Could implement navigation to home here, but usually tab switching is handled by the parent
                   },
                   child: const Text('Go explore books'),
                 ),
@@ -100,27 +108,37 @@ class _LibraryViewState extends State<LibraryView> {
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(12),
-                        child: book.coverImage != null && book.coverImage!.isNotEmpty
+                        child: book.coverImage != null &&
+                                book.coverImage!.isNotEmpty
                             ? CachedNetworkImage(
                                 imageUrl: book.coverImage!,
                                 fit: BoxFit.cover,
                                 placeholder: (context, url) => Container(
-                                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .surfaceContainerHighest,
                                   child: const Center(
-                                    child: Icon(Icons.book, size: 40, color: Colors.grey),
+                                    child: Icon(Icons.book,
+                                        size: 40, color: Colors.grey),
                                   ),
                                 ),
                                 errorWidget: (context, url, error) => Container(
-                                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .surfaceContainerHighest,
                                   child: const Center(
-                                    child: Icon(Icons.broken_image, size: 40, color: Colors.grey),
+                                    child: Icon(Icons.broken_image,
+                                        size: 40, color: Colors.grey),
                                   ),
                                 ),
                               )
                             : Container(
-                                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .surfaceContainerHighest,
                                 child: const Center(
-                                  child: Icon(Icons.book, size: 40, color: Colors.grey),
+                                  child: Icon(Icons.book,
+                                      size: 40, color: Colors.grey),
                                 ),
                               ),
                       ),
@@ -136,12 +154,14 @@ class _LibraryViewState extends State<LibraryView> {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  if (book.authorName != null && book.authorName!.isNotEmpty) ...[
+                  if (book.authorName != null &&
+                      book.authorName!.isNotEmpty) ...[
                     const SizedBox(height: 2),
                     Text(
                       book.authorName!,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
                             fontSize: 11,
                           ),
                       maxLines: 1,

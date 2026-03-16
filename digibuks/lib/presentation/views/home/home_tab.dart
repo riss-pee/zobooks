@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/book_controller.dart';
 import '../../controllers/auth_controller.dart';
+import '../../controllers/language_controller.dart';
 import '../../../data/models/grouped_books_model.dart';
 import '../../../data/models/book_model.dart';
 import 'home_controller.dart';
@@ -111,37 +112,49 @@ class _HomeTabState extends State<HomeTab> {
                                 ],
                               ),
                               const SizedBox(height: 32),
-                              
+
                               // Removed Search Bar and Categories per user request
                             ],
                           ),
                         ),
                       ),
-                      
+
                       const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
                       // 2. Trending Books Section (New)
                       Obx(() {
                         if (homeController.trendingBooks.isEmpty) {
-                          return const SliverToBoxAdapter(child: SizedBox.shrink());
+                          return const SliverToBoxAdapter(
+                              child: SizedBox.shrink());
                         }
-                        
+
+                        final languageController =
+                            Get.find<LanguageController>();
+                        // Access observable to make GetX listen
+                        languageController.language;
                         return SliverMainAxisGroup(
                           slivers: [
                             SliverToBoxAdapter(
-                              child: _buildSectionHeader(context, 'Trending Now', () {}),
+                              child: _buildSectionHeader(
+                                  context,
+                                  languageController.translate('trending_now'),
+                                  () {}),
                             ),
                             SliverToBoxAdapter(
                               child: SizedBox(
                                 height: 260,
                                 child: ListView.separated(
-                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 20, vertical: 8),
                                   scrollDirection: Axis.horizontal,
-                                  itemCount: homeController.trendingBooks.length,
-                                  separatorBuilder: (_, __) => const SizedBox(width: 16),
+                                  itemCount:
+                                      homeController.trendingBooks.length,
+                                  separatorBuilder: (_, __) =>
+                                      const SizedBox(width: 16),
                                   itemBuilder: (context, index) {
-                                    final book = homeController.trendingBooks[index];
-                                    
+                                    final book =
+                                        homeController.trendingBooks[index];
+
                                     final summaryBook = BookSummaryModel(
                                       id: book.id,
                                       title: book.title,
@@ -150,16 +163,18 @@ class _HomeTabState extends State<HomeTab> {
                                       price: book.price,
                                       isFree: book.isFree,
                                     );
-                                    
+
                                     return SizedBox(
                                       width: 120,
-                                      child: _buildBookSummaryCard(context, summaryBook),
+                                      child: _buildBookSummaryCard(
+                                          context, summaryBook),
                                     );
                                   },
                                 ),
                               ),
                             ),
-                            const SliverToBoxAdapter(child: SizedBox(height: 12)),
+                            const SliverToBoxAdapter(
+                                child: SizedBox(height: 12)),
                           ],
                         );
                       }),
@@ -220,44 +235,57 @@ class _HomeTabState extends State<HomeTab> {
                       ],
 
                       // 4. Dynamic Categories from API
-                      ...homeController.groupedBooks.map((group) {
-                        if (group.books.isEmpty)
-                          return const SliverToBoxAdapter(
-                              child: SizedBox.shrink());
+                      Obx(() {
+                        final languageController =
+                            Get.find<LanguageController>();
+                        // Access observable to make GetX listen
+                        languageController.language;
 
-                        return SliverMainAxisGroup(
-                          slivers: [
-                            SliverToBoxAdapter(
-                              child: _buildSectionHeader(
-                                  context, group.category, () {}),
-                            ),
-                            SliverToBoxAdapter(
-                              child: SizedBox(
-                                height: 260,
-                                child: ListView.separated(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 20, vertical: 8),
-                                  scrollDirection: Axis.horizontal,
-                                  itemCount: group.books.length,
-                                  separatorBuilder: (_, __) =>
-                                      const SizedBox(width: 16),
-                                  itemBuilder: (context, index) {
-                                     final book = group.books[index];
-                                     // Create an interim BookModel to reuse BookCard formatting, 
-                                     // or properly update BookCard.
-                                     // For simplicity, converting BookSummaryModel to dynamic to pass to Get arguments or UI correctly
-                                     return SizedBox(
-                                       width: 120,
-                                       child: _buildBookSummaryCard(context, book),
-                                     );
-                                  },
-                                ),
-                              ),
-                            ),
-                            const SliverToBoxAdapter(child: SizedBox(height: 12)),
-                          ],
+                        return SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                            (context, groupIndex) {
+                              final group =
+                                  homeController.groupedBooks[groupIndex];
+                              if (group.books.isEmpty)
+                                return const SizedBox.shrink();
+
+                              return Column(
+                                children: [
+                                  SizedBox(
+                                    child: _buildSectionHeader(
+                                      context,
+                                      _translateCategory(
+                                          group.category, languageController),
+                                      () {},
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    height: 260,
+                                    child: ListView.separated(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 20, vertical: 8),
+                                      scrollDirection: Axis.horizontal,
+                                      itemCount: group.books.length,
+                                      separatorBuilder: (_, __) =>
+                                          const SizedBox(width: 16),
+                                      itemBuilder: (context, index) {
+                                        final book = group.books[index];
+                                        return SizedBox(
+                                          width: 120,
+                                          child: _buildBookSummaryCard(
+                                              context, book),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                ],
+                              );
+                            },
+                            childCount: homeController.groupedBooks.length,
+                          ),
                         );
-                      }).toList(),
+                      }),
 
                       // Bottom padding for safer scrolling above navbar
                       const SliverToBoxAdapter(child: SizedBox(height: 120)),
@@ -286,9 +314,11 @@ class _HomeTabState extends State<HomeTab> {
           authorName: book.authors.isNotEmpty ? book.authors.first : 'Unknown',
           authorId: 'unknown',
           price: book.price,
-          fileType: 'pdf', 
+          fileType: 'pdf',
           language: book.language,
-          type: book.isFree ? AppConstants.bookTypeFree : AppConstants.bookTypePurchase,
+          type: book.isFree
+              ? AppConstants.bookTypeFree
+              : AppConstants.bookTypePurchase,
         );
         Get.toNamed(AppConstants.bookDetailRoute, arguments: mockBook);
       },
@@ -404,7 +434,9 @@ class _HomeTabState extends State<HomeTab> {
           price: book.price,
           fileType: 'pdf', // Default placeholder
           language: 'english', // Default placeholder
-          type: book.isFree ? AppConstants.bookTypeFree : AppConstants.bookTypePurchase,
+          type: book.isFree
+              ? AppConstants.bookTypeFree
+              : AppConstants.bookTypePurchase,
         );
         Get.toNamed(AppConstants.bookDetailRoute, arguments: mockBook);
       },
@@ -420,7 +452,8 @@ class _HomeTabState extends State<HomeTab> {
                 color: Theme.of(context).colorScheme.surfaceContainerHighest,
                 boxShadow: [
                   BoxShadow(
-                    color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                    color:
+                        Theme.of(context).colorScheme.primary.withOpacity(0.2),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -643,6 +676,23 @@ class _HomeTabState extends State<HomeTab> {
         ),
       ),
     );
+  }
+
+  String _translateCategory(
+      String category, LanguageController languageController) {
+    final categoryKey = category.toLowerCase();
+    // Try to translate if key exists in AppStrings, otherwise return original
+    const categoryTranslations = {
+      'history': 'history',
+      'horror': 'horror',
+      'novel': 'novel',
+    };
+
+    final key = categoryTranslations[categoryKey];
+    if (key != null) {
+      return languageController.translate(key);
+    }
+    return category; // Return original if no translation found
   }
 
   Widget _buildFilterChip(
