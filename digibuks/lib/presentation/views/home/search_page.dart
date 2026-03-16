@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/book_controller.dart';
+import '../../controllers/language_controller.dart';
 import '../../widgets/book_card.dart';
 import '../../widgets/search_bar.dart';
 import '../../../core/constants/app_constants.dart';
@@ -32,7 +33,8 @@ class _SearchPageState extends State<SearchPage> {
     });
 
     _gridScrollController.addListener(() {
-      if (_gridScrollController.position.pixels >= _gridScrollController.position.maxScrollExtent - 200) {
+      if (_gridScrollController.position.pixels >=
+          _gridScrollController.position.maxScrollExtent - 200) {
         Get.find<BookController>().loadMoreBooks();
       }
     });
@@ -57,6 +59,7 @@ class _SearchPageState extends State<SearchPage> {
   @override
   Widget build(BuildContext context) {
     final bookController = Get.find<BookController>();
+    final languageController = Get.find<LanguageController>();
 
     return SafeArea(
       child: Padding(
@@ -65,13 +68,17 @@ class _SearchPageState extends State<SearchPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 20),
-            Text(
-              'Explore Books',
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-            ),
+            Obx(() {
+              // Access language observable to make GetX listen
+              languageController.language;
+              return Text(
+                languageController.translate('explore_books'),
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+              );
+            }),
             const SizedBox(height: 20),
 
             // 1. Search Bar
@@ -87,11 +94,13 @@ class _SearchPageState extends State<SearchPage> {
               if (bookController.isCategoriesLoading) {
                 return const SizedBox(
                   height: 40,
-                  child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                  child:
+                      Center(child: CircularProgressIndicator(strokeWidth: 2)),
                 );
               }
               final categories = bookController.categories;
-              final currentGenre = bookController.selectedGenre; // MUST be accessed synchronously to track state
+              final currentGenre = bookController
+                  .selectedGenre; // MUST be accessed synchronously to track state
 
               return SizedBox(
                 height: 40,
@@ -99,32 +108,42 @@ class _SearchPageState extends State<SearchPage> {
                   controller: _categoryScrollController,
                   scrollDirection: Axis.horizontal,
                   itemCount: categories.length + 1, // +1 for "All"
-                  separatorBuilder: (context, index) => const SizedBox(width: 8),
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(width: 8),
                   itemBuilder: (context, index) {
                     final isAll = index == 0;
-                    final categoryLabel = isAll ? 'All' : categories[index - 1].name;
-                    final isSelected = currentGenre == categoryLabel || 
-                                      (isAll && currentGenre.isEmpty);
+                    final categoryLabel =
+                        isAll ? 'All' : categories[index - 1].name;
+                    final isSelected = currentGenre == categoryLabel ||
+                        (isAll && currentGenre.isEmpty);
 
                     return GestureDetector(
                       onTap: () {
                         // Unfocus keyboard when tapping a category
                         FocusScope.of(context).unfocus();
-                        bookController.filterByGenre(isAll ? '' : categoryLabel);
+                        bookController
+                            .filterByGenre(isAll ? '' : categoryLabel);
                         // Clear search text if desired, or keep it to search within category
                         // _searchController.clear();
                       },
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
                         decoration: BoxDecoration(
                           color: isSelected
                               ? Theme.of(context).colorScheme.primary
-                              : Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha(100),
+                              : Theme.of(context)
+                                  .colorScheme
+                                  .surfaceContainerHighest
+                                  .withAlpha(100),
                           borderRadius: BorderRadius.circular(20),
                           border: isSelected
                               ? null
-                              : Border.all(color: Theme.of(context).dividerColor.withAlpha(50)),
+                              : Border.all(
+                                  color: Theme.of(context)
+                                      .dividerColor
+                                      .withAlpha(50)),
                         ),
                         alignment: Alignment.center,
                         child: Text(
@@ -132,8 +151,11 @@ class _SearchPageState extends State<SearchPage> {
                           style: TextStyle(
                             color: isSelected
                                 ? Theme.of(context).colorScheme.onPrimary
-                                : Theme.of(context).colorScheme.onSurfaceVariant,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                                : Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
+                            fontWeight:
+                                isSelected ? FontWeight.bold : FontWeight.w600,
                             fontSize: 14,
                           ),
                         ),
@@ -151,22 +173,31 @@ class _SearchPageState extends State<SearchPage> {
                 if (bookController.isLoading) {
                   return const Center(child: CircularProgressIndicator());
                 }
-                
+
                 // Using bookController.filteredBooks will use the already updated _books
-                final books = bookController.filteredBooks; 
-                
+                final books = bookController.filteredBooks;
+
                 if (books.isEmpty) {
                   return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.search_off_rounded, size: 64, color: Theme.of(context).colorScheme.onSurface.withAlpha(100)),
+                        Icon(Icons.search_off_rounded,
+                            size: 64,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withAlpha(100)),
                         const SizedBox(height: 16),
                         Text(
                           'No books found',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurface.withAlpha(150),
-                          ),
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withAlpha(150),
+                                  ),
                         ),
                       ],
                     ),
@@ -175,10 +206,12 @@ class _SearchPageState extends State<SearchPage> {
                 return GridView.builder(
                   controller: _gridScrollController,
                   padding: const EdgeInsets.only(bottom: 150),
-                  itemCount: books.length + (bookController.isLoadingMore ? 1 : 0),
+                  itemCount:
+                      books.length + (bookController.isLoadingMore ? 1 : 0),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 3,
-                    childAspectRatio: 0.42, // Adjusted to fix bottom overflow (width / totalHeight)
+                    childAspectRatio:
+                        0.42, // Adjusted to fix bottom overflow (width / totalHeight)
                     mainAxisSpacing: 16,
                     crossAxisSpacing: 12,
                   ),

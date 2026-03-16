@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../controllers/bookmarks_controller.dart';
 import '../../controllers/book_controller.dart';
+import '../../controllers/language_controller.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/utils/snackbar_helper.dart';
 import '../../../data/models/book_model.dart';
@@ -25,9 +26,14 @@ class _BookmarksViewState extends State<BookmarksView> {
 
   @override
   Widget build(BuildContext context) {
+    final languageController = Get.find<LanguageController>();
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Bookmarks'),
+        title: Obx(() {
+          languageController.language;
+          return Text(languageController.translate('bookmarks'));
+        }),
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
@@ -85,11 +91,14 @@ class _BookmarksViewState extends State<BookmarksView> {
                       ),
                 ),
                 const SizedBox(height: 24),
-                ElevatedButton.icon(
-                  onPressed: () => Get.offNamed(AppConstants.homeRoute),
-                  icon: const Icon(Icons.explore_rounded),
-                  label: const Text('Explore Books'),
-                ),
+                Obx(() {
+                  final languageController = Get.find<LanguageController>();
+                  return ElevatedButton.icon(
+                    onPressed: () => Get.offNamed(AppConstants.homeRoute),
+                    icon: const Icon(Icons.explore_rounded),
+                    label: Text(languageController.translate('explore_books')),
+                  );
+                }),
               ],
             ),
           );

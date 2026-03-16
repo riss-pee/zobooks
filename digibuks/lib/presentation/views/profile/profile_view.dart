@@ -285,7 +285,7 @@ class _ProfileViewState extends State<ProfileView> {
                       _buildMenuItem(
                         context,
                         Icons.bookmark_rounded,
-                        'Bookmarks',
+                        languageController.translate('bookmarks'),
                         () => Get.toNamed(AppConstants.bookmarksRoute),
                       ),
                     ],

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/auth_controller.dart';
+import '../../controllers/language_controller.dart';
 import '../../../core/utils/snackbar_helper.dart';
 
 class EditProfileView extends StatefulWidget {
@@ -30,11 +31,16 @@ class _EditProfileViewState extends State<EditProfileView> {
     final profile = _authController.userProfile;
     final user = _authController.currentUser;
 
-    _usernameController = TextEditingController(text: profile?.username ?? user?.name ?? '');
-    _firstNameController = TextEditingController(text: profile?.firstName ?? '');
+    _usernameController =
+        TextEditingController(text: profile?.username ?? user?.name ?? '');
+    _firstNameController =
+        TextEditingController(text: profile?.firstName ?? '');
     _lastNameController = TextEditingController(text: profile?.lastName ?? '');
-    _phoneController = TextEditingController(text: profile?.phone ?? user?.phone ?? '');
-    _bioController = TextEditingController(text: profile?.bio ?? ''); // bio is usually handled, we'll pass an empty string if null
+    _phoneController =
+        TextEditingController(text: profile?.phone ?? user?.phone ?? '');
+    _bioController = TextEditingController(
+        text: profile?.bio ??
+            ''); // bio is usually handled, we'll pass an empty string if null
     _dobController = TextEditingController(text: profile?.dob ?? '');
     _genderController = TextEditingController(text: profile?.gender ?? '');
   }
@@ -60,20 +66,28 @@ class _EditProfileViewState extends State<EditProfileView> {
 
     try {
       final data = {
-        if (_usernameController.text.isNotEmpty) 'username': _usernameController.text.trim(),
-        if (_firstNameController.text.isNotEmpty) 'first_name': _firstNameController.text.trim(),
-        if (_lastNameController.text.isNotEmpty) 'last_name': _lastNameController.text.trim(),
-        if (_phoneController.text.isNotEmpty) 'phone': _phoneController.text.trim(),
+        if (_usernameController.text.isNotEmpty)
+          'username': _usernameController.text.trim(),
+        if (_firstNameController.text.isNotEmpty)
+          'first_name': _firstNameController.text.trim(),
+        if (_lastNameController.text.isNotEmpty)
+          'last_name': _lastNameController.text.trim(),
+        if (_phoneController.text.isNotEmpty)
+          'phone': _phoneController.text.trim(),
         if (_bioController.text.isNotEmpty) 'bio': _bioController.text.trim(),
-        if (_dobController.text.isNotEmpty) 'date_of_birth': _dobController.text.trim(),
-        if (_genderController.text.isNotEmpty) 'gender': _genderController.text.trim(),
+        if (_dobController.text.isNotEmpty)
+          'date_of_birth': _dobController.text.trim(),
+        if (_genderController.text.isNotEmpty)
+          'gender': _genderController.text.trim(),
       };
 
       await _authController.updateUserProfile(data);
-      showSnackSafe('Success', 'Profile updated successfully', snackPosition: SnackPosition.BOTTOM);
+      showSnackSafe('Success', 'Profile updated successfully',
+          snackPosition: SnackPosition.BOTTOM);
       Get.back();
     } catch (e) {
-      showSnackSafe('Error', 'Failed to update profile: $e', snackPosition: SnackPosition.BOTTOM);
+      showSnackSafe('Error', 'Failed to update profile: $e',
+          snackPosition: SnackPosition.BOTTOM);
     } finally {
       if (mounted) {
         setState(() {
@@ -85,9 +99,14 @@ class _EditProfileViewState extends State<EditProfileView> {
 
   @override
   Widget build(BuildContext context) {
+    final languageController = Get.find<LanguageController>();
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Edit Profile'),
+        title: Obx(() {
+          languageController.language;
+          return Text(languageController.translate('edit_profile'));
+        }),
         actions: [
           if (_isLoading)
             const Center(
@@ -114,71 +133,93 @@ class _EditProfileViewState extends State<EditProfileView> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              TextFormField(
-                controller: _usernameController,
-                decoration: const InputDecoration(
-                  labelText: 'Username',
-                  prefixIcon: Icon(Icons.person_outline),
-                  border: OutlineInputBorder(),
-                ),
-              ),
+              Obx(() {
+                // Access to trigger rebuild when language changes
+                languageController.language;
+                return TextFormField(
+                  controller: _usernameController,
+                  decoration: InputDecoration(
+                    labelText: languageController.translate('username'),
+                    prefixIcon: const Icon(Icons.person_outline),
+                    border: const OutlineInputBorder(),
+                  ),
+                );
+              }),
               const SizedBox(height: 16),
-              TextFormField(
-                controller: _firstNameController,
-                decoration: const InputDecoration(
-                  labelText: 'First Name',
-                  prefixIcon: Icon(Icons.badge_outlined),
-                  border: OutlineInputBorder(),
-                ),
-              ),
+              Obx(() {
+                languageController.language;
+                return TextFormField(
+                  controller: _firstNameController,
+                  decoration: InputDecoration(
+                    labelText: languageController.translate('first_name'),
+                    prefixIcon: const Icon(Icons.badge_outlined),
+                    border: const OutlineInputBorder(),
+                  ),
+                );
+              }),
               const SizedBox(height: 16),
-              TextFormField(
-                controller: _lastNameController,
-                decoration: const InputDecoration(
-                  labelText: 'Last Name',
-                  prefixIcon: Icon(Icons.badge_outlined),
-                  border: OutlineInputBorder(),
-                ),
-              ),
+              Obx(() {
+                languageController.language;
+                return TextFormField(
+                  controller: _lastNameController,
+                  decoration: InputDecoration(
+                    labelText: languageController.translate('last_name'),
+                    prefixIcon: const Icon(Icons.badge_outlined),
+                    border: const OutlineInputBorder(),
+                  ),
+                );
+              }),
               const SizedBox(height: 16),
-              TextFormField(
-                controller: _phoneController,
-                keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(
-                  labelText: 'Phone Number',
-                  prefixIcon: Icon(Icons.phone_outlined),
-                  border: OutlineInputBorder(),
-                ),
-              ),
+              Obx(() {
+                languageController.language;
+                return TextFormField(
+                  controller: _phoneController,
+                  keyboardType: TextInputType.phone,
+                  decoration: InputDecoration(
+                    labelText: languageController.translate('phone_number'),
+                    prefixIcon: const Icon(Icons.phone_outlined),
+                    border: const OutlineInputBorder(),
+                  ),
+                );
+              }),
               const SizedBox(height: 16),
-              TextFormField(
-                controller: _bioController,
-                maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: 'Bio',
-                  alignLabelWithHint: true,
-                  prefixIcon: Icon(Icons.description_outlined),
-                  border: OutlineInputBorder(),
-                ),
-              ),
+              Obx(() {
+                languageController.language;
+                return TextFormField(
+                  controller: _bioController,
+                  maxLines: 3,
+                  decoration: InputDecoration(
+                    labelText: languageController.translate('bio'),
+                    alignLabelWithHint: true,
+                    prefixIcon: const Icon(Icons.description_outlined),
+                    border: const OutlineInputBorder(),
+                  ),
+                );
+              }),
               const SizedBox(height: 16),
-              TextFormField(
-                controller: _dobController,
-                decoration: const InputDecoration(
-                  labelText: 'Date of Birth (YYYY-MM-DD)',
-                  prefixIcon: Icon(Icons.calendar_today_outlined),
-                  border: OutlineInputBorder(),
-                ),
-              ),
+              Obx(() {
+                languageController.language;
+                return TextFormField(
+                  controller: _dobController,
+                  decoration: InputDecoration(
+                    labelText: languageController.translate('date_of_birth'),
+                    prefixIcon: const Icon(Icons.calendar_today_outlined),
+                    border: const OutlineInputBorder(),
+                  ),
+                );
+              }),
               const SizedBox(height: 16),
-              TextFormField(
-                controller: _genderController,
-                decoration: const InputDecoration(
-                  labelText: 'Gender',
-                  prefixIcon: Icon(Icons.people_outlined),
-                  border: OutlineInputBorder(),
-                ),
-              ),
+              Obx(() {
+                languageController.language;
+                return TextFormField(
+                  controller: _genderController,
+                  decoration: InputDecoration(
+                    labelText: languageController.translate('gender'),
+                    prefixIcon: const Icon(Icons.people_outlined),
+                    border: const OutlineInputBorder(),
+                  ),
+                );
+              }),
               const SizedBox(height: 32),
               ElevatedButton(
                 onPressed: _isLoading ? null : _handleSave,
@@ -191,7 +232,8 @@ class _EditProfileViewState extends State<EditProfileView> {
                         width: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('Save Changes', style: TextStyle(fontSize: 16)),
+                    : const Text('Save Changes',
+                        style: TextStyle(fontSize: 16)),
               ),
             ],
           ),

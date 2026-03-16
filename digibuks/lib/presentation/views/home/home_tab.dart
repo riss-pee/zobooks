@@ -299,9 +299,10 @@ class _HomeTabState extends State<HomeTab> {
 
   String _getGreeting() {
     final hour = DateTime.now().hour;
-    if (hour < 12) return 'Good Morning,';
-    if (hour < 17) return 'Good Afternoon,';
-    return 'Good Evening,';
+    final languageController = Get.find<LanguageController>();
+    if (hour < 12) return languageController.translate('greeting_morning');
+    if (hour < 17) return languageController.translate('greeting_afternoon');
+    return languageController.translate('greeting_evening');
   }
 
   Widget _buildFeaturedCard(BuildContext context, dynamic book) {
