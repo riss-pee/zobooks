@@ -9,7 +9,6 @@ class SplashView extends StatefulWidget {
 
 class _SplashViewState extends State<SplashView>
     with SingleTickerProviderStateMixin {
-
   late AnimationController _controller;
   late Animation<double> _logoScale;
   late Animation<double> _logoFade;
@@ -71,14 +70,12 @@ class _SplashViewState extends State<SplashView>
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       backgroundColor: Colors.white,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-
             FadeTransition(
               opacity: _logoFade,
               child: ScaleTransition(
@@ -89,9 +86,8 @@ class _SplashViewState extends State<SplashView>
                 ),
               ),
             ),
-
             const SizedBox(height: 20),
-                        FadeTransition(
+            FadeTransition(
               opacity: _textFade,
               child: const Text(
                 "Zo Reads",
@@ -101,7 +97,6 @@ class _SplashViewState extends State<SplashView>
                 ),
               ),
             ),
-
             FadeTransition(
               opacity: _textFade,
               child: const Text(
@@ -112,7 +107,6 @@ class _SplashViewState extends State<SplashView>
                 ),
               ),
             ),
-
           ],
         ),
       ),

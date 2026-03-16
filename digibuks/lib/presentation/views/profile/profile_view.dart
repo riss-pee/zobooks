@@ -2,15 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/utils/snackbar_helper.dart';
 import '../../controllers/auth_controller.dart';
+import '../../controllers/language_controller.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/constants/app_strings.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../controllers/theme_controller.dart';
 import '../../widgets/glass_container.dart';
 import '../../../core/utils/snackbar_helper.dart';
 
-class ProfileView extends StatelessWidget {
+class ProfileView extends StatefulWidget {
   const ProfileView({super.key});
 
+  @override
+  State<ProfileView> createState() => _ProfileViewState();
+}
+
+class _ProfileViewState extends State<ProfileView> {
   @override
   Widget build(BuildContext context) {
     final authController = Get.find<AuthController>();
@@ -240,44 +247,50 @@ class ProfileView extends StatelessWidget {
                 const SizedBox(height: 24),
 
                 // Menu Items in Glass Containers
-                _buildGlassMenuSection(
-                  context,
-                  'Account',
-                  [
-                    _buildMenuItem(
-                      context,
-                      Icons.person_rounded,
-                      'Edit Profile',
-                      () => Get.toNamed(AppConstants.editProfileRoute),
-                    ),
-                    _buildMenuItem(
-                      context,
-                      Icons.settings_rounded,
-                      'Settings',
-                      () => _showSettingsWindow(context),
-                    ),
-                  ],
-                ),
+                Obx(() {
+                  final languageController = Get.find<LanguageController>();
+                  return _buildGlassMenuSection(
+                    context,
+                    'Account',
+                    [
+                      _buildMenuItem(
+                        context,
+                        Icons.person_rounded,
+                        languageController.translate('edit_profile'),
+                        () => Get.toNamed(AppConstants.editProfileRoute),
+                      ),
+                      _buildMenuItem(
+                        context,
+                        Icons.settings_rounded,
+                        'Settings',
+                        () => _showSettingsWindow(context),
+                      ),
+                    ],
+                  );
+                }),
                 const SizedBox(height: 16),
 
-                _buildGlassMenuSection(
-                  context,
-                  'Library',
-                  [
-                    _buildMenuItem(
-                      context,
-                      Icons.auto_stories_rounded,
-                      'My Books',
-                      () => Get.toNamed(AppConstants.libraryRoute),
-                    ),
-                    _buildMenuItem(
-                      context,
-                      Icons.bookmark_rounded,
-                      'Bookmarks',
-                      () => Get.toNamed(AppConstants.bookmarksRoute),
-                    ),
-                  ],
-                ),
+                Obx(() {
+                  final languageController = Get.find<LanguageController>();
+                  return _buildGlassMenuSection(
+                    context,
+                    'Library',
+                    [
+                      _buildMenuItem(
+                        context,
+                        Icons.auto_stories_rounded,
+                        languageController.translate('my_books'),
+                        () => Get.toNamed(AppConstants.libraryRoute),
+                      ),
+                      _buildMenuItem(
+                        context,
+                        Icons.bookmark_rounded,
+                        'Bookmarks',
+                        () => Get.toNamed(AppConstants.bookmarksRoute),
+                      ),
+                    ],
+                  );
+                }),
                 const SizedBox(height: 16),
 
                 if (user.role == AppConstants.roleAuthor) ...[
@@ -444,8 +457,7 @@ class ProfileView extends StatelessWidget {
                   const SizedBox(height: 16),
                   _buildPopupItem(context, Icons.notifications_rounded,
                       'Notifications', () {}),
-                  _buildPopupItem(
-                      context, Icons.language_rounded, 'Language', () {}),
+                  _buildLanguageDropdownSection(context),
                   const SizedBox(height: 16),
                   _buildThemeToggleSection(context),
                   const SizedBox(height: 24),
@@ -560,6 +572,82 @@ class ProfileView extends StatelessWidget {
       title: Text(title, style: Theme.of(context).textTheme.bodyMedium),
       trailing: const Icon(Icons.chevron_right_rounded, size: 20),
       onTap: onTap,
+    );
+  }
+
+  Widget _buildLanguageItem(BuildContext context) {
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Colors.white.withAlpha(30),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Icon(Icons.language_rounded, size: 20),
+      ),
+      title: const Text('Language'),
+      trailing: AnimatedRotation(
+        turns: 0,
+        duration: const Duration(milliseconds: 300),
+        child: const Icon(Icons.chevron_right_rounded, size: 20),
+      ),
+      onTap: () {},
+    );
+  }
+
+  Widget _buildLanguageDropdownSection(BuildContext context) {
+    final languageController = Get.find<LanguageController>();
+    return Padding(
+      padding: const EdgeInsets.only(left: 16, right: 16),
+      child: Obx(
+        () => Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Language',
+              style: Theme.of(context)
+                  .textTheme
+                  .titleSmall
+                  ?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white.withAlpha(30),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color:
+                      Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+                ),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: languageController.language,
+                  isExpanded: true,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  items: const [
+                    DropdownMenuItem(
+                      value: 'en',
+                      child: Text('English'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'mi',
+                      child: Text('Mizo'),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) {
+                      languageController.setLanguage(value);
+                    }
+                  },
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
