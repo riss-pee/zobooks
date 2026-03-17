@@ -341,12 +341,16 @@ class _ProfileViewState extends State<ProfileView> {
                       );
                     }),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: AppTheme.errorColor,
+                      foregroundColor: Theme.of(context).colorScheme.error,
                       padding: const EdgeInsets.symmetric(vertical: 20),
                       side: BorderSide(
-                          color: AppTheme.errorColor.withOpacity(0.3),
+                          color: Theme.of(context)
+                              .colorScheme
+                              .error
+                              .withOpacity(0.3),
                           width: 1.5),
-                      backgroundColor: AppTheme.errorColor.withOpacity(0.05),
+                      backgroundColor:
+                          Theme.of(context).colorScheme.error.withOpacity(0.05),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),
                       ),
@@ -473,15 +477,18 @@ class _ProfileViewState extends State<ProfileView> {
                   _buildThemeToggleSection(context),
                   const SizedBox(height: 24),
                   Center(
-                    child: TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: Text('Close',
-                          style: TextStyle(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurface
-                                  .withOpacity(0.6))),
-                    ),
+                    child: Obx(() {
+                      final languageController = Get.find<LanguageController>();
+                      return TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: Text(languageController.translate('close'),
+                            style: TextStyle(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurface
+                                    .withOpacity(0.6))),
+                      );
+                    }),
                   ),
                 ],
               ),
@@ -494,6 +501,7 @@ class _ProfileViewState extends State<ProfileView> {
 
   Widget _buildThemeToggleSection(BuildContext context) {
     final controller = Get.find<ThemeController>();
+    final languageController = Get.find<LanguageController>();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -505,18 +513,33 @@ class _ProfileViewState extends State<ProfileView> {
               ?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
-        Obx(() => Row(
-              children: [
-                _buildThemeToggleOption(context, ThemeMode.light, 'Light',
-                    Icons.light_mode_rounded, controller),
-                const SizedBox(width: 8),
-                _buildThemeToggleOption(context, ThemeMode.dark, 'Dark',
-                    Icons.dark_mode_rounded, controller),
-                const SizedBox(width: 8),
-                _buildThemeToggleOption(context, ThemeMode.system, 'System',
-                    Icons.brightness_auto_rounded, controller),
-              ],
-            )),
+        Obx(() {
+          languageController.language;
+          return Row(
+            children: [
+              _buildThemeToggleOption(
+                  context,
+                  ThemeMode.light,
+                  languageController.translate('theme_light'),
+                  Icons.light_mode_rounded,
+                  controller),
+              const SizedBox(width: 8),
+              _buildThemeToggleOption(
+                  context,
+                  ThemeMode.dark,
+                  languageController.translate('theme_dark'),
+                  Icons.dark_mode_rounded,
+                  controller),
+              const SizedBox(width: 8),
+              _buildThemeToggleOption(
+                  context,
+                  ThemeMode.system,
+                  languageController.translate('theme_system'),
+                  Icons.brightness_auto_rounded,
+                  controller),
+            ],
+          );
+        }),
       ],
     );
   }
@@ -729,18 +752,28 @@ class _ProfileViewState extends State<ProfileView> {
       builder: (context) => Obx(() {
         languageController.language;
         return AlertDialog(
-          title: Text(languageController.translate('logout')),
-          content: const Text('Are you sure you want to logout?'),
+          title: Text(
+            languageController.translate('logout'),
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+          ),
+          content: Text(
+            languageController.translate('logout_confirm'),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+          ),
           actions: [
             TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel')),
+                child: Text(languageController.translate('cancel'))),
             TextButton(
               onPressed: () {
                 Navigator.pop(context);
                 authController.logout();
               },
-              child: Text(languageController.translate('logout')),
+              child: Text(languageController.translate('logout_button')),
             ),
           ],
         );
