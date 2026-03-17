@@ -17,7 +17,7 @@ class _ResetPasswordViewState extends State<ResetPasswordView> {
   final _confirmPasswordController = TextEditingController();
   final _obscurePassword = true.obs;
   final _obscureConfirmPassword = true.obs;
-  
+
   late final AuthController _authController;
   String username = '';
 
@@ -25,7 +25,7 @@ class _ResetPasswordViewState extends State<ResetPasswordView> {
   void initState() {
     super.initState();
     _authController = Get.find<AuthController>();
-    
+
     final args = Get.arguments as Map<String, dynamic>?;
     if (args != null) {
       username = args['username'] ?? '';
@@ -67,21 +67,25 @@ class _ResetPasswordViewState extends State<ResetPasswordView> {
       appBar: AppBar(
         title: const Text('Reset Password'),
       ),
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topRight,
-            end: Alignment.bottomLeft,
-            colors: [
-              Color(0xFFF5F5F5),
-              Color(0xFFEEEEEE),
-              Color(0xFFE0E0E0),
-            ],
+      body: SafeArea(
+        child: Container(
+          width: double.infinity,
+          height: double.infinity,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
+              colors: Theme.of(context).brightness == Brightness.dark
+                  ? [
+                      Theme.of(context).scaffoldBackgroundColor,
+                      Theme.of(context).colorScheme.surface,
+                    ]
+                  : [
+                      Theme.of(context).scaffoldBackgroundColor,
+                      Theme.of(context).colorScheme.surface,
+                    ],
+            ),
           ),
-        ),
-        child: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24.0),
             child: Form(
@@ -143,8 +147,8 @@ class _ResetPasswordViewState extends State<ResetPasswordView> {
                                 ? Icons.visibility_outlined
                                 : Icons.visibility_off_outlined,
                           ),
-                          onPressed: () => _obscurePassword.value =
-                              !_obscurePassword.value,
+                          onPressed: () =>
+                              _obscurePassword.value = !_obscurePassword.value,
                         ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -199,7 +203,8 @@ class _ResetPasswordViewState extends State<ResetPasswordView> {
                               width: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(Colors.white),
                               ),
                             )
                           : const Text(
