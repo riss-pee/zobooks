@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/auth_controller.dart';
+import '../../controllers/language_controller.dart';
 import '../../../core/utils/validators.dart';
 
 class ResetPasswordView extends StatefulWidget {
@@ -63,9 +64,13 @@ class _ResetPasswordViewState extends State<ResetPasswordView> {
 
   @override
   Widget build(BuildContext context) {
+    final languageController = Get.find<LanguageController>();
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Reset Password'),
+        title: Obx(() {
+          languageController.language;
+          return Text(languageController.translate('reset_your_password'));
+        }),
       ),
       body: SafeArea(
         child: Container(
@@ -88,137 +93,145 @@ class _ResetPasswordViewState extends State<ResetPasswordView> {
           ),
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24.0),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: 20),
-                  Text(
-                    'Create New Password',
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Enter the verification code sent to your email and your new password.',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 32),
-                  // OTP Field
-                  TextFormField(
-                    controller: _otpController,
-                    keyboardType: TextInputType.number,
-                    textInputAction: TextInputAction.next,
-                    maxLength: 6,
-                    decoration: InputDecoration(
-                      labelText: 'Verification Code',
-                      hintText: 'Enter 6-digit code',
-                      prefixIcon: const Icon(Icons.pin_outlined),
-                      counterText: '',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+            child: Obx(() {
+              languageController.language;
+              return Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const SizedBox(height: 20),
+                    Text(
+                      languageController.translate('reset_your_password'),
+                      style:
+                          Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                      textAlign: TextAlign.center,
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty || value.length != 6) {
-                        return 'Please enter the 6-digit code';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 20),
-                  // Password Field
-                  Obx(
-                    () => TextFormField(
-                      controller: _passwordController,
-                      obscureText: _obscurePassword.value,
+                    const SizedBox(height: 8),
+                    Text(
+                      languageController.translate('reset_password_desc'),
+                      style: Theme.of(context).textTheme.bodyMedium,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 32),
+                    // OTP Field
+                    TextFormField(
+                      controller: _otpController,
+                      keyboardType: TextInputType.number,
                       textInputAction: TextInputAction.next,
+                      maxLength: 6,
                       decoration: InputDecoration(
-                        labelText: 'New Password',
-                        hintText: 'Enter new password',
-                        prefixIcon: const Icon(Icons.lock_outlined),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscurePassword.value
-                                ? Icons.visibility_outlined
-                                : Icons.visibility_off_outlined,
-                          ),
-                          onPressed: () =>
-                              _obscurePassword.value = !_obscurePassword.value,
-                        ),
+                        labelText: 'Verification Code',
+                        hintText: 'Enter 6-digit code',
+                        prefixIcon: const Icon(Icons.pin_outlined),
+                        counterText: '',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      validator: Validators.validatePassword,
+                      validator: (value) {
+                        if (value == null ||
+                            value.isEmpty ||
+                            value.length != 6) {
+                          return 'Please enter the 6-digit code';
+                        }
+                        return null;
+                      },
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  // Confirm Password Field
-                  Obx(
-                    () => TextFormField(
-                      controller: _confirmPasswordController,
-                      obscureText: _obscureConfirmPassword.value,
-                      textInputAction: TextInputAction.done,
-                      onFieldSubmitted: (_) => _handleReset(),
-                      decoration: InputDecoration(
-                        labelText: 'Confirm New Password',
-                        hintText: 'Re-enter new password',
-                        prefixIcon: const Icon(Icons.lock_outlined),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscureConfirmPassword.value
-                                ? Icons.visibility_outlined
-                                : Icons.visibility_off_outlined,
-                          ),
-                          onPressed: () => _obscureConfirmPassword.value =
-                              !_obscureConfirmPassword.value,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      validator: _validateConfirmPassword,
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-                  // Reset Button
-                  Obx(
-                    () => ElevatedButton(
-                      onPressed:
-                          _authController.isLoading ? null : _handleReset,
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: _authController.isLoading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor:
-                                    AlwaysStoppedAnimation<Color>(Colors.white),
-                              ),
-                            )
-                          : const Text(
-                              'Reset Password',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
+                    const SizedBox(height: 20),
+                    // Password Field
+                    Obx(
+                      () => TextFormField(
+                        controller: _passwordController,
+                        obscureText: _obscurePassword.value,
+                        textInputAction: TextInputAction.next,
+                        decoration: InputDecoration(
+                          labelText: languageController.translate('password'),
+                          hintText: 'Enter new password',
+                          prefixIcon: const Icon(Icons.lock_outlined),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword.value
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
                             ),
+                            onPressed: () => _obscurePassword.value =
+                                !_obscurePassword.value,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        validator: Validators.validatePassword,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ),
+                    const SizedBox(height: 20),
+                    // Confirm Password Field
+                    Obx(
+                      () => TextFormField(
+                        controller: _confirmPasswordController,
+                        obscureText: _obscureConfirmPassword.value,
+                        textInputAction: TextInputAction.done,
+                        onFieldSubmitted: (_) => _handleReset(),
+                        decoration: InputDecoration(
+                          labelText:
+                              languageController.translate('confirm_password'),
+                          hintText: 'Re-enter new password',
+                          prefixIcon: const Icon(Icons.lock_outlined),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscureConfirmPassword.value
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
+                            ),
+                            onPressed: () => _obscureConfirmPassword.value =
+                                !_obscureConfirmPassword.value,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        validator: _validateConfirmPassword,
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    // Reset Button
+                    Obx(
+                      () => ElevatedButton(
+                        onPressed:
+                            _authController.isLoading ? null : _handleReset,
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: _authController.isLoading
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white),
+                                ),
+                              )
+                            : Text(
+                                languageController
+                                    .translate('reset_your_password'),
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
           ),
         ),
       ),
