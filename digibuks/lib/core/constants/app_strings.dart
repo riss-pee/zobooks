@@ -48,6 +48,17 @@ class AppStrings {
     'bio': 'Bio',
     'date_of_birth': 'Date of Birth (YYYY-MM-DD)',
     'gender': 'Gender',
+
+    // Theme
+    'theme_light': 'Light',
+    'theme_dark': 'Dark',
+    'theme_system': 'System',
+
+    // Logout
+    'logout_confirm': 'Are you sure you want to logout?',
+    'cancel': 'Cancel',
+    'logout_button': 'Logout',
+    'close': 'Close',
   };
 
   // Mizo strings
@@ -72,7 +83,7 @@ class AppStrings {
     'already_have_account': 'Account i nei tawh em?',
 
     // Profile Page
-    'edit_profile': 'Profile Siamṭhatna',
+    'edit_profile': 'Profile Siamthatna',
     'my_books': 'Ka Lehkhabu Te',
     'bookmarks': 'Chhinchhiahte',
     'logout': 'Chhuahna',
@@ -91,7 +102,7 @@ class AppStrings {
     'novel': 'Thawnthu Thui',
 
     // Library Page
-    'my_library': 'Lehkhabu Lei te',
+    'my_library': 'Lehkhabu Leite',
 
     // Edit Profile Fields
     'first_name': 'Hming hmasa',
@@ -99,6 +110,17 @@ class AppStrings {
     'bio': 'I Chanchin',
     'date_of_birth': 'Pian ni',
     'gender': 'Gender',
+
+    // Theme
+    'theme_light': 'Eng',
+    'theme_dark': 'Thim',
+    'theme_system': 'System',
+
+    // Logout
+    'logout_confirm': 'I chhuak duh tak tak em?',
+    'cancel': 'Duh lo',
+    'logout_button': 'Duh e',
+    'close': 'Khárna',
   };
 
   static String get(String key, String languageCode) {

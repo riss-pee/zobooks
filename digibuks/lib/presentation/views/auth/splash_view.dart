@@ -70,8 +70,11 @@ class _SplashViewState extends State<SplashView>
 
   @override
   Widget build(BuildContext context) {
+    final textColor =
+        Theme.of(context).textTheme.displayMedium?.color ?? Colors.black;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -89,21 +92,23 @@ class _SplashViewState extends State<SplashView>
             const SizedBox(height: 20),
             FadeTransition(
               opacity: _textFade,
-              child: const Text(
+              child: Text(
                 "Zo Reads",
                 style: TextStyle(
                   fontSize: 30,
                   letterSpacing: 1.5,
+                  color: textColor,
                 ),
               ),
             ),
             FadeTransition(
               opacity: _textFade,
-              child: const Text(
+              child: Text(
                 "Mizo e-Book Platform",
                 style: TextStyle(
                   fontSize: 16,
                   letterSpacing: 1.5,
+                  color: textColor,
                 ),
               ),
             ),
