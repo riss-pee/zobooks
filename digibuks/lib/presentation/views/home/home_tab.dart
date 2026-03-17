@@ -6,9 +6,7 @@ import '../../controllers/language_controller.dart';
 import '../../../data/models/grouped_books_model.dart';
 import '../../../data/models/book_model.dart';
 import 'home_controller.dart';
-import '../../widgets/book_card.dart';
 import '../../widgets/loading_shimmer.dart';
-import '../../widgets/search_bar.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/utils/snackbar_helper.dart';
 
@@ -179,60 +177,78 @@ class _HomeTabState extends State<HomeTab> {
                         );
                       }),
 
-                      // 3. Featured Section
-                      if (bookController.featuredBooks.isNotEmpty) ...[
-                        SliverToBoxAdapter(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 8),
-                            child: Text(
-                              'Trending Now',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleLarge
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                      // 3. Latest Published Books Carousel Section
+                      Obx(() {
+                        if (homeController.latestPublishedBooks.isEmpty) {
+                          return const SliverToBoxAdapter(
+                              child: SizedBox.shrink());
+                        }
+                        final languageController =
+                            Get.find<LanguageController>();
+                        // Access observable to make GetX listen
+                        languageController.language;
+                        return SliverMainAxisGroup(
+                          slivers: [
+                            SliverToBoxAdapter(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 20, vertical: 8),
+                                child: Text(
+                                  languageController
+                                      .translate('latest_published'),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleLarge
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
-                        SliverToBoxAdapter(
-                          child: SizedBox(
-                            height: 220,
-                            child: PageView.builder(
-                              controller: _featuredController,
-                              itemCount: bookController.featuredBooks.length,
-                              onPageChanged: (p) =>
-                                  setState(() => _featuredIndex = p),
-                              itemBuilder: (context, index) {
-                                final book =
-                                    bookController.featuredBooks[index];
-                                final active = index == _featuredIndex;
-                                return AnimatedContainer(
-                                  duration: const Duration(milliseconds: 300),
-                                  curve: Curves.easeOut,
-                                  margin: EdgeInsets.symmetric(
-                                      horizontal: 8, vertical: active ? 0 : 16),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(20),
-                                    boxShadow: active
-                                        ? [
-                                            BoxShadow(
-                                                color:
-                                                    Colors.black.withAlpha(50),
-                                                blurRadius: 15,
-                                                offset: const Offset(0, 10))
-                                          ]
-                                        : [],
-                                  ),
-                                  child: _buildFeaturedCard(context, book),
-                                );
-                              },
+                            SliverToBoxAdapter(
+                              child: SizedBox(
+                                height: 220,
+                                child: PageView.builder(
+                                  controller: _featuredController,
+                                  itemCount: homeController
+                                      .latestPublishedBooks.length,
+                                  onPageChanged: (p) =>
+                                      setState(() => _featuredIndex = p),
+                                  itemBuilder: (context, index) {
+                                    final book = homeController
+                                        .latestPublishedBooks[index];
+                                    final active = index == _featuredIndex;
+                                    return AnimatedContainer(
+                                      duration:
+                                          const Duration(milliseconds: 300),
+                                      curve: Curves.easeOut,
+                                      margin: EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: active ? 0 : 16),
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(20),
+                                        boxShadow: active
+                                            ? [
+                                                BoxShadow(
+                                                    color: Colors.black
+                                                        .withAlpha(50),
+                                                    blurRadius: 15,
+                                                    offset: const Offset(0, 10))
+                                              ]
+                                            : [],
+                                      ),
+                                      child: _buildLatestBooksCarouselCard(
+                                          context, book),
+                                    );
+                                  },
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
-                        const SliverToBoxAdapter(child: SizedBox(height: 16)),
-                      ],
+                            const SliverToBoxAdapter(
+                                child: SizedBox(height: 16)),
+                          ],
+                        );
+                      }),
 
                       // 4. Dynamic Categories from API
                       Obx(() {
@@ -423,6 +439,249 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
+  Widget _buildTrendingCarouselCard(BuildContext context, dynamic book) {
+    return GestureDetector(
+      onTap: () {
+        final mockBook = BookModel(
+          id: book.id,
+          title: book.title,
+          coverImage: book.coverUrl,
+          authorName: book.authors.isNotEmpty ? book.authors.first : 'Unknown',
+          authorId: 'unknown',
+          price: book.price,
+          fileType: 'pdf',
+          language: book.language,
+          type: book.isFree
+              ? AppConstants.bookTypeFree
+              : AppConstants.bookTypePurchase,
+        );
+        Get.toNamed(AppConstants.bookDetailRoute, arguments: mockBook);
+      },
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          // Image
+          ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: (book.coverUrl ?? '').isNotEmpty
+                ? Image.network(
+                    book.coverUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(
+                      color: Theme.of(context).colorScheme.primaryContainer,
+                      child: Center(
+                        child: Icon(Icons.menu_book,
+                            size: 50,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onPrimaryContainer),
+                      ),
+                    ),
+                  )
+                : Container(
+                    color: Theme.of(context).colorScheme.primaryContainer,
+                    child: Center(
+                      child: Icon(Icons.menu_book,
+                          size: 50,
+                          color:
+                              Theme.of(context).colorScheme.onPrimaryContainer),
+                    ),
+                  ),
+          ),
+
+          // Gradient Overlay
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.transparent,
+                  Colors.black.withAlpha(20),
+                  Colors.black.withAlpha(200),
+                ],
+                stops: const [0.4, 0.7, 1.0],
+              ),
+            ),
+          ),
+
+          // Text Content
+          Positioned(
+            left: 20,
+            right: 20,
+            bottom: 20,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Tag
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'Trending',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  book.title,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    shadows: [
+                      const Shadow(
+                        offset: Offset(0, 1),
+                        blurRadius: 3,
+                        color: Colors.black45,
+                      ),
+                    ],
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  book.authors.isNotEmpty ? book.authors.first : 'Unknown',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Colors.white.withAlpha(200),
+                        fontWeight: FontWeight.w500,
+                      ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLatestBooksCarouselCard(BuildContext context, BookModel book) {
+    return GestureDetector(
+      onTap: () {
+        Get.toNamed(AppConstants.bookDetailRoute, arguments: book);
+      },
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          // Image
+          ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: (book.coverImage ?? '').isNotEmpty
+                ? Image.network(
+                    book.coverImage!,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(
+                      color: Theme.of(context).colorScheme.primaryContainer,
+                      child: Center(
+                        child: Icon(Icons.menu_book,
+                            size: 50,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onPrimaryContainer),
+                      ),
+                    ),
+                  )
+                : Container(
+                    color: Theme.of(context).colorScheme.primaryContainer,
+                    child: Center(
+                      child: Icon(Icons.menu_book,
+                          size: 50,
+                          color:
+                              Theme.of(context).colorScheme.onPrimaryContainer),
+                    ),
+                  ),
+          ),
+
+          // Gradient Overlay
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.transparent,
+                  Colors.black.withAlpha(20),
+                  Colors.black.withAlpha(200),
+                ],
+                stops: const [0.4, 0.7, 1.0],
+              ),
+            ),
+          ),
+
+          // Text Content
+          Positioned(
+            left: 20,
+            right: 20,
+            bottom: 20,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Tag
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'Latest',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  book.title,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    shadows: [
+                      const Shadow(
+                        offset: Offset(0, 1),
+                        blurRadius: 3,
+                        color: Colors.black45,
+                      ),
+                    ],
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  book.authorName ?? 'Unknown',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Colors.white.withAlpha(200),
+                        fontWeight: FontWeight.w500,
+                      ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildBookSummaryCard(BuildContext context, dynamic book) {
     return GestureDetector(
       onTap: () {
@@ -551,25 +810,30 @@ class _HomeTabState extends State<HomeTab> {
       BuildContext context, String title, VoidCallback onSeeAll) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            title,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-          ),
-          TextButton(
-            onPressed: () =>
-                showSnackSafe('Coming Soon', 'See all coming soon'),
-            style: TextButton.styleFrom(
-              visualDensity: VisualDensity.compact,
+      child: Obx(() {
+        final languageController = Get.find<LanguageController>();
+        // Access observable to make GetX listen
+        languageController.language;
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              title,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
-            child: const Text('See All'),
-          ),
-        ],
-      ),
+            TextButton(
+              onPressed: () =>
+                  showSnackSafe('Coming Soon', 'See all coming soon'),
+              style: TextButton.styleFrom(
+                visualDensity: VisualDensity.compact,
+              ),
+              child: Text(languageController.translate('see_all')),
+            ),
+          ],
+        );
+      }),
     );
   }
 

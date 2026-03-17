@@ -81,7 +81,13 @@ class _ProfileViewState extends State<ProfileView> {
                       const SizedBox(height: 32),
                       ElevatedButton(
                         onPressed: () => Get.toNamed(AppConstants.loginRoute),
-                        child: const Text('Login / Sign Up'),
+                        child: Obx(() {
+                          final languageController =
+                              Get.find<LanguageController>();
+                          languageController.language;
+                          return Text(
+                              languageController.translate('login_signup'));
+                        }),
                       ),
                       const SizedBox(height: 24),
                       OutlinedButton.icon(
@@ -324,11 +330,16 @@ class _ProfileViewState extends State<ProfileView> {
                   child: OutlinedButton.icon(
                     onPressed: () => _showLogoutDialog(context, authController),
                     icon: const Icon(Icons.logout_rounded),
-                    label: const Text(
-                      'Logout',
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                    ),
+                    label: Obx(() {
+                      final languageController = Get.find<LanguageController>();
+                      // Access observable to make GetX listen
+                      languageController.language;
+                      return Text(
+                        languageController.translate('logout'),
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 16),
+                      );
+                    }),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppTheme.errorColor,
                       padding: const EdgeInsets.symmetric(vertical: 20),
@@ -712,24 +723,28 @@ class _ProfileViewState extends State<ProfileView> {
   }
 
   void _showLogoutDialog(BuildContext context, AuthController authController) {
+    final languageController = Get.find<LanguageController>();
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Logout'),
-        content: const Text('Are you sure you want to logout?'),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel')),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              authController.logout();
-            },
-            child: const Text('Logout'),
-          ),
-        ],
-      ),
+      builder: (context) => Obx(() {
+        languageController.language;
+        return AlertDialog(
+          title: Text(languageController.translate('logout')),
+          content: const Text('Are you sure you want to logout?'),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel')),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                authController.logout();
+              },
+              child: Text(languageController.translate('logout')),
+            ),
+          ],
+        );
+      }),
     );
   }
 }
