@@ -38,21 +38,25 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
       appBar: AppBar(
         title: const Text('Forgot Password'),
       ),
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topRight,
-            end: Alignment.bottomLeft,
-            colors: [
-              Color(0xFFF5F5F5),
-              Color(0xFFEEEEEE),
-              Color(0xFFE0E0E0),
-            ],
+      body: SafeArea(
+        child: Container(
+          width: double.infinity,
+          height: double.infinity,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
+              colors: Theme.of(context).brightness == Brightness.dark
+                  ? [
+                      Theme.of(context).scaffoldBackgroundColor,
+                      Theme.of(context).colorScheme.surface,
+                    ]
+                  : [
+                      Theme.of(context).scaffoldBackgroundColor,
+                      Theme.of(context).colorScheme.surface,
+                    ],
+            ),
           ),
-        ),
-        child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(24.0),
@@ -62,17 +66,18 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.lock_reset,
                       size: 80,
-                      color: Colors.blueAccent,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
                     const SizedBox(height: 24),
                     Text(
                       'Reset Your Password',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                      style:
+                          Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 16),
@@ -107,7 +112,9 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
                     // Submit Button
                     Obx(
                       () => ElevatedButton(
-                        onPressed: _authController.isLoading ? null : _handleRequestReset,
+                        onPressed: _authController.isLoading
+                            ? null
+                            : _handleRequestReset,
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
@@ -120,7 +127,8 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
                                 width: 20,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white),
                                 ),
                               )
                             : const Text(
