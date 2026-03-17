@@ -22,6 +22,10 @@ class _BookmarksViewState extends State<BookmarksView> {
   void initState() {
     super.initState();
     _bookmarksController = Get.find<BookmarksController>();
+    // Reload bookmarks when the view is initialized
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _bookmarksController.loadBookmarks();
+    });
   }
 
   @override
@@ -54,88 +58,95 @@ class _BookmarksViewState extends State<BookmarksView> {
           }),
         ],
       ),
-      body: Obx(() {
-        if (_bookmarksController.isLoading) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
-        }
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await _bookmarksController.loadBookmarks();
+        },
+        child: Obx(() {
+          if (_bookmarksController.isLoading) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
 
-        final bookmarks = _bookmarksController.chapterBookmarks;
+          final bookmarks = _bookmarksController.chapterBookmarks;
 
-        if (bookmarks.isEmpty) {
-          return Center(
+          if (bookmarks.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.bookmark_outline_rounded,
+                    size: 80,
+                    color:
+                        Theme.of(context).colorScheme.onSurface.withAlpha(50),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No Bookmarks Yet',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Bookmark your favorite books to read later',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withOpacity(0.6),
+                        ),
+                  ),
+                  const SizedBox(height: 24),
+                  Obx(() {
+                    final languageController = Get.find<LanguageController>();
+                    return ElevatedButton.icon(
+                      onPressed: () => Get.offNamed(AppConstants.homeRoute),
+                      icon: const Icon(Icons.explore_rounded),
+                      label:
+                          Text(languageController.translate('explore_books')),
+                    );
+                  }),
+                ],
+              ),
+            );
+          }
+
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
-                  Icons.bookmark_outline_rounded,
-                  size: 80,
-                  color: Theme.of(context).colorScheme.onSurface.withAlpha(50),
+                Padding(
+                  padding: const EdgeInsets.only(left: 4, bottom: 16),
+                  child: Text(
+                    '${bookmarks.length} Bookmarked ${bookmarks.length == 1 ? 'Chapter' : 'Chapters'}',
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withOpacity(0.6),
+                        ),
+                  ),
                 ),
-                const SizedBox(height: 16),
-                Text(
-                  'No Bookmarks Yet',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: bookmarks.length,
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    final bookmark = bookmarks[index];
+                    return _buildChapterBookmarkCard(context, bookmark);
+                  },
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'Bookmark your favorite books to read later',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .onSurface
-                            .withOpacity(0.6),
-                      ),
-                ),
-                const SizedBox(height: 24),
-                Obx(() {
-                  final languageController = Get.find<LanguageController>();
-                  return ElevatedButton.icon(
-                    onPressed: () => Get.offNamed(AppConstants.homeRoute),
-                    icon: const Icon(Icons.explore_rounded),
-                    label: Text(languageController.translate('explore_books')),
-                  );
-                }),
               ],
             ),
           );
-        }
-
-        return SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(left: 4, bottom: 16),
-                child: Text(
-                  '${bookmarks.length} Bookmarked ${bookmarks.length == 1 ? 'Chapter' : 'Chapters'}',
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .onSurface
-                            .withOpacity(0.6),
-                      ),
-                ),
-              ),
-              ListView.separated(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: bookmarks.length,
-                separatorBuilder: (context, index) =>
-                    const SizedBox(height: 12),
-                itemBuilder: (context, index) {
-                  final bookmark = bookmarks[index];
-                  return _buildChapterBookmarkCard(context, bookmark);
-                },
-              ),
-            ],
-          ),
-        );
-      }),
+        }),
+      ),
     );
   }
 
