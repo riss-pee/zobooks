@@ -1,6 +1,25 @@
 class AppStrings {
   // English strings
   static const Map<String, String> EN = {
+    // Auth Pages
+    'welcome_back': 'Welcome Back',
+    'username': 'Username',
+    'email': 'Email',
+    'password': 'Password',
+    'confirm_password': 'Confirm Password',
+    'phone_number': 'Phone Number',
+    'forgot_password_question': 'Forgot Password?',
+    'login': 'Login',
+    'dont_have_account': "Don't have an account?",
+    'sign_up': 'Sign Up',
+    'forgot_password': 'Forgot Password',
+    'reset_your_password': 'Reset Your Password',
+    'reset_password_desc':
+        'Enter your username and we will send a verification code to your registered email address.',
+    'send_reset_code': 'Send Reset Code',
+    'create_account': 'Create Account',
+    'already_have_account': 'Already have an account?',
+
     // Profile Page
     'edit_profile': 'Edit Profile',
     'my_books': 'My Books',
@@ -24,10 +43,8 @@ class AppStrings {
     'my_library': 'My Library',
 
     // Edit Profile Fields
-    'username': 'Username',
     'first_name': 'First Name',
     'last_name': 'Last Name',
-    'phone_number': 'Phone Number',
     'bio': 'Bio',
     'date_of_birth': 'Date of Birth (YYYY-MM-DD)',
     'gender': 'Gender',
@@ -35,6 +52,25 @@ class AppStrings {
 
   // Mizo strings
   static const Map<String, String> MI = {
+    // Auth Pages
+    'welcome_back': 'Kan Lo Lawm A Che',
+    'username': 'Hming',
+    'email': 'Email',
+    'password': 'Password',
+    'confirm_password': 'Confirm Password',
+    'phone_number': 'Phone number',
+    'forgot_password_question': 'Password i theihnghilh em?',
+    'login': 'Luhna',
+    'dont_have_account': 'Account i la nei lo em?',
+    'sign_up': 'In Ziah Luhna',
+    'forgot_password': 'Password Theihnghilh',
+    'reset_your_password': 'Password Siam Tharna',
+    'reset_password_desc':
+        'I username chhu lut la, i email address ziah luh tawhah verification code kan rawn thawn ang',
+    'send_reset_code': 'Reset Code Thawnna',
+    'create_account': 'Account Siamna',
+    'already_have_account': 'Account i nei tawh em?',
+
     // Profile Page
     'edit_profile': 'Profile Siamṭhatna',
     'my_books': 'Ka Lehkhabu Te',
@@ -58,10 +94,8 @@ class AppStrings {
     'my_library': 'Lehkhabu Lei te',
 
     // Edit Profile Fields
-    'username': 'Username',
     'first_name': 'Hming hmasa',
     'last_name': 'Hming Hnuhnung',
-    'phone_number': 'Phone number',
     'bio': 'I Chanchin',
     'date_of_birth': 'Pian ni',
     'gender': 'Gender',
