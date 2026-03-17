@@ -5,6 +5,8 @@ class AppStrings {
     'edit_profile': 'Edit Profile',
     'my_books': 'My Books',
     'bookmarks': 'Bookmarks',
+    'logout': 'Logout',
+    'login_signup': 'Login / Sign Up',
 
     // Home Page
     'greeting_morning': 'Good Morning,',
@@ -12,6 +14,8 @@ class AppStrings {
     'greeting_evening': 'Good Evening,',
     'explore_books': 'Explore Books',
     'trending_now': 'Trending Now',
+    'latest_published': 'Latest Published',
+    'see_all': 'See All',
     'history': 'History',
     'horror': 'Horror',
     'novel': 'Novel',
@@ -32,9 +36,11 @@ class AppStrings {
   // Mizo strings
   static const Map<String, String> MI = {
     // Profile Page
-    'edit_profile': 'Profile siamṭhatna',
+    'edit_profile': 'Profile Siamṭhatna',
     'my_books': 'Ka Lehkhabu Te',
     'bookmarks': 'Chhinchhiahte',
+    'logout': 'Chhuahna',
+    'login_signup': 'Luhna / Inziahluhna',
 
     // Home Page
     'greeting_morning': 'Chibai le,',
@@ -42,6 +48,8 @@ class AppStrings {
     'greeting_evening': 'Tlai Chibai,',
     'explore_books': 'Lehkhabu Enkualna',
     'trending_now': 'Lar Zual Te',
+    'latest_published': 'Tihchhuah thar berte',
+    'see_all': 'En Vekna',
     'history': 'Thil Hlui',
     'horror': 'Hlauhawm Lam',
     'novel': 'Thawnthu Thui',

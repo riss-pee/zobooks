@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import '../../../data/models/grouped_books_model.dart';
 import '../../../data/models/trending_book_model.dart';
+import '../../../data/models/book_model.dart';
 import '../../../data/repositories/home_repository.dart';
 import '../../../core/utils/snackbar_helper.dart';
 
@@ -13,6 +14,7 @@ class HomeController extends GetxController {
   final RxString error = ''.obs;
   final RxList<GroupedBooksModel> groupedBooks = <GroupedBooksModel>[].obs;
   final RxList<TrendingBookModel> trendingBooks = <TrendingBookModel>[].obs;
+  final RxList<BookModel> latestPublishedBooks = <BookModel>[].obs;
 
   @override
   void onInit() {
@@ -25,19 +27,23 @@ class HomeController extends GetxController {
       print('HomeController.fetchBooks START');
       isLoading.value = true;
       error.value = '';
-      
+
       final results = await Future.wait([
         _repository.getGroupedBooks(),
         _repository.getTrendingBooks(),
+        _repository.getLatestPublishedBooks(limit: 10),
       ]);
-      
+
       final books = results[0] as List<GroupedBooksModel>;
       final trending = results[1] as List<TrendingBookModel>;
+      final latest = results[2] as List<BookModel>;
 
-      print('HomeController.fetchBooks SUCCESS - Got ${books.length} groups, ${trending.length} trending');
-      
+      print(
+          'HomeController.fetchBooks SUCCESS - Got ${books.length} groups, ${trending.length} trending, ${latest.length} latest');
+
       groupedBooks.value = books;
       trendingBooks.value = trending;
+      latestPublishedBooks.value = latest;
     } catch (e, stackTrace) {
       print('HomeController.fetchBooks ERROR: $e');
       print('Stacktrace: $stackTrace');
