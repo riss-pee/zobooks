@@ -18,14 +18,39 @@ class TrendingBookModel {
   });
 
   factory TrendingBookModel.fromJson(Map<String, dynamic> json) {
+    // Helper function to safely parse authors from various formats
+    List<String> _parseAuthors(dynamic authorsData) {
+      if (authorsData == null) return [];
+
+      if (authorsData is List<dynamic>) {
+        // Authors is a list of strings
+        return authorsData
+            .where((e) => e != null)
+            .map((e) => e.toString())
+            .toList();
+      } else if (authorsData is Map<String, dynamic>) {
+        // Authors is a map - extract values or names
+        final values = authorsData.values
+            .where((v) => v != null)
+            .map((v) => v.toString())
+            .toList();
+        return values.isNotEmpty ? values : ['Unknown'];
+      } else if (authorsData is String) {
+        // Single author as string
+        return [authorsData];
+      }
+
+      return ['Unknown'];
+    }
+
     return TrendingBookModel(
-      id: json['id'] as String,
-      title: json['title'] as String,
-      coverUrl: json['cover_url'] as String,
-      authors: (json['authors'] as List<dynamic>).map((e) => e as String).toList(),
-      price: (json['price'] as num).toDouble(),
-      isFree: json['is_free'] as bool,
-      language: json['language'] as String,
+      id: (json['id'] ?? 'unknown').toString(),
+      title: (json['title'] ?? 'Unknown').toString(),
+      coverUrl: (json['cover_url'] ?? '').toString(),
+      authors: _parseAuthors(json['authors']),
+      price: (json['price'] as num?)?.toDouble() ?? 0.0,
+      isFree: json['is_free'] as bool? ?? false,
+      language: (json['language'] ?? 'Unknown').toString(),
     );
   }
 

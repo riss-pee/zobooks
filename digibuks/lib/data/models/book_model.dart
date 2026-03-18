@@ -60,29 +60,31 @@ class BookModel {
       title: json['title'] ?? '',
       description: json['description'],
       authorId: json['author_id'] ?? '',
-      authorName: json['author_name'] ?? 
-          (json['authors'] != null && (json['authors'] as List).isNotEmpty
-              ? (json['authors'][0] is String ? json['authors'][0] : json['authors'][0]['name'])
+      authorName: json['author_name'] ??
+          (json['authors'] != null &&
+                  json['authors'] is List &&
+                  (json['authors'] as List).isNotEmpty
+              ? (json['authors'][0] is String
+                  ? json['authors'][0]
+                  : json['authors'][0]['name'])
               : null),
       coverImage: json['cover_image'] ?? json['cover_url'],
       fileUrl: json['file_url'],
       fileType: json['file_type'] ?? 'epub',
       language: json['language'] ?? 'en',
-      authors: json['authors'] != null
+      authors: json['authors'] != null && json['authors'] is List
           ? (json['authors'] as List).map<AuthorModel>((i) {
               if (i is String) return AuthorModel(id: '', name: i);
               return AuthorModel.fromJson(i);
             }).toList()
           : [],
-      chapters: json['chapters'] != null
-          ? (json['chapters'] as List).map((i) => ChapterModel.fromJson(i)).toList()
+      chapters: json['chapters'] != null && json['chapters'] is List
+          ? (json['chapters'] as List)
+              .map((i) => ChapterModel.fromJson(i))
+              .toList()
           : [],
-      genres: json['genres'] != null
-          ? List<String>.from(json['genres'])
-          : [],
-      tags: json['tags'] != null
-          ? List<String>.from(json['tags'])
-          : [],
+      genres: json['genres'] != null ? List<String>.from(json['genres']) : [],
+      tags: json['tags'] != null ? List<String>.from(json['tags']) : [],
       price: json['price']?.toDouble(),
       rentalPrice: json['rental_price']?.toDouble(),
       rentalDays: json['rental_days'],
@@ -132,4 +134,3 @@ class BookModel {
     };
   }
 }
-

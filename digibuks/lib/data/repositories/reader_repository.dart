@@ -38,6 +38,9 @@ class ReaderRepository {
       final response =
           await _apiClient.get('/reader/reader/books/$bookId/chapters');
       if (response.statusCode == 200 && response.data != null) {
+        if (response.data is! List) {
+          throw ApiException(message: 'Invalid chapters response format');
+        }
         return List<Map<String, dynamic>>.from(
           (response.data as List).map((e) => Map<String, dynamic>.from(e)),
         );
