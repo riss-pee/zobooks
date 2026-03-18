@@ -23,18 +23,22 @@ class TrendingBookModel {
       if (authorsData == null) return [];
 
       if (authorsData is List<dynamic>) {
-        // Authors is a list of strings
-        return authorsData
-            .where((e) => e != null)
-            .map((e) => e.toString())
-            .toList();
+        // Authors is a list - could be strings or objects
+        return authorsData.where((e) => e != null).map((e) {
+          if (e is String) {
+            return e;
+          } else if (e is Map<String, dynamic>) {
+            // Extract name from author object
+            return e['name']?.toString() ?? e['title']?.toString() ?? 'Unknown';
+          }
+          return e.toString();
+        }).toList();
       } else if (authorsData is Map<String, dynamic>) {
-        // Authors is a map - extract values or names
-        final values = authorsData.values
-            .where((v) => v != null)
-            .map((v) => v.toString())
-            .toList();
-        return values.isNotEmpty ? values : ['Unknown'];
+        // Authors is a single author object - extract name
+        final name = authorsData['name']?.toString() ??
+            authorsData['title']?.toString() ??
+            'Unknown';
+        return [name];
       } else if (authorsData is String) {
         // Single author as string
         return [authorsData];
