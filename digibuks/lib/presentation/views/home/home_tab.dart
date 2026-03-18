@@ -9,6 +9,7 @@ import 'home_controller.dart';
 import '../../widgets/loading_shimmer.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/utils/snackbar_helper.dart';
+import 'package:flutter/foundation.dart';
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
@@ -17,7 +18,7 @@ class HomeTab extends StatefulWidget {
   State<HomeTab> createState() => _HomeTabState();
 }
 
-class _HomeTabState extends State<HomeTab> {
+class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
   late final PageController _featuredController;
   final _searchController = TextEditingController();
   int _featuredIndex = 0;
@@ -26,13 +27,28 @@ class _HomeTabState extends State<HomeTab> {
   void initState() {
     super.initState();
     _featuredController = PageController(viewportFraction: 0.85);
+    // Register this widget to observe app lifecycle
+    WidgetsBinding.instance.addObserver(this);
   }
 
   @override
   void dispose() {
+    // Unregister observer to avoid memory leaks
+    WidgetsBinding.instance.removeObserver(this);
     _featuredController.dispose();
     _searchController.dispose();
     super.dispose();
+  }
+
+  /// Called when app lifecycle changes (resumed, paused, etc.)
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // App has resumed from background, refresh home data
+      final homeController = Get.find<HomeController>();
+      print('HomeTab: App resumed, checking for refresh...');
+      homeController.refreshIfNeeded();
+    }
   }
 
   @override
@@ -193,13 +209,18 @@ class _HomeTabState extends State<HomeTab> {
                         return SliverMainAxisGroup(
                           slivers: [
                             SliverToBoxAdapter(
-                              child: _buildSectionHeader(
-                                context,
-                                languageController
-                                    .translate('latest_published'),
-                                () => Get.toNamed(
-                                  AppConstants.categoryRoute,
-                                  arguments: 'Latest',
+                              child: Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 20),
+                                child: Text(
+                                  languageController
+                                      .translate('latest_published'),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleLarge
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                 ),
                               ),
                             ),
