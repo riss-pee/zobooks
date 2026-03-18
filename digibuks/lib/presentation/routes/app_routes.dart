@@ -7,6 +7,7 @@ import '../views/auth/forgot_password_view.dart';
 import '../views/auth/reset_password_view.dart';
 import '../views/auth/splash_view.dart';
 import '../views/home/home_view.dart';
+import '../views/home/category_view.dart';
 import '../views/books/book_detail_view.dart';
 import '../views/reader/reader_view.dart';
 import '../views/profile/profile_view.dart';
@@ -126,6 +127,13 @@ class AppRoutes {
           appBar: AppBar(title: const Text('Payment')),
           body: const Center(child: Text('Invalid payment request')),
         );
+      },
+    ),
+    GetPage(
+      name: AppConstants.categoryRoute,
+      page: () {
+        final categoryName = Get.arguments as String? ?? 'Books';
+        return CategoryView(categoryName: categoryName);
       },
     ),
   ];

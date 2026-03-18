@@ -21,6 +21,7 @@ class AppConstants {
   static const String userManagementRoute = '/user-management';
   static const String contentModerationRoute = '/content-moderation';
   static const String paymentRoute = '/payment';
+  static const String categoryRoute = '/category';
 
   // User Roles
   static const String roleReader = 'reader';

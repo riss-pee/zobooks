@@ -136,7 +136,10 @@ class _HomeTabState extends State<HomeTab> {
                               child: _buildSectionHeader(
                                   context,
                                   languageController.translate('trending_now'),
-                                  () {}),
+                                  () => Get.toNamed(
+                                        AppConstants.categoryRoute,
+                                        arguments: 'Trending',
+                                      )),
                             ),
                             SliverToBoxAdapter(
                               child: SizedBox(
@@ -190,18 +193,13 @@ class _HomeTabState extends State<HomeTab> {
                         return SliverMainAxisGroup(
                           slivers: [
                             SliverToBoxAdapter(
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 20, vertical: 8),
-                                child: Text(
-                                  languageController
-                                      .translate('latest_published'),
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleLarge
-                                      ?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                              child: _buildSectionHeader(
+                                context,
+                                languageController
+                                    .translate('latest_published'),
+                                () => Get.toNamed(
+                                  AppConstants.categoryRoute,
+                                  arguments: 'Latest',
                                 ),
                               ),
                             ),
@@ -272,7 +270,10 @@ class _HomeTabState extends State<HomeTab> {
                                       context,
                                       _translateCategory(
                                           group.category, languageController),
-                                      () {},
+                                      () => Get.toNamed(
+                                        AppConstants.categoryRoute,
+                                        arguments: group.category,
+                                      ),
                                     ),
                                   ),
                                   SizedBox(
@@ -824,8 +825,7 @@ class _HomeTabState extends State<HomeTab> {
                   ),
             ),
             TextButton(
-              onPressed: () =>
-                  showSnackSafe('Coming Soon', 'See all coming soon'),
+              onPressed: onSeeAll,
               style: TextButton.styleFrom(
                 visualDensity: VisualDensity.compact,
               ),
