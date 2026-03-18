@@ -14,15 +14,23 @@ class SearchPage extends StatefulWidget {
   State<SearchPage> createState() => _SearchPageState();
 }
 
-class _SearchPageState extends State<SearchPage> {
+class _SearchPageState extends State<SearchPage>
+    with SingleTickerProviderStateMixin {
   final _searchController = TextEditingController();
   Timer? _debounce;
   final ScrollController _categoryScrollController = ScrollController();
   final ScrollController _gridScrollController = ScrollController();
+  bool _isFilterExpanded = false;
+  late AnimationController _filterAnimationController;
 
   @override
   void initState() {
     super.initState();
+    _filterAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+
     // Default call with no query
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final controller = Get.find<BookController>();
@@ -46,6 +54,7 @@ class _SearchPageState extends State<SearchPage> {
     _debounce?.cancel();
     _categoryScrollController.dispose();
     _gridScrollController.dispose();
+    _filterAnimationController.dispose();
     super.dispose();
   }
 
@@ -53,6 +62,152 @@ class _SearchPageState extends State<SearchPage> {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () {
       Get.find<BookController>().searchBooks(query);
+    });
+  }
+
+  void _toggleFilter() {
+    setState(() {
+      _isFilterExpanded = !_isFilterExpanded;
+      if (_isFilterExpanded) {
+        _filterAnimationController.forward();
+      } else {
+        _filterAnimationController.reverse();
+      }
+    });
+  }
+
+  Widget _buildFilterPanel(
+      BookController bookController, LanguageController languageController) {
+    return Obx(() {
+      if (bookController.isCategoriesLoading) {
+        return const Padding(
+          padding: EdgeInsets.symmetric(vertical: 16),
+          child: SizedBox(
+            height: 40,
+            child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+          ),
+        );
+      }
+
+      final categories = bookController.categories;
+      final currentGenre = bookController.selectedGenre;
+
+      return Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Theme.of(context)
+              .colorScheme
+              .surfaceContainerHighest
+              .withAlpha(80),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outlineVariant.withAlpha(50),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Categories',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                // "All" option
+                GestureDetector(
+                  onTap: () {
+                    FocusScope.of(context).unfocus();
+                    bookController.filterByGenre('');
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: currentGenre.isEmpty
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(context)
+                              .colorScheme
+                              .surfaceContainerHighest
+                              .withAlpha(100),
+                      borderRadius: BorderRadius.circular(20),
+                      border: currentGenre.isEmpty
+                          ? null
+                          : Border.all(
+                              color:
+                                  Theme.of(context).dividerColor.withAlpha(50)),
+                    ),
+                    child: Text(
+                      'All',
+                      style: TextStyle(
+                        color: currentGenre.isEmpty
+                            ? Theme.of(context).colorScheme.onPrimary
+                            : Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontWeight: currentGenre.isEmpty
+                            ? FontWeight.bold
+                            : FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ),
+                // Category options
+                ...categories.map((category) {
+                  final isSelected = currentGenre == category.name;
+                  return GestureDetector(
+                    onTap: () {
+                      FocusScope.of(context).unfocus();
+                      bookController.filterByGenre(category.name);
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(context)
+                                .colorScheme
+                                .surfaceContainerHighest
+                                .withAlpha(100),
+                        borderRadius: BorderRadius.circular(20),
+                        border: isSelected
+                            ? null
+                            : Border.all(
+                                color: Theme.of(context)
+                                    .dividerColor
+                                    .withAlpha(50)),
+                      ),
+                      child: Text(
+                        category.name,
+                        style: TextStyle(
+                          color: isSelected
+                              ? Theme.of(context).colorScheme.onPrimary
+                              : Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontWeight:
+                              isSelected ? FontWeight.bold : FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+              ],
+            ),
+          ],
+        ),
+      );
     });
   }
 
@@ -86,86 +241,20 @@ class _SearchPageState extends State<SearchPage> {
               controller: _searchController,
               onChanged: _onSearchChanged,
               onSubmitted: (query) => bookController.searchBooks(query),
+              onFilter: _toggleFilter,
             ),
             const SizedBox(height: 16),
 
-            // 2. Category Pills
-            Obx(() {
-              if (bookController.isCategoriesLoading) {
-                return const SizedBox(
-                  height: 40,
-                  child:
-                      Center(child: CircularProgressIndicator(strokeWidth: 2)),
-                );
-              }
-              final categories = bookController.categories;
-              final currentGenre = bookController
-                  .selectedGenre; // MUST be accessed synchronously to track state
-
-              return SizedBox(
-                height: 40,
-                child: ListView.separated(
-                  controller: _categoryScrollController,
-                  scrollDirection: Axis.horizontal,
-                  itemCount: categories.length + 1, // +1 for "All"
-                  separatorBuilder: (context, index) =>
-                      const SizedBox(width: 8),
-                  itemBuilder: (context, index) {
-                    final isAll = index == 0;
-                    final categoryLabel =
-                        isAll ? 'All' : categories[index - 1].name;
-                    final isSelected = currentGenre == categoryLabel ||
-                        (isAll && currentGenre.isEmpty);
-
-                    return GestureDetector(
-                      onTap: () {
-                        // Unfocus keyboard when tapping a category
-                        FocusScope.of(context).unfocus();
-                        bookController
-                            .filterByGenre(isAll ? '' : categoryLabel);
-                        // Clear search text if desired, or keep it to search within category
-                        // _searchController.clear();
-                      },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? Theme.of(context).colorScheme.primary
-                              : Theme.of(context)
-                                  .colorScheme
-                                  .surfaceContainerHighest
-                                  .withAlpha(100),
-                          borderRadius: BorderRadius.circular(20),
-                          border: isSelected
-                              ? null
-                              : Border.all(
-                                  color: Theme.of(context)
-                                      .dividerColor
-                                      .withAlpha(50)),
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          categoryLabel,
-                          style: TextStyle(
-                            color: isSelected
-                                ? Theme.of(context).colorScheme.onPrimary
-                                : Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant,
-                            fontWeight:
-                                isSelected ? FontWeight.bold : FontWeight.w600,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              );
-            }),
-            const SizedBox(height: 16),
+            // 2. Collapsible Filter Panel
+            SizeTransition(
+              sizeFactor: Tween<double>(begin: 0, end: 1).animate(
+                CurvedAnimation(
+                    parent: _filterAnimationController,
+                    curve: Curves.easeInOut),
+              ),
+              axisAlignment: -1.0,
+              child: _buildFilterPanel(bookController, languageController),
+            ),
 
             // 3. Book Cards (Results)
             Expanded(

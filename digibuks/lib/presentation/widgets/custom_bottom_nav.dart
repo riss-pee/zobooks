@@ -23,7 +23,6 @@ class CustomBottomNav extends StatelessWidget {
         child: GlassContainer(
           borderRadius: 28,
           opacity: 0.85,
-          color: Colors.white,
           child: NavigationBar(
             selectedIndex: currentIndex,
             onDestinationSelected: onTap,
