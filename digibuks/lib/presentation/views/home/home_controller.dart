@@ -16,6 +16,10 @@ class HomeController extends GetxController {
   final RxList<TrendingBookModel> trendingBooks = <TrendingBookModel>[].obs;
   final RxList<BookModel> latestPublishedBooks = <BookModel>[].obs;
 
+  // For refresh-on-focus: track last fetch time to avoid excessive API calls
+  DateTime? _lastFetchTime;
+  static const Duration _refreshThreshold = Duration(minutes: 5);
+
   @override
   void onInit() {
     super.onInit();
@@ -44,6 +48,7 @@ class HomeController extends GetxController {
       groupedBooks.value = books;
       trendingBooks.value = trending;
       latestPublishedBooks.value = latest;
+      _lastFetchTime = DateTime.now();
     } catch (e, stackTrace) {
       print('HomeController.fetchBooks ERROR: $e');
       print('Stacktrace: $stackTrace');
@@ -52,6 +57,24 @@ class HomeController extends GetxController {
     } finally {
       isLoading.value = false;
       print('HomeController.fetchBooks END');
+    }
+  }
+
+  /// Refresh books if enough time has passed since last fetch
+  /// Prevents excessive API calls when user returns to app frequently
+  Future<void> refreshIfNeeded() async {
+    if (_lastFetchTime == null) {
+      await fetchBooks();
+      return;
+    }
+
+    final timeSinceLastFetch = DateTime.now().difference(_lastFetchTime!);
+    if (timeSinceLastFetch >= _refreshThreshold) {
+      print('HomeController: Refreshing due to time threshold exceeded');
+      await fetchBooks();
+    } else {
+      print(
+          'HomeController: Skipping refresh (fetched ${timeSinceLastFetch.inSeconds}s ago)');
     }
   }
 }

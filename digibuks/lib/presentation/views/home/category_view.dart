@@ -56,6 +56,30 @@ class _CategoryViewState extends State<CategoryView> {
     super.dispose();
   }
 
+  /// Translate category name to appropriate language
+  String _getTranslatedCategoryName(
+      String categoryName, LanguageController languageController) {
+    final lowerName = categoryName.toLowerCase();
+
+    // Map category names to translation keys
+    const categoryKeyMap = {
+      'trending': 'trending_now',
+      'latest': 'latest_published',
+      'latest published': 'latest_published',
+      'history': 'history',
+      'horror': 'horror',
+      'novel': 'novel',
+    };
+
+    final key = categoryKeyMap[lowerName];
+    if (key != null) {
+      return languageController.translate(key);
+    }
+
+    // For unknown categories, return the original name
+    return categoryName;
+  }
+
   @override
   Widget build(BuildContext context) {
     final bookController = Get.find<BookController>();
@@ -66,7 +90,8 @@ class _CategoryViewState extends State<CategoryView> {
         title: Obx(() {
           // Access language observable to make GetX listen
           languageController.language;
-          return Text(widget.categoryName);
+          return Text(_getTranslatedCategoryName(
+              widget.categoryName, languageController));
         }),
         elevation: 0,
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
