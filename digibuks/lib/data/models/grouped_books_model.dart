@@ -16,13 +16,30 @@ class BookSummaryModel {
   });
 
   factory BookSummaryModel.fromJson(Map<String, dynamic> json) {
+    List<String> _parseAuthors(dynamic authorsData) {
+      if (authorsData == null) return [];
+      if (authorsData is List) {
+        return authorsData
+            .where((e) => e != null)
+            .map((e) => e.toString())
+            .toList();
+      } else if (authorsData is Map<String, dynamic>) {
+        final values = authorsData.values
+            .where((v) => v != null)
+            .map((v) => v.toString())
+            .toList();
+        return values.isNotEmpty ? values : [];
+      }
+      return [];
+    }
+
     return BookSummaryModel(
       id: json['id'] ?? '',
       title: json['title'] ?? '',
       price: (json['price'] ?? 0).toDouble(),
       isFree: json['is_free'] ?? false,
       coverUrl: json['cover_url'] ?? '',
-      authors: json['authors'] != null ? List<String>.from(json['authors']) : [],
+      authors: _parseAuthors(json['authors']),
     );
   }
 
@@ -50,8 +67,10 @@ class GroupedBooksModel {
   factory GroupedBooksModel.fromJson(Map<String, dynamic> json) {
     return GroupedBooksModel(
       category: json['category'] ?? '',
-      books: json['books'] != null
-          ? (json['books'] as List).map((i) => BookSummaryModel.fromJson(i)).toList()
+      books: json['books'] != null && json['books'] is List
+          ? (json['books'] as List)
+              .map((i) => BookSummaryModel.fromJson(i))
+              .toList()
           : [],
     );
   }
