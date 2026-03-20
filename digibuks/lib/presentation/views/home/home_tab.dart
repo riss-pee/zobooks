@@ -9,6 +9,7 @@ import 'home_controller.dart';
 import '../../widgets/loading_shimmer.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/utils/snackbar_helper.dart';
+import '../../../core/theme/app_theme.dart';
 import 'package:flutter/foundation.dart';
 
 class HomeTab extends StatefulWidget {
@@ -657,7 +658,7 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary,
+                    color: AppTheme.successColor,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(

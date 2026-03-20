@@ -26,6 +26,9 @@ class AppStrings {
     'bookmarks': 'Bookmarks',
     'logout': 'Logout',
     'login_signup': 'Login / Sign Up',
+    'welcome_to_zo_reads': 'Welcome to Zo Reads',
+    'login_create_account_desc':
+        'Login or create an account to view your profile, manage your books, and more.',
 
     // Home Page
     'greeting_morning': 'Good Morning,',
@@ -88,6 +91,9 @@ class AppStrings {
     'bookmarks': 'Chhinchhiahte',
     'logout': 'Chhuahna',
     'login_signup': 'Luhna / Inziahluhna',
+    'welcome_to_zo_reads': 'Zo Reads-ah\nKan Lo Lawm A Che',
+    'login_create_account_desc':
+        'I profile en tur te, i lehkhabute enkawl tur te, leh thil dangte ti turin lut rawh emaw account siam rawh.',
 
     // Home Page
     'greeting_morning': 'Chibai le,',

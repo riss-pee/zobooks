@@ -54,30 +54,43 @@ class _ProfileViewState extends State<ProfileView> {
                         color: Theme.of(context).colorScheme.primary,
                       ),
                       const SizedBox(height: 24),
-                      Text(
-                        'Welcome to Zo Reads',
-                        style: Theme.of(context)
-                            .textTheme
-                            .headlineMedium
-                            ?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurface
-                                  .withOpacity(0.87),
-                            ),
-                      ),
+                      Obx(() {
+                        final languageController =
+                            Get.find<LanguageController>();
+                        languageController.language;
+                        return Text(
+                          languageController.translate('welcome_to_zo_reads'),
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurface
+                                    .withOpacity(0.87),
+                              ),
+                        );
+                      }),
                       const SizedBox(height: 12),
-                      Text(
-                        'Login or create an account to view your profile, manage your books, and more.',
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurface
-                                  .withOpacity(0.87),
-                            ),
-                      ),
+                      Obx(() {
+                        final languageController =
+                            Get.find<LanguageController>();
+                        languageController.language;
+                        return Text(
+                          languageController
+                              .translate('login_create_account_desc'),
+                          textAlign: TextAlign.center,
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withOpacity(0.87),
+                                  ),
+                        );
+                      }),
                       const SizedBox(height: 32),
                       ElevatedButton(
                         onPressed: () => Get.toNamed(AppConstants.loginRoute),
